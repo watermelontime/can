@@ -7,6 +7,7 @@ import { sevC } from './help_functions.js';
 //       but not clear how to add formating inside a report => via own special characters, e.g. <b> asdf <\b>
 //       that are replaced in the report print process
 // TODO: visualize gaps in the Memory Map as own rows and also generate according report to inform about this
+// TOOD: support different M_CAN version => ask Florian before
 
 // ===================================================================================
 // X_CAN: Process User Register Values: parse, validate, calculate results, generate report
@@ -34,7 +35,7 @@ export function loadExampleRegisterValues() {
   const registerString = `# M_CAN example register values
 # Format to use: 0xADDR 0xVALUE
 # 0xADDR is internal X_CAN address
-#        or global address (e.g. 32 bit)
+#        or global address (e.g. 32bit)
 0x000 0x32150323
 0x004 0x87654321
 0x008 0x00000000
@@ -165,7 +166,8 @@ function mapRawRegistersToNames(reg) {
       mappedCount++;
       
       reg.parse_output.report.push({
-        severityLevel: sevC.Info, // info
+        severityLevel: sevC.Info,
+        verbose: true,
         msg: `Mapped reg. address 0x${rawReg.addr.toString(16).toUpperCase().padStart(2, '0')} to ${regName} (${mapping.longName})`
       });
     } else {
@@ -173,7 +175,7 @@ function mapRawRegistersToNames(reg) {
       unmappedCount++;
       
       reg.parse_output.report.push({
-        severityLevel: sevC.Warn, // warning
+        severityLevel: sevC.Warn,
         msg: `Unknown register address: 0x${rawReg.addr.toString(16).toUpperCase().padStart(2, '0')} - register will be ignored`
       });
       reg.parse_output.hasWarnings = true;
@@ -182,7 +184,7 @@ function mapRawRegistersToNames(reg) {
   
   // Add summary message
   reg.parse_output.report.push({
-    severityLevel: sevC.Info, // info
+    severityLevel: sevC.Info,
     msg: `Address mapping completed: ${mappedCount} mapped, ${unmappedCount} unknown`
   });
   
@@ -629,7 +631,7 @@ function procRegsPrtOther(reg) {
     reg.CREL.report.push({
       severityLevel: sevC.Info,
       highlight: true,
-      msg: `CREL: M_CAN V${reg.CREL.fields.REL.toString(16).toUpperCase()}.${reg.CREL.fields.STEP.toString(16).toUpperCase()}.${reg.CREL.fields.SUBSTEP.toString(16).toUpperCase()}, Date ${reg.CREL.fields.DAY.toString(16).toUpperCase().padStart(2, '0')}.${reg.CREL.fields.MON.toString(16).toUpperCase().padStart(2, '0')}.${reg.CREL.fields.YEAR.toString(16).toUpperCase().padStart(2, '0')}`
+      msg: `CREL: M_CAN V${reg.CREL.fields.REL.toString(16).toUpperCase()}.${reg.CREL.fields.STEP.toString(16).toUpperCase()}.${reg.CREL.fields.SUBSTEP.toString(16).toUpperCase()}, Date ${reg.CREL.fields.DAY.toString(16).toUpperCase().padStart(2, '0')}.${reg.CREL.fields.MON.toString(16).toUpperCase().padStart(2, '0')}.201${reg.CREL.fields.YEAR.toString(16).toUpperCase()}`
     });
   }
 
@@ -696,10 +698,10 @@ function procRegsPrtOther(reg) {
     reg.TEST.report.push({
       severityLevel: sevC.Info, // info
       msg: `TEST: ${reg.TEST.name_long} (0x${reg.TEST.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[SVAL ] Started Valid             = ${reg.TEST.fields.SVAL}\n` +
-           `[TXBNS] TX Buffer Number Started  = ${reg.TEST.fields.TXBNS}\n` +
-           `[PVAL ] Prepend Valid             = ${reg.TEST.fields.PVAL}\n` +
-           `[TXBNP] TX Buffer Number Prepared = ${reg.TEST.fields.TXBNP}\n` +
+           `[SVAL ] Started Valid             = ${reg.TEST.fields.SVAL} (only in M_CAN V3.3.0 or later)\n` +
+           `[TXBNS] TX Buffer Number Started  = ${reg.TEST.fields.TXBNS} (only in M_CAN V3.3.0 or later)\n` +
+           `[PVAL ] Prepend Valid             = ${reg.TEST.fields.PVAL} (only in M_CAN V3.3.0 or later)\n` +
+           `[TXBNP] TX Buffer Number Prepared = ${reg.TEST.fields.TXBNP} (only in M_CAN V3.3.0 or later)\n` +
            `[RX   ] RX Pin                    = ${reg.TEST.fields.RX}\n` +
            `[TX   ] TX Pin Control            = ${reg.TEST.fields.TX} (0: PRT controlled, 1: SP monitor, 2: Dominant, 3: Recessive)\n` +
            `[LBCK ] Loop Back Mode            = ${reg.TEST.fields.LBCK} (1: enabled)`
@@ -1941,6 +1943,7 @@ function checkMcanMessageRamMap(reg) {
   // Collect all structures
   const memMapUsedArray = []; // used structures (like FIFOs)
   const memMapUnUsedArray = []; // unused structures (like FIFOs)
+  const RxBufferName="RX Buffer ded.";
 
   // --- Standard ID Filter List ---
   if (reg.SIDFC && reg.SIDFC.fields) {
@@ -1993,13 +1996,13 @@ function checkMcanMessageRamMap(reg) {
     const enabled = (reg.RXBC.fields.RBSA > 0); // HINT: Assume it to be enabled if Address != 0
     const startAddr = reg.RXBC.fields.RBSA << 2;
     // Number of RX buffers = sum of NDAT1/2 bits set, but spec: up to 64
-    let elemNum = 0; // not configured in M_CAN; this is indirectly configured via the target in the RX filters
+    let elemNum = 1; // not configured in M_CAN; this is indirectly configured via the target in the RX filters
     let elemSize = 0; // default: 2 bytes (header+data)
     if (reg.RXESC && reg.RXESC.fields) {
       elemSize = 8 + decodeConfiguredDataFieldSizeInByte(reg.RXESC.fields.RBDS);
     }
     const size = elemNum * elemSize;
-    addStruct("RX Buffer ded.", enabled, startAddr, size, elemNum, elemSize);
+    addStruct(RxBufferName, enabled, startAddr, size, elemNum, elemSize);
   }
 
   // --- TX dedicated Buffer ---
@@ -2051,10 +2054,18 @@ function checkMcanMessageRamMap(reg) {
   // Build & submit memory map report
   let mapReport = "Message RAM Memory Map:";
   for (const s of memMapUsedArray) {
-    mapReport += `\n${(s.name).padEnd(14)}: 0x${s.startAddr.toString(16).toUpperCase().padStart(4, "0")} - 0x${s.endAddr.toString(16).toUpperCase().padStart(4, "0")}` +
-                 ` (${s.size.toString().padStart(4, " ")} byte)` +
-                 ` elemNum=${s.elemNum.toString().padStart(2, " ")},` +
-                 ` elemSize=${s.elemSize.toString().padStart(2, " ")} byte`;
+    if (s.name !== RxBufferName){
+      mapReport += `\n${(s.name).padEnd(14)}: 0x${s.startAddr.toString(16).toUpperCase().padStart(4, "0")} - 0x${s.endAddr.toString(16).toUpperCase().padStart(4, "0")}` +
+                   ` (${s.size.toString().padStart(4, " ")} byte)` +
+                   ` elemNum=${s.elemNum.toString().padStart(2, " ")},` +
+                   ` elemSize=${s.elemSize.toString().padStart(2, " ")} byte`;
+    } else {
+      // dedicated RX buffer => number of elements are implicitely configured via RX Filters that point to RX Buffers
+      mapReport += `\n${(s.name).padEnd(14)}: 0x${s.startAddr.toString(16).toUpperCase().padStart(4, "0")} - 0x????` +
+                   ` ( ??? byte)` +
+                   ` elemNum=??,` +
+                   ` elemSize=${s.elemSize.toString().padStart(2, " ")} byte`;
+    }
   }
   reg.memmap.report.push({
       severityLevel: sevC.InfoCalc,
@@ -2064,14 +2075,18 @@ function checkMcanMessageRamMap(reg) {
   // Build & submit report about unused/disabled structures
   let unusedReport = "Message RAM: Unused/Disabled structures";
   for (const s of memMapUnUsedArray) {
-  //unusedReport += `\n${s.name.padEnd(14)}: 0x${s.startAddr.toString(16).toUpperCase().padStart(4, "0")} - undefin.` +
-  //                ` (${s.size.toString().padStart(4, " ")} byte)` +
-  //                ` elemNum=${s.elemNum.toString().padStart(2, " ")}, ` +
-  //                ` elemSize=${s.elemSize.toString().padStart(2, " ")} byte`;
-    unusedReport += `\n${s.name.padEnd(14)}: unused         ` +
-                    ` (${s.size.toString().padStart(4, " ")} byte)` +
-                    ` elemNum=${s.elemNum.toString().padStart(2, " ")}, ` +
-                    ` elemSize=${s.elemSize.toString().padStart(2, " ")} byte`;
+    if (s.name !== RxBufferName){
+      unusedReport += `\n${s.name.padEnd(14)}: unused         ` +
+                      ` (${s.size.toString().padStart(4, " ")} byte)` +
+                      ` elemNum=${s.elemNum.toString().padStart(2, " ")}, ` +
+                      ` elemSize=${s.elemSize.toString().padStart(2, " ")} byte`;
+    } else {
+      // dedicated RX buffer => number of elements are implicitely configured via RX Filters that point to RX Buffers
+      unusedReport += `\n${s.name.padEnd(14)}: unused         ` +
+                   ` ( ??? byte)` +
+                   ` elemNum=??,` +
+                   ` elemSize=${s.elemSize.toString().padStart(2, " ")} byte`;
+    }
   }
   reg.memmap.report.push({
       severityLevel: sevC.Info,

@@ -206,7 +206,7 @@ function parseUserRegisterValues(userRegText, reg, verbose = true) {
 
 // ===================================================================================
 // displayValidationReport: Format and display validation reports in HTML with colors
-function displayValidationReport(reg) {
+function displayValidationReport(reg, printVerbose) {
   const reportTextArea = document.getElementById('reportTextArea');
   if (!reportTextArea) {
     console.warn('[Warning] displayValidationReport(): Report textarea not found in HTML');
@@ -217,23 +217,22 @@ function displayValidationReport(reg) {
   reportTextArea.innerHTML = '';
   
   // Generate allRegReports from reg object
-  const allRegReports = [];
+  const allReports = [];
   if (reg && typeof reg === 'object') {
     // Add reports from each register section
     Object.values(reg).forEach(regSection => {
       if (regSection && regSection.report && Array.isArray(regSection.report)) {
-        allRegReports.push(...regSection.report);
+        if (printVerbose === true) {
+          allReports.push(...regSection.report);
+        } else {
+          // leave out reports from .report-array that are marked "verbose===true"
+          allReports.push(...regSection.report.filter(report => report.verbose !== true));
+        } // printVerbose
       }
     });
   }
-  
-  // Combine all validation reports into a single array
-  const allValidationReports = [];
-  
-  // Add register reports (which now includes parse output)
-  allValidationReports.push(...allRegReports);
-  
-  if (allValidationReports.length === 0) {
+
+  if (allReports.length === 0) {
     reportTextArea.innerHTML = 'No validation reports available.';
     return;
   }
@@ -276,7 +275,7 @@ function displayValidationReport(reg) {
   
   // Count reports by severity
   const counts = { errors: 0, warnings: 0, recommendations: 0, info: 0, calculated: 0 };
-  allValidationReports.forEach(report => {
+  allReports.forEach(report => {
     switch (report.severityLevel) {
       case sevC.Info: counts.info++; break;
       case sevC.Recom: counts.recommendations++; break;
@@ -305,7 +304,7 @@ function displayValidationReport(reg) {
   reportText += '<span class="report-header">' + '--- Reports ---------------------------------------' + '</span>\n';
 
   // Generate detailed reports
-  allValidationReports.forEach((report, index) => {
+  allReports.forEach((report, index) => {
     const severityText = getSeverityText(report.severityLevel);
     const severitySymbol = getSeveritySymbol(report.severityLevel);
     const severityClass = getSeverityClass(report.severityLevel);
@@ -887,5 +886,5 @@ function processUserRegisterValues() {
   displaySVGs(reg); 
 
   // Display: Validation Reports in HTML textarea
-  displayValidationReport(reg);
+  displayValidationReport(reg, verbose);
 }
