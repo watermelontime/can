@@ -2,6 +2,12 @@
 import { getBits } from './help_functions.js';
 import { sevC } from './help_functions.js';
 
+// TODO: IR and IE combined bit wise view: highlight enabled IR
+//       e.g. print vertically (instead of horizontally)
+//       but not clear how to add formating inside a report => via own special characters, e.g. <b> asdf <\b>
+//       that are replaced in the report print process
+// TODO: visualize gaps in the Memory Map as own rows and also generate according report to inform about this
+
 // ===================================================================================
 // X_CAN: Process User Register Values: parse, validate, calculate results, generate report
 export function processRegsOfM_CAN(reg) {
@@ -27,7 +33,8 @@ export function loadExampleRegisterValues() {
   const clock = 80;
   const registerString = `# M_CAN example register values
 # Format to use: 0xADDR 0xVALUE
-# 0xADDR is relative M_CAN address
+# 0xADDR is internal X_CAN address
+#        or global address (e.g. 32 bit)
 0x000 0x32150323
 0x004 0x87654321
 0x008 0x00000000
@@ -183,7 +190,7 @@ function mapRawRegistersToNames(reg) {
 } // end mapRawRegistersToNames
 
 // ===================================================================================
-// Help function: Translate configured data field size from to bytes
+// Help function: Translate configured data field size to bytes
 function decodeConfiguredDataFieldSizeInByte(field) {
   switch (field & 0x7) {
     case 0: return 8;
@@ -2044,7 +2051,7 @@ function checkMcanMessageRamMap(reg) {
   // Build & submit memory map report
   let mapReport = "Message RAM Memory Map:";
   for (const s of memMapUsedArray) {
-    mapReport += `\n${(s.name).padEnd(14)}: 0x${s.startAddr.toString(16).toUpperCase().padStart(6, "0")} - 0x${s.endAddr.toString(16).toUpperCase().padStart(6, "0")}` +
+    mapReport += `\n${(s.name).padEnd(14)}: 0x${s.startAddr.toString(16).toUpperCase().padStart(4, "0")} - 0x${s.endAddr.toString(16).toUpperCase().padStart(4, "0")}` +
                  ` (${s.size.toString().padStart(4, " ")} byte)` +
                  ` elemNum=${s.elemNum.toString().padStart(2, " ")},` +
                  ` elemSize=${s.elemSize.toString().padStart(2, " ")} byte`;
@@ -2057,7 +2064,11 @@ function checkMcanMessageRamMap(reg) {
   // Build & submit report about unused/disabled structures
   let unusedReport = "Message RAM: Unused/Disabled structures";
   for (const s of memMapUnUsedArray) {
-    unusedReport += `\n${s.name.padEnd(14)}: 0x${s.startAddr.toString(16).toUpperCase().padStart(6, "0")} - undefin.` +
+  //unusedReport += `\n${s.name.padEnd(14)}: 0x${s.startAddr.toString(16).toUpperCase().padStart(4, "0")} - undefin.` +
+  //                ` (${s.size.toString().padStart(4, " ")} byte)` +
+  //                ` elemNum=${s.elemNum.toString().padStart(2, " ")}, ` +
+  //                ` elemSize=${s.elemSize.toString().padStart(2, " ")} byte`;
+    unusedReport += `\n${s.name.padEnd(14)}: unused         ` +
                     ` (${s.size.toString().padStart(4, " ")} byte)` +
                     ` elemNum=${s.elemNum.toString().padStart(2, " ")}, ` +
                     ` elemSize=${s.elemSize.toString().padStart(2, " ")} byte`;

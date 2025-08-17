@@ -1,7 +1,13 @@
+// TODO
+// add verbose check-box to html
+// add verbose propoerty to m_can mapping
+// describe in example register dump/values, that absolute addresses can be used
+// support for X_CANB
+
 // import drawing functions
 import * as draw_svg from './draw_bits_svg.js';
 import * as m_can from './m_can.js';
-import * as x_can_prt from './x_can_prt.js';
+import * as x_can from './x_can_main.js';
 import { sevC } from './help_functions.js';
 
 // global variable definitions
@@ -118,7 +124,7 @@ function initializeClockFrequencyHtmlField() {
 
 // ===================================================================================
 // parseUserRegisterValues: Parse text and generate raw register array with addr and value
-function parseUserRegisterValues(userRegText, reg) {
+function parseUserRegisterValues(userRegText, reg, verbose = true) {
   // Initialize parse output in reg object
   reg.parse_output = {
     report: [],
@@ -137,10 +143,12 @@ function parseUserRegisterValues(userRegText, reg) {
       // Check if line is a comment (starts with '#')
       if (trimmedLine.startsWith('#')) {
         // Ignore comment lines - add info report for visibility
-        reg.parse_output.report.push({
-          severityLevel: sevC.Info, // info
-          msg: `Ignored comment line: "${trimmedLine}"`
-        });
+        if (verbose === true) {
+          reg.parse_output.report.push({
+            severityLevel: sevC.Info, // info
+            msg: `Ignored comment line: "${trimmedLine}"`
+          });
+        }
         continue; // Skip to next line
       }
       
@@ -160,10 +168,12 @@ function parseUserRegisterValues(userRegText, reg) {
             value_int32: intValue
           });
           
-          reg.parse_output.report.push({
-            severityLevel: sevC.Info, // info
-            msg: `Parsed register at address 0x${addrHex.toUpperCase()}: 0x${valueHex.toUpperCase()}`
-          });
+          if (verbose === true) {
+            reg.parse_output.report.push({
+              severityLevel: sevC.Info, // info
+              msg: `Parsed register at address 0x${addrHex.toUpperCase()}: 0x${valueHex.toUpperCase()}`
+            });
+          }
         } else {
           reg.parse_output.report.push({
             severityLevel: sevC.Error, // error
@@ -285,14 +295,14 @@ function displayValidationReport(reg) {
     second: '2-digit'
   });
   let reportText = `<span class="report-header">=== VALIDATION REPORT ${timestamp} ========</span>\n`;
-  //reportText += `Total reports: ${sortedReports.length}\n`;
+  reportText += '<span class="report-header">' + '--- Summary ---------------------------------------' + '</span>\n';
   if (counts.errors > 0) reportText += `<span class="report-error">❌ Errors: ${counts.errors}</span>\n`;
   if (counts.warnings > 0) reportText += `<span class="report-warning">⚠️ Warnings: ${counts.warnings}</span>\n`;
   if (counts.recommendations > 0) reportText += `<span class="report-recommendation">💡 Recommendations: ${counts.recommendations}</span>\n`;
   if (counts.info > 0) reportText += `<span class="report-info">ℹ️ Info: ${counts.info}</span>\n`;
   if (counts.calculated > 0) reportText += `<span class="report-infoCalculated">🧮 Calculated: ${counts.calculated}</span>\n`;
-  reportText += '<span class="report-header">' + ''.padEnd(51, '-') + '</span>\n';
-  
+  reportText += '<span class="report-header">' + '--- Reports ---------------------------------------' + '</span>\n';
+
   // Generate detailed reports
   allValidationReports.forEach((report, index) => {
     const severityText = getSeverityText(report.severityLevel);
@@ -709,9 +719,9 @@ function loadRegisterValuesExample() {
       }
       break;
     
-    case 'X_CAN_PRT':
-      if (x_can_prt.loadExampleRegisterValues) {
-        exampleObj = x_can_prt.loadExampleRegisterValues();
+    case 'X_CAN':
+      if (x_can.loadExampleRegisterValues) {
+        exampleObj = x_can.loadExampleRegisterValues();
       } else {
         console.warn(`[Warning] loadExampleRegisterValues not implemented in module: ${canIpModule}`);
         exampleObj = loadDefaultExample();
@@ -787,6 +797,7 @@ function processUserRegisterValues() {
   // 3. Generate HTML Data to be displayed from reg object
   //    and Display data from params, results, reg in HTML fields and SVGs
 
+  const verbose = false; // defines verbosity reports
   const paramsHtml = {}; // Initialize params object for HTML display
   const resultsHtml = {}; // Initialize results object for HTML display
   const reg = {}; // Initialize register object
@@ -824,7 +835,7 @@ function processUserRegisterValues() {
   const userRegText = document.getElementById('userInputRegisterValues').value;
 
   // === Step 1: Parse the text and generate raw register array =========================
-  parseUserRegisterValues(userRegText, reg);
+  parseUserRegisterValues(userRegText, reg, verbose);
   console.log('[Info] Step 1 - Parsed raw register values (reg.raw):', reg.raw);
   // Check for parsing errors
   if (reg.parse_output.hasErrors) {
@@ -837,7 +848,7 @@ function processUserRegisterValues() {
     switch (canIpModule) {
     case 'M_CAN': m_can.processRegsOfM_CAN(reg);
       break;
-    case 'X_CAN_PRT': x_can_prt.processRegsOfX_CAN_PRT(reg);
+    case 'X_CAN': x_can.processRegsOfX_CAN(reg, verbose);
       break;
     default:
       reg.general.report.push({

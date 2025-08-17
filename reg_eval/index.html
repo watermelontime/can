@@ -41,7 +41,7 @@
       </tbody>
     </table>
 
-    <h3>CAN XL Bit Timing</h3>
+    <h3>CAN Bit Timing</h3>
     <!-- Bit Timing Drawing -->
     <svg id="DrawingBTArb" width="342" height="60"></svg>
     <svg id="DrawingBTFDdata" width="342" height="60"></svg>
@@ -236,13 +236,9 @@
     <label for="canIpModuleSelect">CAN IP Module (source of register dump):</label>
     <div class="select-button-row">
       <select id="canIpModuleSelect" class="styled-select">
-        <option value="M_CAN" selected>M_CAN</option>
-        <option value="X_CAN_PRT">X_CAN PRT</option>
-        <option value="X_CAN_MH">X_CAN MH</option>
-        <option value="X_CAN_IRC">X_CAN IRC</option>
-        <option value="XS_CAN_PRT">XS_CAN PRT</option>
-        <option value="XS_CAN_MH">XS_CAN MH</option>
-        <option value="XS_CAN_IRC">XS_CAN IRC</option>
+        <option value="M_CAN">M_CAN</option>
+        <option value="X_CAN" selected>X_CAN</option>
+        <option value="XS_CAN">XS_CAN</option>
       </select>
       <button type="button" id="loadRegisterValuesExampleButton" class="styled-button">load example</button>
     </div>
