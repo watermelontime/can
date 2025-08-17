@@ -203,7 +203,7 @@ export function procRegsPrtBitTiming(reg) {
       reg.DBTP.report.push({
         severityLevel: sevC.Warn, // warning
         msg: `DBTP: ${reg.DBTP.name_long} (0x${reg.DBTP.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `FD Operation is disabled: a) MODE.FDOE=0 OR b) TMS=ON or ES=OFF OR c) MODE register not present`
+             `FD Operation is disabled: a) MODE.FDOE=0 OR b) TMS=ON or ES=OFF OR c) MODE register not present in register dump`
       });
 
     } else { // FD enabled (or MODE register not present)

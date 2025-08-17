@@ -362,9 +362,9 @@ function mapRawRegistersToNames(reg) {
   let unmappedCount = 0;
   
   // Process each raw register entry
-  const xCanAddMask = 0x00000FFF; // 12 LSBit are the X_CAN local address bits
+  const regAddrMask = 0x00000FFF; // 12 LSBit are the X_CAN local address bits
   for (const rawReg of reg.raw) {
-    const mapping = addressMap[rawReg.addr & xCanAddMask];
+    const mapping = addressMap[rawReg.addr & regAddrMask];
     
     if (mapping) {
       // Create named register structure
@@ -400,5 +400,26 @@ function mapRawRegistersToNames(reg) {
     msg: `Address mapping completed: ${mappedCount} mapped, ${unmappedCount} unknown`
   });
   
+  // report missing registers in register dump
+  //    compare reg-object with registers in addressMap
+  let missingRegText = 'Missing registers in dump:';
+  let missingRegFound = false;
+  for (const addr in addressMap) {
+    const regName = addressMap[addr].shortName;
+    if (!(regName in reg)) {
+      // Register is NO present in reg object
+      const addrNum = Number(addr); // convert key to number for hex formatting
+      missingRegText += `\n0x${addrNum.toString(16).toUpperCase().padStart(3, '0')}: ${regName.padEnd(5, ' ')} (${addressMap[addr].longName})`;
+      missingRegFound = true;
+    }
+  }
+  
+  if (missingRegFound) {
+    reg.parse_output.report.push({
+      severityLevel: sevC.Warn,
+      msg: missingRegText
+    });
+  }
+
   return reg;
 } // end mapRawRegistersToNames

@@ -8,6 +8,7 @@ import { sevC } from './help_functions.js';
 //       that are replaced in the report print process
 // TODO: visualize gaps in the Memory Map as own rows and also generate according report to inform about this
 // TOOD: support different M_CAN version => ask Florian before
+// TODO: add tolerance to reserved addresses
 
 // ===================================================================================
 // X_CAN: Process User Register Values: parse, validate, calculate results, generate report
@@ -151,8 +152,9 @@ function mapRawRegistersToNames(reg) {
   let unmappedCount = 0;
   
   // Process each raw register entry
+  const regAddrMask = 0x00000FFF; // 12 LSBit are the X_CAN local address bits
   for (const rawReg of reg.raw) {
-    const mapping = addressMap[rawReg.addr];
+    const mapping = addressMap[rawReg.addr & regAddrMask];
     
     if (mapping) {
       // Create named register structure
@@ -188,6 +190,27 @@ function mapRawRegistersToNames(reg) {
     msg: `Address mapping completed: ${mappedCount} mapped, ${unmappedCount} unknown`
   });
   
+  // report missing registers in register dump
+  //    compare reg-object with registers in addressMap
+  let missingRegText = 'Missing registers in dump:';
+  let missingRegFound = false;
+  for (const addr in addressMap) {
+    const regName = addressMap[addr].shortName;
+    if (!(regName in reg)) {
+      // Register is NO present in reg object
+      const addrNum = Number(addr); // convert key to number for hex formatting
+      missingRegText += `\n0x${addrNum.toString(16).toUpperCase().padStart(3, '0')}: ${regName.padEnd(5, ' ')} (${addressMap[addr].longName})`;
+      missingRegFound = true;
+    }
+  }
+  
+  if (missingRegFound) {
+    reg.parse_output.report.push({
+      severityLevel: sevC.Warn,
+      msg: missingRegText
+    });
+  }
+
   return reg;
 } // end mapRawRegistersToNames
 
@@ -455,7 +478,7 @@ function procRegsPrtBitTiming(reg) {
       reg.TDCR.report.push({
         severityLevel: sevC.Warn, // warning
         msg: `TDCR: ${reg.TDCR.name_long} (0x${reg.TDCR.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `FD Operation wir BRS is disabled: a) CCCR.FDOE=0 OR b) CCCR.BRSE=0 OR c) CCCR register not present`
+             `FD Operation wir BRS is disabled: a) CCCR.FDOE=0 OR b) CCCR.BRSE=0 OR c) CCCR register not present in register dump`
       });
 
     } else {
