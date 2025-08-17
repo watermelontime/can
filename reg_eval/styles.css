@@ -1,3 +1,12 @@
+/* Inline report header with checkbox */
+.report-headline {
+  display: flex;
+  gap: 2em;
+}
+.report-headline .inline-control {
+  font-weight: normal;
+  font-size: 0.9em;
+}
 /* Allgemeines Layout */
 body {
   font-family: sans-serif;

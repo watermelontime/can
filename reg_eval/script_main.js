@@ -788,6 +788,20 @@ function getCanIpModuleFromHTML() {
 }
 
 // ===================================================================================
+// Get selected CAN IP Module from HTML select field
+function getVerbositySettingFromHTML() {
+  const verboseCheckbox = document.getElementById('par_report_verbose');
+  if (verboseCheckbox) {
+    const isChecked = verboseCheckbox.checked;
+    console.log('[Info] Verbose reporting is', isChecked ? 'enabled' : 'disabled');
+    return isChecked;
+  } else {
+    console.error('[Error] Verbose reporting checkbox not found in HTML');
+    return false;
+  }
+}
+
+// ===================================================================================
 // Process User Register Values from Text Area - Updated main function
 function processUserRegisterValues() {
   // Basic idea of this function:
@@ -797,7 +811,7 @@ function processUserRegisterValues() {
   // 3. Generate HTML Data to be displayed from reg object
   //    and Display data from params, results, reg in HTML fields and SVGs
 
-  const verbose = false; // defines verbosity reports
+  const verbose = getVerbositySettingFromHTML(); // defines verbosity of reports
   const paramsHtml = {}; // Initialize params object for HTML display
   const resultsHtml = {}; // Initialize results object for HTML display
   const reg = {}; // Initialize register object
