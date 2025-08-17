@@ -473,8 +473,6 @@ export function procRegsPrtBitTiming(reg) {
   } // end if PCFG
 }
 
-
-// TODO: check these register decodings
 // ===================================================================================
 // Process Other PRT Registers: Extract parameters, validate ranges, generate report
 export function procRegsPrtOther(reg) {
@@ -551,40 +549,40 @@ export function procRegsPrtOther(reg) {
     reg.STAT.report = []; // Initialize report array
 
     // 1. Decode all individual bits of STAT register
-    reg.STAT.fields.ACT  = getBits(regValue, 1, 0);   // Activity (00: inactive, 01: idle, 10: receiver, 11: transmitter)
-    reg.STAT.fields.INT  = getBits(regValue, 2, 2);   // Integrating (1: integrating into bus communication)
-    reg.STAT.fields.STP  = getBits(regValue, 3, 3);   // Stop (1: Waiting for End of current frame TX/RX)
-    reg.STAT.fields.CLKA = getBits(regValue, 4, 4);   // CLOCK_ACTIVE (1: active)
-    reg.STAT.fields.FIMA = getBits(regValue, 5, 5);   // Fault Injection Mode Active
-    reg.STAT.fields.EP   = getBits(regValue, 6, 6);   // Error Passive State
-    reg.STAT.fields.BO   = getBits(regValue, 7, 7);   // Bus Off State
-    reg.STAT.fields.TDCV = getBits(regValue, 15, 8);  // TDC Value
-    reg.STAT.fields.REC  = getBits(regValue, 22, 16); // Receive Error Counter
-    reg.STAT.fields.RP   = getBits(regValue, 23, 23); // Receive Error Counter Carry Flag
     reg.STAT.fields.TEC  = getBits(regValue, 31, 24); // Transmit Error Counter
+    reg.STAT.fields.RP   = getBits(regValue, 23, 23); // Receive Error Counter Carry Flag
+    reg.STAT.fields.REC  = getBits(regValue, 22, 16); // Receive Error Counter
+    reg.STAT.fields.TDCV = getBits(regValue, 15, 8);  // TDC Value
+    reg.STAT.fields.BO   = getBits(regValue, 7, 7);   // Bus Off State
+    reg.STAT.fields.EP   = getBits(regValue, 6, 6);   // Error Passive State
+    reg.STAT.fields.FIMA = getBits(regValue, 5, 5);   // Fault Injection Mode Active
+    reg.STAT.fields.CLKA = getBits(regValue, 4, 4);   // CLOCK_ACTIVE (1: active)
+    reg.STAT.fields.STP  = getBits(regValue, 3, 3);   // Stop (1: Waiting for End of current frame TX/RX)
+    reg.STAT.fields.INT  = getBits(regValue, 2, 2);   // Integrating (1: integrating into bus communication)
+    reg.STAT.fields.ACT  = getBits(regValue, 1, 0);   // Activity (00: inactive, 01: idle, 10: receiver, 11: transmitter)
 
     // 2. Generate human-readable register report
     reg.STAT.report.push({
       severityLevel: sevC.Info, // info
       msg: `STAT: ${reg.STAT.name_long} (0x${reg.STAT.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[ACT ] Activity                     = ${reg.STAT.fields.ACT} (0: inactive, 1: idle, 2: receiver, 3: transmitter))\n` +
-           `[INT ] Integrating                  = ${reg.STAT.fields.INT}\n` +
-           `[STP ] Stop                         = ${reg.STAT.fields.STP}\n` +
-           `[CLKA] Clock Active                 = ${reg.STAT.fields.CLKA}\n` +
-           `[FIMA] Fault Injection Mode Active  = ${reg.STAT.fields.FIMA}\n` +
-           `[EP  ] Error Passive State          = ${reg.STAT.fields.EP}\n` +
-           `[BO  ] Bus Off State                = ${reg.STAT.fields.BO}\n` +
-           `[TDCV] Transmitter Delay Comp Value = ${reg.STAT.fields.TDCV} cycles = ${reg.STAT.fields.TDCV * reg.general.clk_period} ns\n` +
-           `[REC ] Receive Error Counter        = ${reg.STAT.fields.REC}\n` +
-           `[RP  ] RX Error Counter Carry Flag  = ${reg.STAT.fields.RP}\n` +
-           `[TEC ] Transmit Error Counter       = ${reg.STAT.fields.TEC}`
+           `[TEC ] TX Error Counter              = ${reg.STAT.fields.TEC}\n` +
+           `[RP  ] RX Error Counter Carry Flag   = ${reg.STAT.fields.RP}\n` +
+           `[REC ] RX Error Counter              = ${reg.STAT.fields.REC}\n` +
+           `[TDCV] TDC Value (=TLD+SSP_offset)   = ${reg.STAT.fields.TDCV} cycles = ${reg.STAT.fields.TDCV * reg.general.clk_period} ns\n` +
+           `[BO  ] Bus-Off State                 = ${reg.STAT.fields.BO}\n` +
+           `[EP  ] Error Passive State           = ${reg.STAT.fields.EP}\n` +
+           `[FIMA] Fault Injection Module Active = ${reg.STAT.fields.FIMA}\n` +
+           `[CLKA] Clock Active                  = ${reg.STAT.fields.CLKA}\n` +
+           `[STP ] Stop Request by user          = ${reg.STAT.fields.STP}\n` +
+           `[INT ] Integrating                   = ${reg.STAT.fields.INT}\n` +
+           `[ACT ] Activity                      = ${reg.STAT.fields.ACT} (0: inactive, 1: idle, 2: receiver, 3: transmitter))`
     });
 
     // 3. Add status-specific warnings/errors
     if (reg.STAT.fields.BO === 1) {
       reg.STAT.report.push({
         severityLevel: sevC.Warn, // warning
-        msg: `CAN controller is in Bus Off state`
+        msg: `CAN controller is in Bus-Off state`
       });
     }
     if (reg.STAT.fields.EP === 1) {
@@ -595,18 +593,24 @@ export function procRegsPrtOther(reg) {
     }
     if (reg.STAT.fields.TEC > 0) {
       reg.STAT.report.push({
-        severityLevel: sevC.Warn, // warning
-        msg: `Transmit Error Counter > 0. Errors seen recently on CAN bus.`
+        severityLevel: sevC.Warn,
+        msg: `Transmit Error Counter (${reg.STAT.fields.TEC}) > 0: Transmit Errors seen recently.`
       });
     }
-    if (reg.STAT.fields.REC > 96) {
+    if (reg.STAT.fields.REC > 0) {
       reg.STAT.report.push({
-        severityLevel: sevC.Warn, // warning
-        msg: `Receive Error Counter > 0. Errors seen recently on CAN bus.`
+        severityLevel: sevC.Warn,
+        msg: `Receive Error Counter (${reg.STAT.fields.REC}) > 0. Receive Errors seen recently.`
+      });
+    }
+    if (reg.STAT.fields.RP === 1) {
+      reg.STAT.report.push({
+        severityLevel: sevC.Warn,
+        msg: `Receive Error Passive flag is set. CAN controller is in error passive state for receive.`
       });
     }
   }
-// TODO AB HIER: Check the decoding of the registers. It The code is written by copilot.
+
   // === EVNT: Event Status Flags Register ================================
   if ('EVNT' in reg && reg.EVNT.int32 !== undefined) {
     const regValue = reg.EVNT.int32;
@@ -615,72 +619,46 @@ export function procRegsPrtOther(reg) {
     reg.EVNT.fields = {};
     reg.EVNT.report = []; // Initialize report array
 
-    // 1. Decode all individual bits of EVNT register
-    reg.EVNT.fields.RXFI = getBits(regValue, 31, 31); // RX FIFO Interrupt
-    reg.EVNT.fields.TXFI = getBits(regValue, 30, 30); // TX FIFO Interrupt
-    reg.EVNT.fields.TEFI = getBits(regValue, 29, 29); // TX Event FIFO Interrupt
-    reg.EVNT.fields.HPMI = getBits(regValue, 28, 28); // High Priority Message Interrupt
-    reg.EVNT.fields.WKUI = getBits(regValue, 27, 27); // Wake Up Interrupt
-    reg.EVNT.fields.MRAF = getBits(regValue, 17, 17); // Message RAM Access Failure
-    reg.EVNT.fields.TSWE = getBits(regValue, 16, 16); // Timestamp Wraparound Event
-    reg.EVNT.fields.ELO = getBits(regValue, 15, 15); // Error Logging Overflow
-    reg.EVNT.fields.EP = getBits(regValue, 14, 14); // Error Passive
-    reg.EVNT.fields.EW = getBits(regValue, 13, 13); // Error Warning
-    reg.EVNT.fields.BO = getBits(regValue, 12, 12); // Bus Off
-    reg.EVNT.fields.WDI = getBits(regValue, 11, 11); // Watchdog Interrupt
-    reg.EVNT.fields.PEA = getBits(regValue, 10, 10); // Protocol Error in Arbitration Phase
-    reg.EVNT.fields.PED = getBits(regValue, 9, 9); // Protocol Error in Data Phase
-    reg.EVNT.fields.ARA = getBits(regValue, 8, 8); // Access to Reserved Address
+    // 1. Decode all individual bits of EVNT register (MSB -> LSB)
+    reg.EVNT.fields.ABO = getBits(regValue, 13, 13); // TX stopped by user at MH/PRT Interface
+    reg.EVNT.fields.IFR = getBits(regValue, 12, 12); // Invalid Frame Format (TX message)
+    reg.EVNT.fields.USO = getBits(regValue, 11, 11); // Unexpected Sequence Start at MH/PRT Interface
+    reg.EVNT.fields.DU  = getBits(regValue, 10, 10); // Data Underrun (TX_MSG)
+    reg.EVNT.fields.PXE = getBits(regValue, 9, 9);   // Protocol Exception Event occurred
+    reg.EVNT.fields.TXF = getBits(regValue, 8, 8);   // TX Frame successfully
+    reg.EVNT.fields.RXF = getBits(regValue, 7, 7);   // RX Frame successfully
+    reg.EVNT.fields.DO  = getBits(regValue, 6, 6);   // Data Overflow (RX_MSG)
+    reg.EVNT.fields.STE = getBits(regValue, 5, 5);   // Stuff Error
+    reg.EVNT.fields.FRE = getBits(regValue, 4, 4);   // Form Error / error counting rule f)
+    reg.EVNT.fields.AKE = getBits(regValue, 3, 3);   // Acknowledge Error
+    reg.EVNT.fields.B1E = getBits(regValue, 2, 2);   // Bit1 Error
+    reg.EVNT.fields.B0E = getBits(regValue, 1, 1);   // Bit0 Error
+    reg.EVNT.fields.CRE = getBits(regValue, 0, 0);   // CRC Error
 
-    // 2. Generate human-readable register report
-  reg.EVNT.report.push({
-        severityLevel: sevC.Info, // info
-        msg: `EVNT: ${reg.EVNT.name_long} (0x${reg.EVNT.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `[RXFI] RX FIFO Interrupt          = ${reg.EVNT.fields.RXFI}\n` +
-             `[TXFI] TX FIFO Interrupt          = ${reg.EVNT.fields.TXFI}\n` +
-             `[TEFI] TX Event FIFO Interrupt    = ${reg.EVNT.fields.TEFI}\n` +
-             `[HPMI] High Priority Message Int  = ${reg.EVNT.fields.HPMI}\n` +
-             `[WKUI] Wake Up Interrupt          = ${reg.EVNT.fields.WKUI}\n` +
-             `[MRAF] Message RAM Access Failure = ${reg.EVNT.fields.MRAF}\n` +
-             `[TSWE] Timestamp Wraparound Event = ${reg.EVNT.fields.TSWE}\n` +
-             `[ELO ] Error Logging Overflow     = ${reg.EVNT.fields.ELO}\n` +
-             `[EP  ] Error Passive              = ${reg.EVNT.fields.EP}\n` +
-             `[EW  ] Error Warning              = ${reg.EVNT.fields.EW}\n` +
-             `[BO  ] Bus Off                    = ${reg.EVNT.fields.BO}\n` +
-             `[WDI ] Watchdog Interrupt         = ${reg.EVNT.fields.WDI}\n` +
-             `[PEA ] Protocol Error Arbitration = ${reg.EVNT.fields.PEA}\n` +
-             `[PED ] Protocol Error Data Phase  = ${reg.EVNT.fields.PED}\n` +
-             `[ARA ] Access to Reserved Address = ${reg.EVNT.fields.ARA}`
+    // 2. Generate human-readable register report (MSB -> LSB)
+    reg.EVNT.report.push({
+      severityLevel: sevC.Info,
+      msg: `EVNT: ${reg.EVNT.name_long} (0x${reg.EVNT.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
+           `[ABO] TX stopped by user                  = ${reg.EVNT.fields.ABO}\n` +
+           `[IFR] Invalid Frame Format (TX message)   = ${reg.EVNT.fields.IFR}\n` +
+           `[USO] Unexpected Seq Start (MH/PRT TX IF) = ${reg.EVNT.fields.USO}\n` +
+           `[DU ] Data Underrun (MH/PRT TX Interface) = ${reg.EVNT.fields.DU}\n` +
+           `[PXE] Protocol Exception Event            = ${reg.EVNT.fields.PXE}\n` +
+           `[TXF] TX Frame successfully               = ${reg.EVNT.fields.TXF}\n` +
+           `[RXF] RX Frame successfully               = ${reg.EVNT.fields.RXF}\n` +
+           `[DO ] Data Overflow (MH/PRT RX Interface) = ${reg.EVNT.fields.DO}\n` +
+           `[STE] Stuff Error                         = ${reg.EVNT.fields.STE}\n` +
+           `[FRE] Form Error                          = ${reg.EVNT.fields.FRE}\n` +
+           `[AKE] Acknowledge Error                   = ${reg.EVNT.fields.AKE}\n` +
+           `[B1E] Bit1 Error                          = ${reg.EVNT.fields.B1E}\n` +
+           `[B0E] Bit0 Error                          = ${reg.EVNT.fields.B0E}\n` +
+           `[CRE] CRC Error                           = ${reg.EVNT.fields.CRE}`
     });
 
-    // 3. Add event-specific warnings/errors
-    if (reg.EVNT.fields.BO === 1) {
-      reg.EVNT.report.push({
-        severityLevel: sevC.Error, // error
-        msg: `Bus Off condition detected - CAN controller is offline`
-      });
-    }
-    if (reg.EVNT.fields.EP === 1) {
-      reg.EVNT.report.push({
-        severityLevel: sevC.Warn, // warning
-        msg: `Error Passive state - high error rate detected`
-      });
-    }
-    if (reg.EVNT.fields.EW === 1) {
-      reg.EVNT.report.push({
-        severityLevel: sevC.Recom, // recommendation
-        msg: `Error Warning state - monitor error counters`
-      });
-    }
-    if (reg.EVNT.fields.MRAF === 1) {
-      reg.EVNT.report.push({
-        severityLevel: sevC.Error, // error
-        msg: `Message RAM Access Failure detected`
-      });
-    }
-  }
+    // 3. Additional summary/reporting
+  } // EVNT
 
-  // === LOCK: Unlock Sequence Register ===================================
+  // === LOCK: Unlock Sequence Register ==================================
   if ('LOCK' in reg && reg.LOCK.int32 !== undefined) {
     const regValue = reg.LOCK.int32;
 
@@ -688,15 +666,25 @@ export function procRegsPrtOther(reg) {
     reg.LOCK.fields = {};
     reg.LOCK.report = []; // Initialize report array
 
-    // 1. Decode LOCK register
-    reg.LOCK.fields.UNLOCK = regValue; // Unlock Value
+    // 1. Decode all individual bits of LOCK register (MSB -> LSB)
+    reg.LOCK.fields.TMK = getBits(regValue, 31, 16); // Test Mode Key
+    reg.LOCK.fields.ULK = getBits(regValue, 15, 0);  // Unlock Key
 
-    // 2. Generate human-readable register report
-  reg.LOCK.report.push({
-        severityLevel: sevC.Info, // info
-        msg: `LOCK: ${reg.LOCK.name_long} (0x${reg.LOCK.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `[UNLOCK] Unlock Value = 0x${regValue.toString(16).toUpperCase().padStart(8, '0')}`
+    // 2. Generate human-readable register report (MSB -> LSB)
+    reg.LOCK.report.push({
+      severityLevel: sevC.Info,
+      msg: `LOCK (PRT): ${reg.LOCK.name_long} (0x${reg.LOCK.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
+           `[TMK] Test Mode Key = 0x${reg.LOCK.fields.TMK.toString(16).toUpperCase().padStart(4, '0')}\n` +
+           `[ULK] Unlock Key    = 0x${reg.LOCK.fields.ULK.toString(16).toUpperCase().padStart(4, '0')}`
     });
+
+    // 3. Additional checks/warnings
+    if (regValue !== 0) {
+      reg.LOCK.report.push({
+        severityLevel: sevC.Warn,
+        msg: `LOCK: Read value is not 0x00000000. Spec states read returns 0.`
+      });
+    }
   }
 
   // === CTRL: Control Register ==========================================
@@ -707,62 +695,34 @@ export function procRegsPrtOther(reg) {
     reg.CTRL.fields = {};
     reg.CTRL.report = []; // Initialize report array
 
-    // 1. Decode all individual bits of CTRL register
-    reg.CTRL.fields.NISO = getBits(regValue, 15, 15); // Non-ISO Operation
-    reg.CTRL.fields.TXP = getBits(regValue, 14, 14); // Transmit Pause
-    reg.CTRL.fields.EFBI = getBits(regValue, 13, 13); // Edge Filtering during Bus Integration
-    reg.CTRL.fields.PXHD = getBits(regValue, 12, 12); // Protocol Exception Handling Disable
-    reg.CTRL.fields.WMM = getBits(regValue, 11, 11); // Wide Message Marker
-    reg.CTRL.fields.UTSU = getBits(regValue, 10, 10); // Use Timestamping Unit
-    reg.CTRL.fields.BRSE = getBits(regValue, 9, 9); // Bit Rate Switch Enable
-    reg.CTRL.fields.LOM = getBits(regValue, 8, 8); // Loop Back Mode
-    reg.CTRL.fields.DAR = getBits(regValue, 7, 7); // Disable Automatic Retransmission
-    reg.CTRL.fields.CCE = getBits(regValue, 6, 6); // Configuration Change Enable
-    reg.CTRL.fields.TEST = getBits(regValue, 5, 5); // Test Mode Enable
-    reg.CTRL.fields.MON = getBits(regValue, 4, 4); // Bus Monitoring Mode
-    reg.CTRL.fields.CSR = getBits(regValue, 3, 3); // Clock Stop Request
-    reg.CTRL.fields.CSA = getBits(regValue, 2, 2); // Clock Stop Acknowledge
-    reg.CTRL.fields.ASM = getBits(regValue, 1, 1); // Restricted Operation Mode
-    reg.CTRL.fields.INIT = getBits(regValue, 0, 0); // Initialization
+    // 1. Decode all individual bits of CTRL register (MSB -> LSB)
+    reg.CTRL.fields.TEST = getBits(regValue, 12, 12); // Enable Test Mode Command (needs TMK)
+    reg.CTRL.fields.SRES = getBits(regValue, 8, 8);   // Software Reset Command (no unlock needed)
+    reg.CTRL.fields.STRT = getBits(regValue, 4, 4);   // Start Command
+    reg.CTRL.fields.IMMD = getBits(regValue, 1, 1);   // Stop Immediate Command (with STOP only)
+    reg.CTRL.fields.STOP = getBits(regValue, 0, 0);   // Stop Command (needs ULK)
 
-    // 2. Generate human-readable register report
-  reg.CTRL.report.push({
-        severityLevel: sevC.Info, // info
-        msg: `CTRL: ${reg.CTRL.name_long} (0x${reg.CTRL.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `[NISO] Non-ISO Operation              = ${reg.CTRL.fields.NISO}\n` +
-             `[TXP ] Transmit Pause                 = ${reg.CTRL.fields.TXP}\n` +
-             `[EFBI] Edge Filtering Bus Integration = ${reg.CTRL.fields.EFBI}\n` +
-             `[PXHD] Protocol Exception Disable     = ${reg.CTRL.fields.PXHD}\n` +
-             `[WMM ] Wide Message Marker            = ${reg.CTRL.fields.WMM}\n` +
-             `[UTSU] Use Timestamping Unit          = ${reg.CTRL.fields.UTSU}\n` +
-             `[BRSE] Bit Rate Switch Enable         = ${reg.CTRL.fields.BRSE}\n` +
-             `[LOM ] Loop Back Mode                 = ${reg.CTRL.fields.LOM}\n` +
-             `[DAR ] Disable Auto Retransmission    = ${reg.CTRL.fields.DAR}\n` +
-             `[CCE ] Configuration Change Enable    = ${reg.CTRL.fields.CCE}\n` +
-             `[TEST] Test Mode Enable               = ${reg.CTRL.fields.TEST}\n` +
-             `[MON ] Bus Monitoring Mode            = ${reg.CTRL.fields.MON}\n` +
-             `[CSR ] Clock Stop Request             = ${reg.CTRL.fields.CSR}\n` +
-             `[CSA ] Clock Stop Acknowledge         = ${reg.CTRL.fields.CSA}\n` +
-             `[ASM ] Restricted Operation Mode      = ${reg.CTRL.fields.ASM}\n` +
-             `[INIT] Initialization                 = ${reg.CTRL.fields.INIT}`
+    // 2. Generate human-readable register report (MSB -> LSB)
+    reg.CTRL.report.push({
+      severityLevel: sevC.Info,
+      msg: `CTRL: ${reg.CTRL.name_long} (0x${reg.CTRL.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
+           `[TEST] Enable Test Mode Command = ${reg.CTRL.fields.TEST}\n` +
+           `[SRES] Software Reset Command   = ${reg.CTRL.fields.SRES}\n` +
+           `[STRT] Start Command            = ${reg.CTRL.fields.STRT}\n` +
+           `[IMMD] Stop Immediate Command   = ${reg.CTRL.fields.IMMD}\n` +
+           `[STOP] Stop Command             = ${reg.CTRL.fields.STOP}`
     });
 
-    // 3. Add control-specific information
-    if (reg.CTRL.fields.INIT === 1) {
+    // 3. Additional checks/warnings
+    if (regValue !== 0) {
       reg.CTRL.report.push({
-        severityLevel: sevC.Recom, // recommendation
-        msg: `Controller is in Initialization mode - switch to Normal mode for operation`
-      });
-    }
-    if (reg.CTRL.fields.MON === 1) {
-      reg.CTRL.report.push({
-        severityLevel: sevC.Info, // info
-        msg: `Bus Monitoring Mode is active - controller will not transmit`
+        severityLevel: sevC.Warn,
+        msg: `CTRL: Read value is not 0x00000000. Spec states read returns 0.`
       });
     }
   }
 
-  // === FIMC: Fault Injection Module Control Register ===================
+  // === FIMC: Fault Injection Module Control Register ====================
   if ('FIMC' in reg && reg.FIMC.int32 !== undefined) {
     const regValue = reg.FIMC.int32;
 
@@ -770,34 +730,18 @@ export function procRegsPrtOther(reg) {
     reg.FIMC.fields = {};
     reg.FIMC.report = []; // Initialize report array
 
-    // 1. Decode all individual bits of FIMC register
-    reg.FIMC.fields.FIME = getBits(regValue, 31, 31); // Fault Injection Module Enable
-    reg.FIMC.fields.FIMS = getBits(regValue, 30, 29); // Fault Injection Module Select
-    reg.FIMC.fields.FIMF = getBits(regValue, 28, 24); // Fault Injection Module Function
-    reg.FIMC.fields.FIMP = getBits(regValue, 23, 16); // Fault Injection Module Parameter
-    reg.FIMC.fields.FIMV = getBits(regValue, 15, 0);  // Fault Injection Module Value
+    // 1. Decode all individual bits of FIMC register (MSB -> LSB of defined fields)
+    reg.FIMC.fields.FIP = getBits(regValue, 14, 0); // Fault Injection (Bit) Position
 
-    // 2. Generate human-readable register report
-  reg.FIMC.report.push({
-        severityLevel: sevC.Info, // info
-        msg: `FIMC: ${reg.FIMC.name_long} (0x${reg.FIMC.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `[FIME] Fault Injection Enable        = ${reg.FIMC.fields.FIME}\n` +
-             `[FIMS] Fault Injection Module Select = ${reg.FIMC.fields.FIMS}\n` +
-             `[FIMF] Fault Injection Function      = ${reg.FIMC.fields.FIMF}\n` +
-             `[FIMP] Fault Injection Parameter     = ${reg.FIMC.fields.FIMP}\n` +
-             `[FIMV] Fault Injection Value         = ${reg.FIMC.fields.FIMV}`
+    // 2. Generate human-readable register report (MSB -> LSB)
+    reg.FIMC.report.push({
+      severityLevel: sevC.Info,
+      msg: `FIMC: ${reg.FIMC.name_long} (0x${reg.FIMC.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
+           `[FIP] Fault Injection Bit Position = ${reg.FIMC.fields.FIP}`
     });
-
-    // 3. Add fault injection warnings
-    if (reg.FIMC.fields.FIME === 1) {
-      reg.FIMC.report.push({
-        severityLevel: sevC.Warn, // warning
-        msg: `Fault Injection Module is enabled - this should only be used for testing`
-      });
-    }
   }
 
-  // === TEST: Hardware Test Functions Register ========================
+  // === TEST: Hardware Test Functions Register ===========================
   if ('TEST' in reg && reg.TEST.int32 !== undefined) {
     const regValue = reg.TEST.int32;
 
@@ -805,36 +749,47 @@ export function procRegsPrtOther(reg) {
     reg.TEST.fields = {};
     reg.TEST.report = []; // Initialize report array
 
-    // 1. Decode all individual bits of TEST register
-    reg.TEST.fields.SVAL = getBits(regValue, 21, 21); // Start Value
-    reg.TEST.fields.TXBNS = getBits(regValue, 20, 16); // TX Buffer Number Select
-    reg.TEST.fields.PVAL = getBits(regValue, 15, 15); // Prepend Value
-    reg.TEST.fields.TXBNP = getBits(regValue, 14, 10); // TX Buffer Number Prepend
-    reg.TEST.fields.RX = getBits(regValue, 7, 7); // Receive Pin
-    reg.TEST.fields.TX = getBits(regValue, 6, 5); // TX Pin Control
-    reg.TEST.fields.RXD  = getBits(regValue, 3, 3); // Receive Pin
-    reg.TEST.fields.LBCK = getBits(regValue, 0, 0); // Loop Back Mode
+    // 1. Decode all individual bits of TEST register (MSB -> LSB)
+    reg.TEST.fields.BUS_OFF  = getBits(regValue, 27, 27); // Trigger for IR (for testing)
+    reg.TEST.fields.BUS_ON   = getBits(regValue, 26, 26); // Trigger for IR (for testing)
+    reg.TEST.fields.E_PASSIVE= getBits(regValue, 25, 25); // Trigger for IR (for testing)
+    reg.TEST.fields.E_ACTIVE = getBits(regValue, 24, 24); // Trigger for IR (for testing)
+    reg.TEST.fields.BUS_ERR  = getBits(regValue, 23, 23); // Trigger for IR (for testing)
+    reg.TEST.fields.RX_EVT   = getBits(regValue, 22, 22); // Trigger for IR (for testing)
+    reg.TEST.fields.TX_EVT   = getBits(regValue, 21, 21); // Trigger for IR (for testing)
+    reg.TEST.fields.IFF_RQ   = getBits(regValue, 20, 20); // Trigger for IR (for testing)
+    reg.TEST.fields.RX_DO    = getBits(regValue, 19, 19); // Trigger for IR (for testing)
+    reg.TEST.fields.TX_DU    = getBits(regValue, 18, 18); // Trigger for IR (for testing)
+    reg.TEST.fields.USOS     = getBits(regValue, 17, 17); // Trigger for IR (for testing)
+    reg.TEST.fields.ABORTED  = getBits(regValue, 16, 16); // Trigger for IR (for testing)
+    reg.TEST.fields.HWT      = getBits(regValue, 15, 15); // Hardware Test Mode enabled
+    reg.TEST.fields.TXD      = getBits(regValue, 5, 4);   // TX Signal Control
+    reg.TEST.fields.RXD      = getBits(regValue, 3, 3);   // RX Signal value
+    reg.TEST.fields.LBCK     = getBits(regValue, 0, 0);   // Loop-back mode
 
-    // 2. Generate human-readable register report
-  reg.TEST.report.push({
-        severityLevel: sevC.Info, // info
-        msg: `TEST: ${reg.TEST.name_long} (0x${reg.TEST.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `[SVAL ] Start Value               = ${reg.TEST.fields.SVAL}\n` +
-             `[TXBNS] TX Buffer Number Select   = ${reg.TEST.fields.TXBNS}\n` +
-             `[PVAL ] Prepend Value             = ${reg.TEST.fields.PVAL}\n` +
-             `[TXBNP] TX Buffer Number Prepared = ${reg.TEST.fields.TXBNP}\n` +
-             `[RX   ] Receive Pin               = ${reg.TEST.fields.RX}\n` +
-             `[TX   ] TX Pin Control            = ${reg.TEST.fields.TX}\n` +
-             `[RXD  ] Receive Pin               = ${reg.TEST.fields.RXD} (0: dominant, 1: recessive)\n` +
-             `[LBCK ] Loop Back Mode            = ${reg.TEST.fields.LBCK}`
+    // 2. Generate human-readable register report (MSB -> LSB)
+    const txdMap = ['Normal', 'Normal (RX ignored)', 'TX forced 0', 'TX forced 1'];
+    reg.TEST.report.push({
+      severityLevel: sevC.Info,
+      msg: `TEST: ${reg.TEST.name_long} (0x${reg.TEST.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
+           `[BUS_OFF ] Trigger IR BUS_OFF  = ${reg.TEST.fields.BUS_OFF}\n` +
+           `[BUS_ON  ] Trigger IR BUS_ON   = ${reg.TEST.fields.BUS_ON}\n` +
+           `[E_PASSIV] Trigger IR E_PASSIV = ${reg.TEST.fields.E_PASSIVE}\n` +
+           `[E_ACTIVE] Trigger IR E_ACTIVE = ${reg.TEST.fields.E_ACTIVE}\n` +
+           `[BUS_ERR ] Trigger IR BUS_ERR  = ${reg.TEST.fields.BUS_ERR}\n` +
+           `[RX_EVT  ] Trigger IR RX_EVT   = ${reg.TEST.fields.RX_EVT}\n` +
+           `[TX_EVT  ] Trigger IR TX_EVT   = ${reg.TEST.fields.TX_EVT}\n` +
+           `[IFF_RQ  ] Trigger IR IFF_RQ   = ${reg.TEST.fields.IFF_RQ}\n` +
+           `[RX_DO   ] Trigger IR RX_DO    = ${reg.TEST.fields.RX_DO}\n` +
+           `[TX_DU   ] Trigger IR TX_DU    = ${reg.TEST.fields.TX_DU}\n` +
+           `[USOS    ] Trigger IR USOS     = ${reg.TEST.fields.USOS}\n` +
+           `[ABORTED ] Trigger IR ABORTED  = ${reg.TEST.fields.ABORTED}\n` +
+           `[HWT     ] Hardware Test Mode  = ${reg.TEST.fields.HWT}\n` +
+           `[TXD     ] TX Signal Control   = ${reg.TEST.fields.TXD} (0: PRT controlled, 1: PRT controlled, 2: Dominant, 3: Recessive)\n` +
+           `[RXD     ] RX Signal value     = ${reg.TEST.fields.RXD}\n` +
+           `[LBCK    ] Loop-back mode      = ${reg.TEST.fields.LBCK}`
     });
 
-    // 3. Add test mode information
-    if (reg.TEST.fields.LBCK === 1) {
-      reg.TEST.report.push({
-        severityLevel: sevC.Warn,
-        msg: `Loop Back Mode is active - for testing only`
-      });
-    }
-  }
+  } // TEST
+ 
 } // PRT others

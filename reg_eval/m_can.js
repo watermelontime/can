@@ -854,10 +854,10 @@ function procRegsPrtOther(reg) {
     reg.ECR.report.push({
       severityLevel: sevC.Info, // info
       msg: `ECR: ${reg.ECR.name_long} (0x${reg.ECR.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[CEL] CAN Error Logging      = ${reg.ECR.fields.CEL}\n` +
-           `[RP ] Receive Error Passive  = ${reg.ECR.fields.RP} (1: Rec. Err Counter reached Error Passive Level of 128)\n` +
-           `[REC] Receive Error Counter  = ${reg.ECR.fields.REC}\n` +
-           `[TEC] Transmit Error Counter = ${reg.ECR.fields.TEC}`
+           `[CEL] CAN Error Logging           = ${reg.ECR.fields.CEL}\n` +
+           `[RP ] RX Error Counter Carry Flag = ${reg.ECR.fields.RP} (1: REC reached Error Passive Level of 128)\n` +
+           `[REC] RX Error Counter            = ${reg.ECR.fields.REC}\n` +
+           `[TEC] TX Error Counter            = ${reg.ECR.fields.TEC}`
     });
 
     // 3. Add warnings if error counters are high
@@ -908,8 +908,8 @@ function procRegsPrtOther(reg) {
            `[LEC ] Last Error Code Arb. Phase  = ${reg.PSR.fields.LEC} (0: No Error, 1: Stuff, 2: Form, 3: Ack, 4: Bit1, 5: Bit0, 6: CRC, 7: No Change)\n` +
            `[ACT ] Activity                    = ${reg.PSR.fields.ACT} (0: Synchronizing, 1: Idle, 2: Receiver, 3: Transmitter)\n` +
            `[EP  ] Error Passive               = ${reg.PSR.fields.EP}\n` +
-           `[EQ  ] Error Warning               = ${reg.PSR.fields.EW}\n` +
-           `[BO  ] Bus Off                     = ${reg.PSR.fields.BO}\n` +
+           `[EW  ] Error Warning               = ${reg.PSR.fields.EW}\n` +
+           `[BO  ] Bus-Off                     = ${reg.PSR.fields.BO}\n` +
            `[DLEC] Last Error Code Data Phase  = ${reg.PSR.fields.DLEC} (0: No Error, 1: Stuff, 2: Form, 3: Ack, 4: Bit1, 5: Bit0, 6: CRC, 7: No Change)\n` +
            `[RESI] ESI flag of last CAN FD msg = ${reg.PSR.fields.RESI}\n` +
            `[RBRS] BRS flag of last CAN FD msg = ${reg.PSR.fields.RBRS}\n` +
@@ -921,7 +921,7 @@ function procRegsPrtOther(reg) {
     if (reg.PSR.fields.BO === 1) {
       reg.PSR.report.push({
         severityLevel: sevC.Warn,
-        msg: `CAN controller is in Bus Off state`
+        msg: `CAN controller is in Bus-Off state`
       });
     }
     if (reg.PSR.fields.EP === 1) {

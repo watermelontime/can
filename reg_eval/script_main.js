@@ -3,6 +3,7 @@
 // add verbose propoerty to m_can mapping
 // describe in example register dump/values, that absolute addresses can be used
 // support for X_CANB
+// use the same function for PRT register decoding of X_CAN, XS_CAN, and X_CANB (decode individual registers via separate function)
 
 // import drawing functions
 import * as draw_svg from './draw_bits_svg.js';
