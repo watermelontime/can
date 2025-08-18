@@ -88,97 +88,150 @@ export function loadExampleRegisterValues() {
 return {exampleRegisterValues: registerString, clockFrequency: clock};
 }
 
+// Mapping table to map: Register-Addresses to Register-Names
+const regAddrMap = {
+  0x000: { shortName: 'CREL', longName: 'Core Release Register' },
+  0x004: { shortName: 'ENDN', longName: 'Endian Register' },
+  0x008: { shortName: 'CUST', longName: 'Customer Register' },
+  0x00C: { shortName: 'DBTP', longName: 'Data Bit Timing & Prescaler Register' },
+  0x010: { shortName: 'TEST', longName: 'Test Register' },
+  0x014: { shortName: 'RWD', longName: 'RAM Watchdog' },
+  0x018: { shortName: 'CCCR', longName: 'CC Control Register' },
+  0x01C: { shortName: 'NBTP', longName: 'Nominal Bit Timing & Prescaler Register' },
+  0x020: { shortName: 'TSCC', longName: 'Timestamp Counter Configuration' },
+  0x024: { shortName: 'TSCV', longName: 'Timestamp Counter Value' },
+  0x028: { shortName: 'TOCC', longName: 'Timeout Counter Configuration' },
+  0x02C: { shortName: 'TOCV', longName: 'Timeout Counter Value' },
+  0x040: { shortName: 'ECR', longName: 'Error Counter Register' },
+  0x044: { shortName: 'PSR', longName: 'Protocol Status Register' },
+  0x048: { shortName: 'TDCR', longName: 'Transmitter Delay Compensation Register' },
+  0x050: { shortName: 'IR', longName: 'Interrupt Register' },
+  0x054: { shortName: 'IE', longName: 'Interrupt Enable' },
+  0x058: { shortName: 'ILS', longName: 'Interrupt Line Select' },
+  0x05C: { shortName: 'ILE', longName: 'Interrupt Line Enable' },
+  0x080: { shortName: 'GFC', longName: 'Global Filter Configuration' },
+  0x084: { shortName: 'SIDFC', longName: 'Standard ID Filter Configuration' },
+  0x088: { shortName: 'XIDFC', longName: 'Extended ID Filter Configuration' },
+  0x090: { shortName: 'XIDAM', longName: 'Extended ID AND Mask' },
+  0x094: { shortName: 'HPMS', longName: 'High Priority Message Status' },
+  0x098: { shortName: 'NDAT1', longName: 'New Data 1' },
+  0x09C: { shortName: 'NDAT2', longName: 'New Data 2' },
+  0x0A0: { shortName: 'RXF0C', longName: 'Rx FIFO 0 Configuration' },
+  0x0A4: { shortName: 'RXF0S', longName: 'Rx FIFO 0 Status' },
+  0x0A8: { shortName: 'RXF0A', longName: 'Rx FIFO 0 Acknowledge' },
+  0x0AC: { shortName: 'RXBC', longName: 'Rx Buffer Configuration' },
+  0x0B0: { shortName: 'RXF1C', longName: 'Rx FIFO 1 Configuration' },
+  0x0B4: { shortName: 'RXF1S', longName: 'Rx FIFO 1 Status' },
+  0x0B8: { shortName: 'RXF1A', longName: 'Rx FIFO 1 Acknowledge' },
+  0x0BC: { shortName: 'RXESC', longName: 'Rx Buffer / FIFO Element Size Configuration' },
+  0x0C0: { shortName: 'TXBC', longName: 'Tx Buffer Configuration' },
+  0x0C4: { shortName: 'TXFQS', longName: 'Tx FIFO/Queue Status' },
+  0x0C8: { shortName: 'TXESC', longName: 'Tx Buffer Element Size Configuration' },
+  0x0CC: { shortName: 'TXBRP', longName: 'Tx Buffer Request Pending' },
+  0x0D0: { shortName: 'TXBAR', longName: 'Tx Buffer Add Request' },
+  0x0D4: { shortName: 'TXBCR', longName: 'Tx Buffer Cancellation Request' },
+  0x0D8: { shortName: 'TXBTO', longName: 'Tx Buffer Transmission Occurred' },
+  0x0DC: { shortName: 'TXBCF', longName: 'Tx Buffer Cancellation Finished' },
+  0x0E0: { shortName: 'TXBTIE', longName: 'Tx Buffer Transmission Interrupt Enable' },
+  0x0E4: { shortName: 'TXBCIE', longName: 'Tx Buffer Cancellation Finished Interrupt Enable' },
+  0x0F0: { shortName: 'TXEFC', longName: 'Tx Event FIFO Configuration' },
+  0x0F4: { shortName: 'TXEFS', longName: 'Tx Event FIFO Status' },
+  0x0F8: { shortName: 'TXEFA', longName: 'Tx Event FIFO Acknowledge' }
+};
+
+// Reserved Address Array: list reserved addresses in M_CAN address range (inclusive, word-aligned step = 4 bytes)
+const resAddrArray = [
+  { lowerResAddr: 0x030, upperResAddr: 0x03C }, // 0x030, 0x034, 0x038, 0x03C  -> (4)
+  { lowerResAddr: 0x04C, upperResAddr: 0x04C }, // 0x04C                       -> (1)
+  { lowerResAddr: 0x060, upperResAddr: 0x07C }, // 0x060..0x07C step 4         -> (8)
+  { lowerResAddr: 0x08C, upperResAddr: 0x08C }, // 0x08C                       -> (1)
+  { lowerResAddr: 0x0E8, upperResAddr: 0x0EC }, // 0x0E8, 0x0EC                -> (2)
+  { lowerResAddr: 0x0FC, upperResAddr: 0x1FC }  // 0x0FC..0x1FC step 4         -> (65)
+];
+
+// ===================================================================================
+// Check if an address is within the reserved M_CAN address ranges
+// Only word-aligned addresses (step = 4 bytes) are considered to be in reserved address range
+function isReserved(addr) {
+  // Not a word-aligned address -> treat as not reserved (register map is word-based)
+  if ((addr & 0x3) !== 0) {
+    return false;
+  }
+
+  for (const range of resAddrArray) {
+    if (addr >= range.lowerResAddr && addr <= range.upperResAddr) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // ===================================================================================
 // Map raw register addresses to register names and create named register structure
 function mapRawRegistersToNames(reg) {
+  // Step 1: map addresses to register names
+  // Step 2: check for duplicate register addresses
+  // Step 3: check if reserved addresses present
+
   // Check if parse_output exists (in reg object)
   if (!reg.parse_output) {
     console.warn('[X_CAN] [Warning, mapRawRegistersToNames()] reg.parse_output not found in reg object. Skipping mapping of <raw registers> to <names>. parseUserRegisterValues(userRegText, reg) must be called before this function.');
     return;
   }
   
-  // Address to register name mapping based on M_CAN specification
-  const addressMap = {
-    0x000: { shortName: 'CREL', longName: 'Core Release Register' },
-    0x004: { shortName: 'ENDN', longName: 'Endian Register' },
-    0x008: { shortName: 'CUST', longName: 'Customer Register' },
-    0x00C: { shortName: 'DBTP', longName: 'Data Bit Timing & Prescaler Register' },
-    0x010: { shortName: 'TEST', longName: 'Test Register' },
-    0x014: { shortName: 'RWD', longName: 'RAM Watchdog' },
-    0x018: { shortName: 'CCCR', longName: 'CC Control Register' },
-    0x01C: { shortName: 'NBTP', longName: 'Nominal Bit Timing & Prescaler Register' },
-    0x020: { shortName: 'TSCC', longName: 'Timestamp Counter Configuration' },
-    0x024: { shortName: 'TSCV', longName: 'Timestamp Counter Value' },
-    0x028: { shortName: 'TOCC', longName: 'Timeout Counter Configuration' },
-    0x02C: { shortName: 'TOCV', longName: 'Timeout Counter Value' },
-    0x040: { shortName: 'ECR', longName: 'Error Counter Register' },
-    0x044: { shortName: 'PSR', longName: 'Protocol Status Register' },
-    0x048: { shortName: 'TDCR', longName: 'Transmitter Delay Compensation Register' },
-    0x050: { shortName: 'IR', longName: 'Interrupt Register' },
-    0x054: { shortName: 'IE', longName: 'Interrupt Enable' },
-    0x058: { shortName: 'ILS', longName: 'Interrupt Line Select' },
-    0x05C: { shortName: 'ILE', longName: 'Interrupt Line Enable' },
-    0x080: { shortName: 'GFC', longName: 'Global Filter Configuration' },
-    0x084: { shortName: 'SIDFC', longName: 'Standard ID Filter Configuration' },
-    0x088: { shortName: 'XIDFC', longName: 'Extended ID Filter Configuration' },
-    0x090: { shortName: 'XIDAM', longName: 'Extended ID AND Mask' },
-    0x094: { shortName: 'HPMS', longName: 'High Priority Message Status' },
-    0x098: { shortName: 'NDAT1', longName: 'New Data 1' },
-    0x09C: { shortName: 'NDAT2', longName: 'New Data 2' },
-    0x0A0: { shortName: 'RXF0C', longName: 'Rx FIFO 0 Configuration' },
-    0x0A4: { shortName: 'RXF0S', longName: 'Rx FIFO 0 Status' },
-    0x0A8: { shortName: 'RXF0A', longName: 'Rx FIFO 0 Acknowledge' },
-    0x0AC: { shortName: 'RXBC', longName: 'Rx Buffer Configuration' },
-    0x0B0: { shortName: 'RXF1C', longName: 'Rx FIFO 1 Configuration' },
-    0x0B4: { shortName: 'RXF1S', longName: 'Rx FIFO 1 Status' },
-    0x0B8: { shortName: 'RXF1A', longName: 'Rx FIFO 1 Acknowledge' },
-    0x0BC: { shortName: 'RXESC', longName: 'Rx Buffer / FIFO Element Size Configuration' },
-    0x0C0: { shortName: 'TXBC', longName: 'Tx Buffer Configuration' },
-    0x0C4: { shortName: 'TXFQS', longName: 'Tx FIFO/Queue Status' },
-    0x0C8: { shortName: 'TXESC', longName: 'Tx Buffer Element Size Configuration' },
-    0x0CC: { shortName: 'TXBRP', longName: 'Tx Buffer Request Pending' },
-    0x0D0: { shortName: 'TXBAR', longName: 'Tx Buffer Add Request' },
-    0x0D4: { shortName: 'TXBCR', longName: 'Tx Buffer Cancellation Request' },
-    0x0D8: { shortName: 'TXBTO', longName: 'Tx Buffer Transmission Occurred' },
-    0x0DC: { shortName: 'TXBCF', longName: 'Tx Buffer Cancellation Finished' },
-    0x0E0: { shortName: 'TXBTIE', longName: 'Tx Buffer Transmission Interrupt Enable' },
-    0x0E4: { shortName: 'TXBCIE', longName: 'Tx Buffer Cancellation Finished Interrupt Enable' },
-    0x0F0: { shortName: 'TXEFC', longName: 'Tx Event FIFO Configuration' },
-    0x0F4: { shortName: 'TXEFS', longName: 'Tx Event FIFO Status' },
-    0x0F8: { shortName: 'TXEFA', longName: 'Tx Event FIFO Acknowledge' }
-  };
-  
   let mappedCount = 0;
   let unmappedCount = 0;
+  let reservedCount = 0;
   
-  // Process each raw register entry
+  // Mapping: Process each raw register entry
   const regAddrMask = 0x00000FFF; // 12 LSBit are the X_CAN local address bits
   for (const rawReg of reg.raw) {
-    const mapping = addressMap[rawReg.addr & regAddrMask];
+    const rawRegAddrMasked = rawReg.addr & regAddrMask
     
+    // Step 1: map addresses to register names
+    const mapping = regAddrMap[rawRegAddrMasked];
     if (mapping) {
-      // Create named register structure
-      const regName = mapping.shortName;
-      reg[regName] = {
-        int32: rawReg.value_int32,
-        name_long: mapping.longName,
-        addr: rawReg.addr
-      };
-      
-      mappedCount++;
-      
+      // Step 2: Check if this address is a duplicate (ocurring a second time)
+      if (reg[mapping.shortName]) {
+        // duplicate found, ignore it and warn user
+        reg.parse_output.report.push({
+          severityLevel: sevC.Error,
+          msg: `Duplicate register address found: 0x${rawReg.addr.toString(16).toUpperCase().padStart(3, '0')}. The duplicate will be ignored`
+        });
+        continue;
+      } else {
+        // No duplicate found, proceed with mapping
+        // Create named register structure
+        const regName = mapping.shortName;
+        reg[regName] = {
+          int32: rawReg.value_int32,
+          name_long: mapping.longName,
+          addr: rawReg.addr
+        };
+
+        mappedCount++;
+        reg.parse_output.report.push({
+          severityLevel: sevC.Info,
+          verbose: true,
+          msg: `Mapped reg. address 0x${rawReg.addr.toString(16).toUpperCase().padStart(3, '0')} to ${regName} (${mapping.longName})`
+        });
+      }
+
+    // Step 3: check if reserved addresses present
+    } else if (isReserved(rawRegAddrMasked)) {
+      // it is a reserved address
+      reservedCount++;
       reg.parse_output.report.push({
         severityLevel: sevC.Info,
         verbose: true,
-        msg: `Mapped reg. address 0x${rawReg.addr.toString(16).toUpperCase().padStart(2, '0')} to ${regName} (${mapping.longName})`
+        msg: `Reserved register address: 0x${rawReg.addr.toString(16).toUpperCase().padStart(3, '0')} - register will be ignored`
       });
     } else {
       // Unknown address
       unmappedCount++;
-      
       reg.parse_output.report.push({
         severityLevel: sevC.Warn,
-        msg: `Unknown register address: 0x${rawReg.addr.toString(16).toUpperCase().padStart(2, '0')} - register will be ignored`
+        msg: `Unknown register address: 0x${rawReg.addr.toString(16).toUpperCase().padStart(3, '0')} - register will be ignored`
       });
       reg.parse_output.hasWarnings = true;
     }
@@ -187,19 +240,19 @@ function mapRawRegistersToNames(reg) {
   // Add summary message
   reg.parse_output.report.push({
     severityLevel: sevC.Info,
-    msg: `Address mapping completed: ${mappedCount} mapped, ${unmappedCount} unknown`
+    msg: `Address mapping completed: ${mappedCount} mapped, ${reservedCount} reserved, ${unmappedCount} unknown`
   });
   
   // report missing registers in register dump
   //    compare reg-object with registers in addressMap
   let missingRegText = 'Missing registers in dump:';
   let missingRegFound = false;
-  for (const addr in addressMap) {
-    const regName = addressMap[addr].shortName;
+  for (const addr in regAddrMap) {
+    const regName = regAddrMap[addr].shortName;
     if (!(regName in reg)) {
       // Register is NO present in reg object
       const addrNum = Number(addr); // convert key to number for hex formatting
-      missingRegText += `\n0x${addrNum.toString(16).toUpperCase().padStart(3, '0')}: ${regName.padEnd(5, ' ')} (${addressMap[addr].longName})`;
+      missingRegText += `\n0x${addrNum.toString(16).toUpperCase().padStart(3, '0')}: ${regName.padEnd(5, ' ')} (${regAddrMap[addr].longName})`;
       missingRegFound = true;
     }
   }
