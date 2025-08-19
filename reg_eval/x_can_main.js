@@ -1,16 +1,10 @@
 // X_CAN: Main script for processing CAN XL registers and calculating bit timing parameters
-import { getBits } from './help_functions.js';
-import { sevC } from './help_functions.js';
-
 import * as x_can_prt from './x_can_prt.js';
 import * as x_can_mh from './x_can_mh.js';
 
 // ===================================================================================
 // X_CAN: Process User Register Values: parse, validate, calculate results, generate report
-export function processRegsOfX_CAN(reg) {
-  // Map raw addresses to register names
-  mapRawRegistersToNames(reg);
-  console.log('[Info] Step 2 - Mapped register values (reg object):', reg);
+export function processRegs(reg) {
 
   // c1) Process Bit Timing registers
   x_can_prt.procRegsPrtBitTiming(reg);
@@ -187,239 +181,177 @@ export function loadExampleRegisterValues() {
 return {exampleRegisterValues: registerString, clockFrequency: clock};
 }
 
-// ===================================================================================
-// Map raw register addresses to register names and create named register structure
-function mapRawRegistersToNames(reg) {
-  // Check if parse_output exists (in reg object)
-  if (!reg.parse_output) {
-    console.warn('[X_CAN] [Warning, mapRawRegistersToNames()] reg.parse_output not found in reg object. Skipping mapping of <raw registers> to <names>. parseUserRegisterValues(userRegText, reg) must be called before this function.');
-    return;
-  }
-  
-  // Address to register name mapping (masked with 0xFFF local X_CAN address)
-  const addressMap = {
-    // ====== MH: Global ======
-    0x000: { shortName: 'VERSION', longName: 'Release Identification Register' },
-    0x004: { shortName: 'MH_CTRL', longName: 'Message Handler Control register' },
-    0x008: { shortName: 'MH_CFG', longName: 'Message Handler Configuration register' },
-    0x00C: { shortName: 'MH_STS', longName: 'Message Handler Status register' },
-    0x010: { shortName: 'MH_SFTY_CFG', longName: 'Message Handler Safety Configuration register' },
-    0x014: { shortName: 'MH_SFTY_CTRL', longName: 'Message Handler Safety Control register' },
-    0x018: { shortName: 'RX_FILTER_MEM_ADD', longName: 'RX Filter Base Address register' },
-    0x01C: { shortName: 'TX_DESC_MEM_ADD', longName: 'TX Descriptor Base Address register' },
-    0x020: { shortName: 'AXI_ADD_EXT', longName: 'AXI address extension register' },
-    0x024: { shortName: 'AXI_PARAMS', longName: 'AXI parameter register' },
-    0x028: { shortName: 'MH_LOCK', longName: 'Message Handler Lock register' },
-    // ====== MH: TX FIFOs ======
-    0x100: { shortName: 'TX_DESC_ADD_PT', longName: 'TX descriptor current address pointer register' },
-    0x104: { shortName: 'TX_STATISTICS', longName: 'Unsuccessful and Successful message counter registers' },
-    0x108: { shortName: 'TX_FQ_STS0', longName: 'TX FIFO Queue Status register' },
-    0x10C: { shortName: 'TX_FQ_STS1', longName: 'TX FIFO Queue Status register' },
-    0x110: { shortName: 'TX_FQ_CTRL0', longName: 'TX FIFO Queue Control register 0' },
-    0x114: { shortName: 'TX_FQ_CTRL1', longName: 'TX FIFO Queue Control register 1' },
-    0x118: { shortName: 'TX_FQ_CTRL2', longName: 'TX FIFO Queue Control register 2' },
-    0x120: { shortName: 'TX_FQ_ADD_PT0', longName: 'TX FIFO Queue 0 Current Address Pointer register' },
-    0x124: { shortName: 'TX_FQ_START_ADD0', longName: 'TX FIFO Queue 0 Start Address register' },
-    0x128: { shortName: 'TX_FQ_SIZE0', longName: 'TX FIFO Queue 0 Size register' },
-    0x130: { shortName: 'TX_FQ_ADD_PT1', longName: 'TX FIFO Queue 1 Current Address Pointer register' },
-    0x134: { shortName: 'TX_FQ_START_ADD1', longName: 'TX FIFO Queue 1 Start Address register' },
-    0x138: { shortName: 'TX_FQ_SIZE1', longName: 'TX FIFO Queue 1 Size register' },
-    0x140: { shortName: 'TX_FQ_ADD_PT2', longName: 'TX FIFO Queue 2 Current Address Pointer register' },
-    0x144: { shortName: 'TX_FQ_START_ADD2', longName: 'TX FIFO Queue 2 Start Address register' },
-    0x148: { shortName: 'TX_FQ_SIZE2', longName: 'TX FIFO Queue 2 Size register' },
-    0x150: { shortName: 'TX_FQ_ADD_PT3', longName: 'TX FIFO Queue 3 Current Address Pointer register' },
-    0x154: { shortName: 'TX_FQ_START_ADD3', longName: 'TX FIFO Queue 3 Start Address register' },
-    0x158: { shortName: 'TX_FQ_SIZE3', longName: 'TX FIFO Queue 3 Size register' },
-    0x160: { shortName: 'TX_FQ_ADD_PT4', longName: 'TX FIFO Queue 4 Current Address Pointer register' },
-    0x164: { shortName: 'TX_FQ_START_ADD4', longName: 'TX FIFO Queue 4 Start Address register' },
-    0x168: { shortName: 'TX_FQ_SIZE4', longName: 'TX FIFO Queue 4 Size register' },
-    0x170: { shortName: 'TX_FQ_ADD_PT5', longName: 'TX FIFO Queue 5 Current Address Pointer register' },
-    0x174: { shortName: 'TX_FQ_START_ADD5', longName: 'TX FIFO Queue 5 Start Address register' },
-    0x178: { shortName: 'TX_FQ_SIZE5', longName: 'TX FIFO Queue 5 Size register' },
-    0x180: { shortName: 'TX_FQ_ADD_PT6', longName: 'TX FIFO Queue 6 Current Address Pointer register' },
-    0x184: { shortName: 'TX_FQ_START_ADD6', longName: 'TX FIFO Queue 6 Start Address register' },
-    0x188: { shortName: 'TX_FQ_SIZE6', longName: 'TX FIFO Queue 6 Size register' },
-    0x190: { shortName: 'TX_FQ_ADD_PT7', longName: 'TX FIFO Queue 7 Current Address Pointer register' },
-    0x194: { shortName: 'TX_FQ_START_ADD7', longName: 'TX FIFO Queue 7 Start Address register' },
-    0x198: { shortName: 'TX_FQ_SIZE7', longName: 'TX FIFO Queue 7 Size register' },
-    // ====== MH: TX Priority Queue control/status ======
-    0x300: { shortName: 'TX_PQ_STS0', longName: 'TX Priority Queue Status register' },
-    0x304: { shortName: 'TX_PQ_STS1', longName: 'TX Priority Queue Status register' },
-    0x30C: { shortName: 'TX_PQ_CTRL0', longName: 'TX Priority Queue Control register 0' },
-    0x310: { shortName: 'TX_PQ_CTRL1', longName: 'TX Priority Queue Control register 1' },
-    0x314: { shortName: 'TX_PQ_CTRL2', longName: 'TX Priority Queue Control register 2' },
-    0x318: { shortName: 'TX_PQ_START_ADD', longName: 'TX Priority Queue Start Address' },
-    // ====== MH: RX FIFO Queues control/status ======
-    0x400: { shortName: 'RX_DESC_ADD_PT', longName: 'RX descriptor Current Address Pointer' },
-    0x404: { shortName: 'RX_STATISTICS', longName: 'Unsuccessful and Successful Message Received Counter' },
-    0x408: { shortName: 'RX_FQ_STS0', longName: 'RX FIFO Queue Status register 0' },
-    0x40C: { shortName: 'RX_FQ_STS1', longName: 'RX FIFO Queue Status register 1' },
-    0x410: { shortName: 'RX_FQ_STS2', longName: 'RX FIFO Queue Status register 2' },
-    0x414: { shortName: 'RX_FQ_CTRL0', longName: 'RX FIFO Queue Control register 0' },
-    0x418: { shortName: 'RX_FQ_CTRL1', longName: 'RX FIFO Queue Control register 1' },
-    0x41C: { shortName: 'RX_FQ_CTRL2', longName: 'RX FIFO Queue Control register 2' },
-    0x420: { shortName: 'RX_FQ_ADD_PT0', longName: 'RX FIFO Queue 0 Current Address Pointer' },
-    0x424: { shortName: 'RX_FQ_START_ADD0', longName: 'RX FIFO Queue 0 link list Start Address' },
-    0x428: { shortName: 'RX_FQ_SIZE0', longName: 'RX FIFO Queue 0 link list and data container Size' },
-    0x42C: { shortName: 'RX_FQ_DC_START_ADD0', longName: 'RX FIFO Queue 0 Data Container Start Address' },
-    0x430: { shortName: 'RX_FQ_RD_ADD_PT0', longName: 'RX FIFO Queue 0' },
-    0x438: { shortName: 'RX_FQ_ADD_PT1', longName: 'RX FIFO Queue 1 Current Address Pointer' },
-    0x43C: { shortName: 'RX_FQ_START_ADD1', longName: 'RX FIFO Queue 1 link list Start Address' },
-    0x440: { shortName: 'RX_FQ_SIZE1', longName: 'RX FIFO Queue 1 link list and data container Size' },
-    0x444: { shortName: 'RX_FQ_DC_START_ADD1', longName: 'RX FIFO Queue 1 Data Container Start Address' },
-    0x448: { shortName: 'RX_FQ_RD_ADD_PT1', longName: 'RX FIFO Queue 1' },
-    0x450: { shortName: 'RX_FQ_ADD_PT2', longName: 'RX FIFO Queue 2 Current Address Pointer' },
-    0x454: { shortName: 'RX_FQ_START_ADD2', longName: 'RX FIFO Queue 2 link list Start Address' },
-    0x458: { shortName: 'RX_FQ_SIZE2', longName: 'RX FIFO Queue 2 link list and data container Size' },
-    0x45C: { shortName: 'RX_FQ_DC_START_ADD2', longName: 'RX FIFO Queue 2 Data Container Start Address' },
-    0x460: { shortName: 'RX_FQ_RD_ADD_PT2', longName: 'RX FIFO Queue 2' },
-    0x468: { shortName: 'RX_FQ_ADD_PT3', longName: 'RX FIFO Queue 3 Current Address Pointer' },
-    0x46C: { shortName: 'RX_FQ_START_ADD3', longName: 'RX FIFO Queue 3 link list Start Address' },
-    0x470: { shortName: 'RX_FQ_SIZE3', longName: 'RX FIFO Queue 3 link list and data container Size' },
-    0x474: { shortName: 'RX_FQ_DC_START_ADD3', longName: 'RX FIFO Queue 3 Data Container Start Address' },
-    0x478: { shortName: 'RX_FQ_RD_ADD_PT3', longName: 'RX FIFO Queue 3' },
-    0x480: { shortName: 'RX_FQ_ADD_PT4', longName: 'RX FIFO Queue 4 Current Address Pointer' },
-    0x484: { shortName: 'RX_FQ_START_ADD4', longName: 'RX FIFO Queue 4 link list Start Address' },
-    0x488: { shortName: 'RX_FQ_SIZE4', longName: 'RX FIFO Queue 4 link list and data container Size' },
-    0x48C: { shortName: 'RX_FQ_DC_START_ADD4', longName: 'RX FIFO Queue 4 Data Container Start Address' },
-    0x490: { shortName: 'RX_FQ_RD_ADD_PT4', longName: 'RX FIFO Queue 4' },
-    0x498: { shortName: 'RX_FQ_ADD_PT5', longName: 'RX FIFO Queue 5 Current Address Pointer' },
-    0x49C: { shortName: 'RX_FQ_START_ADD5', longName: 'RX FIFO Queue 5 link list Start Address' },
-    0x4A0: { shortName: 'RX_FQ_SIZE5', longName: 'RX FIFO Queue 5 link list and data container size' },
-    0x4A4: { shortName: 'RX_FQ_DC_START_ADD5', longName: 'RX FIFO Queue 5 Data Container Start Address' },
-    0x4A8: { shortName: 'RX_FQ_RD_ADD_PT5', longName: 'RX FIFO Queue 5' },
-    0x4B0: { shortName: 'RX_FQ_ADD_PT6', longName: 'RX FIFO Queue 6 Current Address Pointer' },
-    0x4B4: { shortName: 'RX_FQ_START_ADD6', longName: 'RX FIFO Queue 6 link list Start Address' },
-    0x4B8: { shortName: 'RX_FQ_SIZE6', longName: 'RX FIFO Queue 6 link list and data container Size' },
-    0x4BC: { shortName: 'RX_FQ_DC_START_ADD6', longName: 'RX FIFO Queue 6 Data Container Start Address' },
-    0x4C0: { shortName: 'RX_FQ_RD_ADD_PT6', longName: 'RX FIFO Queue 6' },
-    0x4C8: { shortName: 'RX_FQ_ADD_PT7', longName: 'RX FIFO Queue 7 Current Address Pointer' },
-    0x4CC: { shortName: 'RX_FQ_START_ADD7', longName: 'RX FIFO Queue 7 link list Start Address' },
-    0x4D0: { shortName: 'RX_FQ_SIZE7', longName: 'RX FIFO Queue 7 link list and data container Size' },
-    0x4D4: { shortName: 'RX_FQ_DC_START_ADD7', longName: 'RX FIFO Queue 7 Data Container Start Address' },
-    0x4D8: { shortName: 'RX_FQ_RD_ADD_PT7', longName: 'RX FIFO Queue 7' },
-    // ====== MH: TX filter control ======
-    0x600: { shortName: 'TX_FILTER_CTRL0', longName: 'TX Filter Control register 0' },
-    0x604: { shortName: 'TX_FILTER_CTRL1', longName: 'TX Filter Control register 1' },
-    0x608: { shortName: 'TX_FILTER_REFVAL0', longName: 'TX Filter Reference Value register 0' },
-    0x60C: { shortName: 'TX_FILTER_REFVAL1', longName: 'TX Filter Reference Value register 1' },
-    0x610: { shortName: 'TX_FILTER_REFVAL2', longName: 'TX Filter Reference Value register 2' },
-    0x614: { shortName: 'TX_FILTER_REFVAL3', longName: 'TX Filter Reference Value register 3' },
-    // ====== MH: RX filter control ======
-    0x680: { shortName: 'RX_FILTER_CTRL', longName: 'RX Filter Control register' },
-    // ====== MH: Interrupts control/status ======
-    0x700: { shortName: 'TX_FQ_INT_STS', longName: 'TX FIFO Queue Interrupt Status register' },
-    0x704: { shortName: 'RX_FQ_INT_STS', longName: 'RX FIFO Queue Interrupt Status register' },
-    0x708: { shortName: 'TX_PQ_INT_STS0', longName: 'TX Priority Queue Interrupt Status register 0' },
-    0x70C: { shortName: 'TX_PQ_INT_STS1', longName: 'TX Priority Queue Interrupt Status register 1' },
-    0x710: { shortName: 'STATS_INT_STS', longName: 'Statistics Interrupt Status register' },
-    0x714: { shortName: 'ERR_INT_STS', longName: 'Error Interrupt Status register' },
-    0x718: { shortName: 'SFTY_INT_STS', longName: 'Safety Interrupt Status register' },
-    0x71C: { shortName: 'AXI_ERR_INFO', longName: 'AXI Error Information' },
-    0x720: { shortName: 'DESC_ERR_INFO0', longName: 'Descriptor Error Information 0' },
-    0x724: { shortName: 'DESC_ERR_INFO1', longName: 'Descriptor Error Information 1' },
-    0x728: { shortName: 'TX_FILTER_ERR_INFO', longName: 'TX Filter Error Information' },
-    // ====== MH: Integration/Debug control/status ======
-    0x800: { shortName: 'DEBUG_TEST_CTRL', longName: 'Debug Control register' },
-    0x804: { shortName: 'INT_TEST0', longName: 'Interrupt Test register 0' },
-    0x808: { shortName: 'INT_TEST1', longName: 'Interrupt Test register 1' },
-    0x810: { shortName: 'TX_SCAN_FC', longName: 'TX-SCAN first candidates register' },
-    0x814: { shortName: 'TX_SCAN_BC', longName: 'TX-SCAN best candidates register' },
-    0x818: { shortName: 'TX_FQ_DESC_VALID', longName: 'Valid TX FIFO Queue descriptors in local memory' },
-    0x81C: { shortName: 'TX_PQ_DESC_VALID', longName: 'Valid TX Priority Queue descriptors in local memory' },
-    // ====== MH: CRC control ======
-    0x880: { shortName: 'CRC_CTRL', longName: 'CRC Control register write-only 0x0' },
-    0x884: { shortName: 'CRC_REG', longName: 'CRC register' },
-    // ====== PRT ======
-    0x900: { shortName: 'ENDN', longName: 'Endianness Test Register' },
-    0x904: { shortName: 'PREL', longName: 'PRT Release Identification Register' },
-    0x908: { shortName: 'STAT', longName: 'PRT Status Register' },
-    0x920: { shortName: 'EVNT', longName: 'Event Status Flags Register' },
-    0x940: { shortName: 'LOCK', longName: 'Unlock Sequence Register' },
-    0x944: { shortName: 'CTRL', longName: 'Control Register' },
-    0x948: { shortName: 'FIMC', longName: 'Fault Injection Module Control Register' },
-    0x94C: { shortName: 'TEST', longName: 'Hardware Test functions Register' },
-    0x960: { shortName: 'MODE', longName: 'Operating Mode Register' },
-    0x964: { shortName: 'NBTP', longName: 'Arbitration Phase Nominal Bit Timing Register' },
-    0x968: { shortName: 'DBTP', longName: 'CAN FD Data Phase Bit Timing Register' },
-    0x96C: { shortName: 'XBTP', longName: 'XAN XL Data Phase Bit Timing Register' },
-    0x970: { shortName: 'PCFG', longName: 'PWME Configuration Register' },
-    // ====== IRC ======
-    0xA00: { shortName: 'FUNC_RAW', longName: 'Functional raw event status register' },
-    0xA04: { shortName: 'ERR_RAW', longName: 'Error raw event status register' },
-    0xA08: { shortName: 'SAFETY_RAW', longName: 'Safety raw event status register' },
-    0xA10: { shortName: 'FUNC_CLR', longName: 'Functional raw event clear register write-only 0x0' },
-    0xA14: { shortName: 'ERR_CLR', longName: 'Error raw event clear register write-only 0x0' },
-    0xA18: { shortName: 'SAFETY_CLR', longName: 'Safety raw event clear register write-only 0x0' },
-    0xA20: { shortName: 'FUNC_ENA', longName: 'Functional raw event enable register' },
-    0xA24: { shortName: 'ERR_ENA', longName: 'Error raw event enable register' },
-    0xA28: { shortName: 'SAFETY_ENA', longName: 'Safety raw event enable register' },
-    0xA30: { shortName: 'CAPTURING_MODE', longName: 'IRC configuration register' },
-    0xA40: { shortName: 'HDP', longName: 'Hardware Debug Port control register' }
-  };
-  
-  let mappedCount = 0;
-  let unmappedCount = 0;
-  
-  // Process each raw register entry
-  const regAddrMask = 0x00000FFF; // 12 LSBit are the X_CAN local address bits
-  for (const rawReg of reg.raw) {
-    const mapping = addressMap[rawReg.addr & regAddrMask];
-    
-    if (mapping) {
-      // Create named register structure
-      const regName = mapping.shortName;
-      reg[regName] = {
-        int32: rawReg.value_int32,
-        name_long: mapping.longName,
-        addr: rawReg.addr
-      };
-      
-      mappedCount++;
-      
-      reg.parse_output.report.push({
-        severityLevel: sevC.Info,
-        verbose: true, // if this flag is set, the report will be only shown, if the user selected "verbose"
-        msg: `Mapped reg. address 0x${rawReg.addr.toString(16).toUpperCase().padStart(3, '0')} to ${regName} (${mapping.longName})`
-      });
-    } else {
-      // Unknown address
-      unmappedCount++;
-      
-      reg.parse_output.report.push({
-        severityLevel: sevC.Warn,
-        msg: `Unknown register address: 0x${rawReg.addr.toString(16).toUpperCase().padStart(3, '0')} - register will be ignored`
-      });
-      reg.parse_output.hasWarnings = true;
-    }
-  }
-  
-  // Add summary message
-  reg.parse_output.report.push({
-    severityLevel: sevC.Info, // info
-    msg: `Address mapping completed: ${mappedCount} mapped, ${unmappedCount} unknown`
-  });
-  
-  // report missing registers in register dump
-  //    compare reg-object with registers in addressMap
-  let missingRegText = 'Missing registers in dump:';
-  let missingRegFound = false;
-  for (const addr in addressMap) {
-    const regName = addressMap[addr].shortName;
-    if (!(regName in reg)) {
-      // Register is NO present in reg object
-      const addrNum = Number(addr); // convert key to number for hex formatting
-      missingRegText += `\n0x${addrNum.toString(16).toUpperCase().padStart(3, '0')}: ${regName.padEnd(5, ' ')} (${addressMap[addr].longName})`;
-      missingRegFound = true;
-    }
-  }
-  
-  if (missingRegFound) {
-    reg.parse_output.report.push({
-      severityLevel: sevC.Warn,
-      msg: missingRegText
-    });
-  }
+// Address Mask to be able to consider the local address bits
+export const regLocalAddrMask = 0x00000FFF; // 12 LSBit are the X_CAN local address bits
 
-  return reg;
-} // end mapRawRegistersToNames
+// Address to register name mapping (masked with 0xFFF local X_CAN address)
+export const regAddrMap = {
+  // ====== MH: Global ======
+  0x000: { shortName: 'VERSION', longName: 'Release Identification Register' },
+  0x004: { shortName: 'MH_CTRL', longName: 'Message Handler Control register' },
+  0x008: { shortName: 'MH_CFG', longName: 'Message Handler Configuration register' },
+  0x00C: { shortName: 'MH_STS', longName: 'Message Handler Status register' },
+  0x010: { shortName: 'MH_SFTY_CFG', longName: 'Message Handler Safety Configuration register' },
+  0x014: { shortName: 'MH_SFTY_CTRL', longName: 'Message Handler Safety Control register' },
+  0x018: { shortName: 'RX_FILTER_MEM_ADD', longName: 'RX Filter Base Address register' },
+  0x01C: { shortName: 'TX_DESC_MEM_ADD', longName: 'TX Descriptor Base Address register' },
+  0x020: { shortName: 'AXI_ADD_EXT', longName: 'AXI address extension register' },
+  0x024: { shortName: 'AXI_PARAMS', longName: 'AXI parameter register' },
+  0x028: { shortName: 'MH_LOCK', longName: 'Message Handler Lock register' },
+  // ====== MH: TX FIFOs ======
+  0x100: { shortName: 'TX_DESC_ADD_PT', longName: 'TX descriptor current address pointer register' },
+  0x104: { shortName: 'TX_STATISTICS', longName: 'Unsuccessful and Successful message counter registers' },
+  0x108: { shortName: 'TX_FQ_STS0', longName: 'TX FIFO Queue Status register' },
+  0x10C: { shortName: 'TX_FQ_STS1', longName: 'TX FIFO Queue Status register' },
+  0x110: { shortName: 'TX_FQ_CTRL0', longName: 'TX FIFO Queue Control register 0' },
+  0x114: { shortName: 'TX_FQ_CTRL1', longName: 'TX FIFO Queue Control register 1' },
+  0x118: { shortName: 'TX_FQ_CTRL2', longName: 'TX FIFO Queue Control register 2' },
+  0x120: { shortName: 'TX_FQ_ADD_PT0', longName: 'TX FIFO Queue 0 Current Address Pointer register' },
+  0x124: { shortName: 'TX_FQ_START_ADD0', longName: 'TX FIFO Queue 0 Start Address register' },
+  0x128: { shortName: 'TX_FQ_SIZE0', longName: 'TX FIFO Queue 0 Size register' },
+  0x130: { shortName: 'TX_FQ_ADD_PT1', longName: 'TX FIFO Queue 1 Current Address Pointer register' },
+  0x134: { shortName: 'TX_FQ_START_ADD1', longName: 'TX FIFO Queue 1 Start Address register' },
+  0x138: { shortName: 'TX_FQ_SIZE1', longName: 'TX FIFO Queue 1 Size register' },
+  0x140: { shortName: 'TX_FQ_ADD_PT2', longName: 'TX FIFO Queue 2 Current Address Pointer register' },
+  0x144: { shortName: 'TX_FQ_START_ADD2', longName: 'TX FIFO Queue 2 Start Address register' },
+  0x148: { shortName: 'TX_FQ_SIZE2', longName: 'TX FIFO Queue 2 Size register' },
+  0x150: { shortName: 'TX_FQ_ADD_PT3', longName: 'TX FIFO Queue 3 Current Address Pointer register' },
+  0x154: { shortName: 'TX_FQ_START_ADD3', longName: 'TX FIFO Queue 3 Start Address register' },
+  0x158: { shortName: 'TX_FQ_SIZE3', longName: 'TX FIFO Queue 3 Size register' },
+  0x160: { shortName: 'TX_FQ_ADD_PT4', longName: 'TX FIFO Queue 4 Current Address Pointer register' },
+  0x164: { shortName: 'TX_FQ_START_ADD4', longName: 'TX FIFO Queue 4 Start Address register' },
+  0x168: { shortName: 'TX_FQ_SIZE4', longName: 'TX FIFO Queue 4 Size register' },
+  0x170: { shortName: 'TX_FQ_ADD_PT5', longName: 'TX FIFO Queue 5 Current Address Pointer register' },
+  0x174: { shortName: 'TX_FQ_START_ADD5', longName: 'TX FIFO Queue 5 Start Address register' },
+  0x178: { shortName: 'TX_FQ_SIZE5', longName: 'TX FIFO Queue 5 Size register' },
+  0x180: { shortName: 'TX_FQ_ADD_PT6', longName: 'TX FIFO Queue 6 Current Address Pointer register' },
+  0x184: { shortName: 'TX_FQ_START_ADD6', longName: 'TX FIFO Queue 6 Start Address register' },
+  0x188: { shortName: 'TX_FQ_SIZE6', longName: 'TX FIFO Queue 6 Size register' },
+  0x190: { shortName: 'TX_FQ_ADD_PT7', longName: 'TX FIFO Queue 7 Current Address Pointer register' },
+  0x194: { shortName: 'TX_FQ_START_ADD7', longName: 'TX FIFO Queue 7 Start Address register' },
+  0x198: { shortName: 'TX_FQ_SIZE7', longName: 'TX FIFO Queue 7 Size register' },
+  // ====== MH: TX Priority Queue control/status ======
+  0x300: { shortName: 'TX_PQ_STS0', longName: 'TX Priority Queue Status register' },
+  0x304: { shortName: 'TX_PQ_STS1', longName: 'TX Priority Queue Status register' },
+  0x30C: { shortName: 'TX_PQ_CTRL0', longName: 'TX Priority Queue Control register 0' },
+  0x310: { shortName: 'TX_PQ_CTRL1', longName: 'TX Priority Queue Control register 1' },
+  0x314: { shortName: 'TX_PQ_CTRL2', longName: 'TX Priority Queue Control register 2' },
+  0x318: { shortName: 'TX_PQ_START_ADD', longName: 'TX Priority Queue Start Address' },
+  // ====== MH: RX FIFO Queues control/status ======
+  0x400: { shortName: 'RX_DESC_ADD_PT', longName: 'RX descriptor Current Address Pointer' },
+  0x404: { shortName: 'RX_STATISTICS', longName: 'Unsuccessful and Successful Message Received Counter' },
+  0x408: { shortName: 'RX_FQ_STS0', longName: 'RX FIFO Queue Status register 0' },
+  0x40C: { shortName: 'RX_FQ_STS1', longName: 'RX FIFO Queue Status register 1' },
+  0x410: { shortName: 'RX_FQ_STS2', longName: 'RX FIFO Queue Status register 2' },
+  0x414: { shortName: 'RX_FQ_CTRL0', longName: 'RX FIFO Queue Control register 0' },
+  0x418: { shortName: 'RX_FQ_CTRL1', longName: 'RX FIFO Queue Control register 1' },
+  0x41C: { shortName: 'RX_FQ_CTRL2', longName: 'RX FIFO Queue Control register 2' },
+  0x420: { shortName: 'RX_FQ_ADD_PT0', longName: 'RX FIFO Queue 0 Current Address Pointer' },
+  0x424: { shortName: 'RX_FQ_START_ADD0', longName: 'RX FIFO Queue 0 link list Start Address' },
+  0x428: { shortName: 'RX_FQ_SIZE0', longName: 'RX FIFO Queue 0 link list and data container Size' },
+  0x42C: { shortName: 'RX_FQ_DC_START_ADD0', longName: 'RX FIFO Queue 0 Data Container Start Address' },
+  0x430: { shortName: 'RX_FQ_RD_ADD_PT0', longName: 'RX FIFO Queue 0' },
+  0x438: { shortName: 'RX_FQ_ADD_PT1', longName: 'RX FIFO Queue 1 Current Address Pointer' },
+  0x43C: { shortName: 'RX_FQ_START_ADD1', longName: 'RX FIFO Queue 1 link list Start Address' },
+  0x440: { shortName: 'RX_FQ_SIZE1', longName: 'RX FIFO Queue 1 link list and data container Size' },
+  0x444: { shortName: 'RX_FQ_DC_START_ADD1', longName: 'RX FIFO Queue 1 Data Container Start Address' },
+  0x448: { shortName: 'RX_FQ_RD_ADD_PT1', longName: 'RX FIFO Queue 1' },
+  0x450: { shortName: 'RX_FQ_ADD_PT2', longName: 'RX FIFO Queue 2 Current Address Pointer' },
+  0x454: { shortName: 'RX_FQ_START_ADD2', longName: 'RX FIFO Queue 2 link list Start Address' },
+  0x458: { shortName: 'RX_FQ_SIZE2', longName: 'RX FIFO Queue 2 link list and data container Size' },
+  0x45C: { shortName: 'RX_FQ_DC_START_ADD2', longName: 'RX FIFO Queue 2 Data Container Start Address' },
+  0x460: { shortName: 'RX_FQ_RD_ADD_PT2', longName: 'RX FIFO Queue 2' },
+  0x468: { shortName: 'RX_FQ_ADD_PT3', longName: 'RX FIFO Queue 3 Current Address Pointer' },
+  0x46C: { shortName: 'RX_FQ_START_ADD3', longName: 'RX FIFO Queue 3 link list Start Address' },
+  0x470: { shortName: 'RX_FQ_SIZE3', longName: 'RX FIFO Queue 3 link list and data container Size' },
+  0x474: { shortName: 'RX_FQ_DC_START_ADD3', longName: 'RX FIFO Queue 3 Data Container Start Address' },
+  0x478: { shortName: 'RX_FQ_RD_ADD_PT3', longName: 'RX FIFO Queue 3' },
+  0x480: { shortName: 'RX_FQ_ADD_PT4', longName: 'RX FIFO Queue 4 Current Address Pointer' },
+  0x484: { shortName: 'RX_FQ_START_ADD4', longName: 'RX FIFO Queue 4 link list Start Address' },
+  0x488: { shortName: 'RX_FQ_SIZE4', longName: 'RX FIFO Queue 4 link list and data container Size' },
+  0x48C: { shortName: 'RX_FQ_DC_START_ADD4', longName: 'RX FIFO Queue 4 Data Container Start Address' },
+  0x490: { shortName: 'RX_FQ_RD_ADD_PT4', longName: 'RX FIFO Queue 4' },
+  0x498: { shortName: 'RX_FQ_ADD_PT5', longName: 'RX FIFO Queue 5 Current Address Pointer' },
+  0x49C: { shortName: 'RX_FQ_START_ADD5', longName: 'RX FIFO Queue 5 link list Start Address' },
+  0x4A0: { shortName: 'RX_FQ_SIZE5', longName: 'RX FIFO Queue 5 link list and data container size' },
+  0x4A4: { shortName: 'RX_FQ_DC_START_ADD5', longName: 'RX FIFO Queue 5 Data Container Start Address' },
+  0x4A8: { shortName: 'RX_FQ_RD_ADD_PT5', longName: 'RX FIFO Queue 5' },
+  0x4B0: { shortName: 'RX_FQ_ADD_PT6', longName: 'RX FIFO Queue 6 Current Address Pointer' },
+  0x4B4: { shortName: 'RX_FQ_START_ADD6', longName: 'RX FIFO Queue 6 link list Start Address' },
+  0x4B8: { shortName: 'RX_FQ_SIZE6', longName: 'RX FIFO Queue 6 link list and data container Size' },
+  0x4BC: { shortName: 'RX_FQ_DC_START_ADD6', longName: 'RX FIFO Queue 6 Data Container Start Address' },
+  0x4C0: { shortName: 'RX_FQ_RD_ADD_PT6', longName: 'RX FIFO Queue 6' },
+  0x4C8: { shortName: 'RX_FQ_ADD_PT7', longName: 'RX FIFO Queue 7 Current Address Pointer' },
+  0x4CC: { shortName: 'RX_FQ_START_ADD7', longName: 'RX FIFO Queue 7 link list Start Address' },
+  0x4D0: { shortName: 'RX_FQ_SIZE7', longName: 'RX FIFO Queue 7 link list and data container Size' },
+  0x4D4: { shortName: 'RX_FQ_DC_START_ADD7', longName: 'RX FIFO Queue 7 Data Container Start Address' },
+  0x4D8: { shortName: 'RX_FQ_RD_ADD_PT7', longName: 'RX FIFO Queue 7' },
+  // ====== MH: TX filter control ======
+  0x600: { shortName: 'TX_FILTER_CTRL0', longName: 'TX Filter Control register 0' },
+  0x604: { shortName: 'TX_FILTER_CTRL1', longName: 'TX Filter Control register 1' },
+  0x608: { shortName: 'TX_FILTER_REFVAL0', longName: 'TX Filter Reference Value register 0' },
+  0x60C: { shortName: 'TX_FILTER_REFVAL1', longName: 'TX Filter Reference Value register 1' },
+  0x610: { shortName: 'TX_FILTER_REFVAL2', longName: 'TX Filter Reference Value register 2' },
+  0x614: { shortName: 'TX_FILTER_REFVAL3', longName: 'TX Filter Reference Value register 3' },
+  // ====== MH: RX filter control ======
+  0x680: { shortName: 'RX_FILTER_CTRL', longName: 'RX Filter Control register' },
+  // ====== MH: Interrupts control/status ======
+  0x700: { shortName: 'TX_FQ_INT_STS', longName: 'TX FIFO Queue Interrupt Status register' },
+  0x704: { shortName: 'RX_FQ_INT_STS', longName: 'RX FIFO Queue Interrupt Status register' },
+  0x708: { shortName: 'TX_PQ_INT_STS0', longName: 'TX Priority Queue Interrupt Status register 0' },
+  0x70C: { shortName: 'TX_PQ_INT_STS1', longName: 'TX Priority Queue Interrupt Status register 1' },
+  0x710: { shortName: 'STATS_INT_STS', longName: 'Statistics Interrupt Status register' },
+  0x714: { shortName: 'ERR_INT_STS', longName: 'Error Interrupt Status register' },
+  0x718: { shortName: 'SFTY_INT_STS', longName: 'Safety Interrupt Status register' },
+  0x71C: { shortName: 'AXI_ERR_INFO', longName: 'AXI Error Information' },
+  0x720: { shortName: 'DESC_ERR_INFO0', longName: 'Descriptor Error Information 0' },
+  0x724: { shortName: 'DESC_ERR_INFO1', longName: 'Descriptor Error Information 1' },
+  0x728: { shortName: 'TX_FILTER_ERR_INFO', longName: 'TX Filter Error Information' },
+  // ====== MH: Integration/Debug control/status ======
+  0x800: { shortName: 'DEBUG_TEST_CTRL', longName: 'Debug Control register' },
+  0x804: { shortName: 'INT_TEST0', longName: 'Interrupt Test register 0' },
+  0x808: { shortName: 'INT_TEST1', longName: 'Interrupt Test register 1' },
+  0x810: { shortName: 'TX_SCAN_FC', longName: 'TX-SCAN first candidates register' },
+  0x814: { shortName: 'TX_SCAN_BC', longName: 'TX-SCAN best candidates register' },
+  0x818: { shortName: 'TX_FQ_DESC_VALID', longName: 'Valid TX FIFO Queue descriptors in local memory' },
+  0x81C: { shortName: 'TX_PQ_DESC_VALID', longName: 'Valid TX Priority Queue descriptors in local memory' },
+  // ====== MH: CRC control ======
+  0x880: { shortName: 'CRC_CTRL', longName: 'CRC Control register write-only 0x0' },
+  0x884: { shortName: 'CRC_REG', longName: 'CRC register' },
+  // ====== PRT ======
+  0x900: { shortName: 'ENDN', longName: 'Endianness Test Register' },
+  0x904: { shortName: 'PREL', longName: 'PRT Release Identification Register' },
+  0x908: { shortName: 'STAT', longName: 'PRT Status Register' },
+  0x920: { shortName: 'EVNT', longName: 'Event Status Flags Register' },
+  0x940: { shortName: 'LOCK', longName: 'Unlock Sequence Register' },
+  0x944: { shortName: 'CTRL', longName: 'Control Register' },
+  0x948: { shortName: 'FIMC', longName: 'Fault Injection Module Control Register' },
+  0x94C: { shortName: 'TEST', longName: 'Hardware Test functions Register' },
+  0x960: { shortName: 'MODE', longName: 'Operating Mode Register' },
+  0x964: { shortName: 'NBTP', longName: 'Arbitration Phase Nominal Bit Timing Register' },
+  0x968: { shortName: 'DBTP', longName: 'CAN FD Data Phase Bit Timing Register' },
+  0x96C: { shortName: 'XBTP', longName: 'XAN XL Data Phase Bit Timing Register' },
+  0x970: { shortName: 'PCFG', longName: 'PWME Configuration Register' },
+  // ====== IRC ======
+  0xA00: { shortName: 'FUNC_RAW', longName: 'Functional raw event status register' },
+  0xA04: { shortName: 'ERR_RAW', longName: 'Error raw event status register' },
+  0xA08: { shortName: 'SAFETY_RAW', longName: 'Safety raw event status register' },
+  0xA10: { shortName: 'FUNC_CLR', longName: 'Functional raw event clear register write-only 0x0' },
+  0xA14: { shortName: 'ERR_CLR', longName: 'Error raw event clear register write-only 0x0' },
+  0xA18: { shortName: 'SAFETY_CLR', longName: 'Safety raw event clear register write-only 0x0' },
+  0xA20: { shortName: 'FUNC_ENA', longName: 'Functional raw event enable register' },
+  0xA24: { shortName: 'ERR_ENA', longName: 'Error raw event enable register' },
+  0xA28: { shortName: 'SAFETY_ENA', longName: 'Safety raw event enable register' },
+  0xA30: { shortName: 'CAPTURING_MODE', longName: 'IRC configuration register' },
+  0xA40: { shortName: 'HDP', longName: 'Hardware Debug Port control register' }
+};
+
+// TODO: add correct reserved ranges to array
+// Reserved Address Array: list reserved addresses in M_CAN address range (inclusive, word-aligned step = 4 bytes)
+export const resAddrArray = [
+  { lowerResAddr: 0xB00, upperResAddr: 0xBFC }, // -> 
+  { lowerResAddr: 0x9F0, upperResAddr: 0x9FC }  // -> 
+];
+
+// ==== Exported Funktions/Structures up to here =====================================
+// ===================================================================================

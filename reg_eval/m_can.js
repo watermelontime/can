@@ -7,15 +7,11 @@ import { sevC } from './help_functions.js';
 //       but not clear how to add formating inside a report => via own special characters, e.g. <b> asdf <\b>
 //       that are replaced in the report print process
 // TODO: visualize gaps in the Memory Map as own rows and also generate according report to inform about this
-// TOOD: support different M_CAN version => ask Florian before
-// TODO: add tolerance to reserved addresses
+// TODO: support different M_CAN version => ask Florian before
 
 // ===================================================================================
 // X_CAN: Process User Register Values: parse, validate, calculate results, generate report
-export function processRegsOfM_CAN(reg) {
-  // Map raw addresses to register names
-  mapRawRegistersToNames(reg);
-  console.log('[Info] Step 2 - Mapped register values (reg object):', reg);
+export function processRegs(reg) {
 
   // c1) Process Bit Timing registers
   procRegsPrtBitTiming(reg);
@@ -88,8 +84,11 @@ export function loadExampleRegisterValues() {
 return {exampleRegisterValues: registerString, clockFrequency: clock};
 }
 
+// Address Mask to be able to consider the local address bits
+export const regLocalAddrMask = 0x000001FF; // 9 LSBit are the M_CAN local address bits
+
 // Mapping table to map: Register-Addresses to Register-Names
-const regAddrMap = {
+export const regAddrMap = {
   0x000: { shortName: 'CREL', longName: 'Core Release Register' },
   0x004: { shortName: 'ENDN', longName: 'Endian Register' },
   0x008: { shortName: 'CUST', longName: 'Customer Register' },
@@ -140,7 +139,7 @@ const regAddrMap = {
 };
 
 // Reserved Address Array: list reserved addresses in M_CAN address range (inclusive, word-aligned step = 4 bytes)
-const resAddrArray = [
+export const resAddrArray = [
   { lowerResAddr: 0x030, upperResAddr: 0x03C }, // 0x030, 0x034, 0x038, 0x03C  -> (4)
   { lowerResAddr: 0x04C, upperResAddr: 0x04C }, // 0x04C                       -> (1)
   { lowerResAddr: 0x060, upperResAddr: 0x07C }, // 0x060..0x07C step 4         -> (8)
@@ -149,123 +148,8 @@ const resAddrArray = [
   { lowerResAddr: 0x0FC, upperResAddr: 0x1FC }  // 0x0FC..0x1FC step 4         -> (65)
 ];
 
+// ==== Exported Funktions/Structures up to here =====================================
 // ===================================================================================
-// Check if an address is within the reserved M_CAN address ranges
-// Only word-aligned addresses (step = 4 bytes) are considered to be in reserved address range
-function isReserved(addr) {
-  // Not a word-aligned address -> treat as not reserved (register map is word-based)
-  if ((addr & 0x3) !== 0) {
-    return false;
-  }
-
-  for (const range of resAddrArray) {
-    if (addr >= range.lowerResAddr && addr <= range.upperResAddr) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// ===================================================================================
-// Map raw register addresses to register names and create named register structure
-function mapRawRegistersToNames(reg) {
-  // Step 1: map addresses to register names
-  // Step 2: check for duplicate register addresses
-  // Step 3: check if reserved addresses present
-
-  // Check if parse_output exists (in reg object)
-  if (!reg.parse_output) {
-    console.warn('[X_CAN] [Warning, mapRawRegistersToNames()] reg.parse_output not found in reg object. Skipping mapping of <raw registers> to <names>. parseUserRegisterValues(userRegText, reg) must be called before this function.');
-    return;
-  }
-  
-  let mappedCount = 0;
-  let unmappedCount = 0;
-  let reservedCount = 0;
-  
-  // Mapping: Process each raw register entry
-  const regAddrMask = 0x00000FFF; // 12 LSBit are the X_CAN local address bits
-  for (const rawReg of reg.raw) {
-    const rawRegAddrMasked = rawReg.addr & regAddrMask
-    
-    // Step 1: map addresses to register names
-    const mapping = regAddrMap[rawRegAddrMasked];
-    if (mapping) {
-      // Step 2: Check if this address is a duplicate (ocurring a second time)
-      if (reg[mapping.shortName]) {
-        // duplicate found, ignore it and warn user
-        reg.parse_output.report.push({
-          severityLevel: sevC.Error,
-          msg: `Duplicate register address found: 0x${rawReg.addr.toString(16).toUpperCase().padStart(3, '0')}. The duplicate will be ignored`
-        });
-        continue;
-      } else {
-        // No duplicate found, proceed with mapping
-        // Create named register structure
-        const regName = mapping.shortName;
-        reg[regName] = {
-          int32: rawReg.value_int32,
-          name_long: mapping.longName,
-          addr: rawReg.addr
-        };
-
-        mappedCount++;
-        reg.parse_output.report.push({
-          severityLevel: sevC.Info,
-          verbose: true,
-          msg: `Mapped reg. address 0x${rawReg.addr.toString(16).toUpperCase().padStart(3, '0')} to ${regName} (${mapping.longName})`
-        });
-      }
-
-    // Step 3: check if reserved addresses present
-    } else if (isReserved(rawRegAddrMasked)) {
-      // it is a reserved address
-      reservedCount++;
-      reg.parse_output.report.push({
-        severityLevel: sevC.Info,
-        verbose: true,
-        msg: `Reserved register address: 0x${rawReg.addr.toString(16).toUpperCase().padStart(3, '0')} - register will be ignored`
-      });
-    } else {
-      // Unknown address
-      unmappedCount++;
-      reg.parse_output.report.push({
-        severityLevel: sevC.Warn,
-        msg: `Unknown register address: 0x${rawReg.addr.toString(16).toUpperCase().padStart(3, '0')} - register will be ignored`
-      });
-      reg.parse_output.hasWarnings = true;
-    }
-  }
-  
-  // Add summary message
-  reg.parse_output.report.push({
-    severityLevel: sevC.Info,
-    msg: `Address mapping completed: ${mappedCount} mapped, ${reservedCount} reserved, ${unmappedCount} unknown`
-  });
-  
-  // report missing registers in register dump
-  //    compare reg-object with registers in addressMap
-  let missingRegText = 'Missing registers in dump:';
-  let missingRegFound = false;
-  for (const addr in regAddrMap) {
-    const regName = regAddrMap[addr].shortName;
-    if (!(regName in reg)) {
-      // Register is NO present in reg object
-      const addrNum = Number(addr); // convert key to number for hex formatting
-      missingRegText += `\n0x${addrNum.toString(16).toUpperCase().padStart(3, '0')}: ${regName.padEnd(5, ' ')} (${regAddrMap[addr].longName})`;
-      missingRegFound = true;
-    }
-  }
-  
-  if (missingRegFound) {
-    reg.parse_output.report.push({
-      severityLevel: sevC.Warn,
-      msg: missingRegText
-    });
-  }
-
-  return reg;
-} // end mapRawRegistersToNames
 
 // ===================================================================================
 // Help function: Translate configured data field size to bytes
@@ -2154,14 +2038,15 @@ function checkMcanMessageRamMap(reg) {
     if (s.name !== RxBufferName){
       unusedReport += `\n${s.name.padEnd(14)}: unused         ` +
                       ` (${s.size.toString().padStart(4, " ")} byte)` +
-                      ` elemNum=${s.elemNum.toString().padStart(2, " ")}, ` +
+                      ` elemNum=${s.elemNum.toString().padStart(2, " ")},` +
                       ` elemSize=${s.elemSize.toString().padStart(2, " ")} byte`;
     } else {
       // dedicated RX buffer => number of elements are implicitely configured via RX Filters that point to RX Buffers
       unusedReport += `\n${s.name.padEnd(14)}: unused         ` +
                    ` ( ??? byte)` +
                    ` elemNum=??,` +
-                   ` elemSize=${s.elemSize.toString().padStart(2, " ")} byte`;
+                   ` elemSize=${s.elemSize.toString().padStart(2, " ")} byte\n` +
+                   `                => assumed unused because RBSA=0 (Hint: elemNum unknown because configured indirectly via RX Filters)`;
     }
   }
   reg.memmap.report.push({

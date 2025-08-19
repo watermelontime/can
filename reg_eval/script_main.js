@@ -1,9 +1,14 @@
 // TODO
-// add verbose check-box to html
-// add verbose propoerty to m_can mapping
-// describe in example register dump/values, that absolute addresses can be used
 // support for X_CANB
 // use the same function for PRT register decoding of X_CAN, XS_CAN, and X_CANB (decode individual registers via separate function)
+// make mapRawRegistersToNames(reg, regAddrMap, resAddrArray); a help in this file, Use function from M_CAN
+//      write list of things an Implementation needs to comply to: 
+//      - provide external data structures regAddrMap and resAddrArray
+//      - parsing and address-to-Regiser mapping done in main function
+//      - provide external register-decoding function to be called by main function
+//        * reports must be in reg.REGNAME.report[]
+//        * must provide data in reg.general.bt_arb / bt_datxl / bt_datfd / bt_global => add detailed format
+//            (these are used for HTML visualisation)
 
 // import drawing functions
 import * as draw_svg from './draw_bits_svg.js';
@@ -125,12 +130,10 @@ function initializeClockFrequencyHtmlField() {
 
 // ===================================================================================
 // parseUserRegisterValues: Parse text and generate raw register array with addr and value
-function parseUserRegisterValues(userRegText, reg, verbose = true) {
+function parseUserRegisterValues(userRegText, reg) {
   // Initialize parse output in reg object
   reg.parse_output = {
     report: [],
-    hasErrors: false,
-    hasWarnings: false
   };
   
   // Initialize raw register array
@@ -140,20 +143,21 @@ function parseUserRegisterValues(userRegText, reg, verbose = true) {
   
   for (const line of lines) {
     const trimmedLine = line.trim();
+
     if (trimmedLine.length > 0) { // ignore empty lines
+
       // Check if line is a comment (starts with '#')
       if (trimmedLine.startsWith('#')) {
         // Ignore comment lines - add info report for visibility
-        if (verbose === true) {
-          reg.parse_output.report.push({
-            severityLevel: sevC.Info, // info
-            msg: `Ignored comment line: "${trimmedLine}"`
-          });
-        }
+        reg.parse_output.report.push({
+          severityLevel: sevC.Info,
+          verbose: true,
+          msg: `Ignored comment line: "${trimmedLine}"`
+        });
         continue; // Skip to next line
       }
       
-      // Expected format: "0x000 0x87654321" or "000 87654321"
+      // Expected format: <address><space><register value>, e.g.: "0x000 0x87654321" or "000 87654321"
       const match = trimmedLine.match(/^(0x)?([0-9a-fA-F]+)\s+(0x)?([0-9a-fA-F]+)$/);
       if (match) {
         const addrHex = match[2];
@@ -163,31 +167,29 @@ function parseUserRegisterValues(userRegText, reg, verbose = true) {
         const intValue = parseInt(valueHex, 16);
         
         if (!isNaN(addrValue) && !isNaN(intValue)) {
-          // Store in raw register array
+          // Valid Input: Store in raw register array
           reg.raw.push({
             addr: addrValue,
             value_int32: intValue
           });
           
-          if (verbose === true) {
-            reg.parse_output.report.push({
-              severityLevel: sevC.Info, // info
-              msg: `Parsed register at address 0x${addrHex.toUpperCase()}: 0x${valueHex.toUpperCase()}`
-            });
-          }
-        } else {
           reg.parse_output.report.push({
-            severityLevel: sevC.Error, // error
+            severityLevel: sevC.Info,
+            verbose: true,
+            msg: `Parsed register at address 0x${addrHex.toUpperCase()}: 0x${valueHex.toUpperCase()}`
+          });
+        } else {
+          // Invalid Input
+          reg.parse_output.report.push({
+            severityLevel: sevC.Error,
             msg: `Invalid hex values in line: "${trimmedLine}"`
           });
-          reg.parse_output.hasErrors = true;
         }
       } else {
         reg.parse_output.report.push({
-          severityLevel: sevC.Error, // Error
-          msg: `Invalid line format: "${trimmedLine}". Expected format: "0x000 0x87654321"`
+          severityLevel: sevC.Error,
+          msg: `Invalid line format: "${trimmedLine}". Expected format: "<address><space><value>, e.g. 0x0123 0x87654321"`
         });
-        reg.parse_output.hasErrors = true;
       }
     }
   }
@@ -202,6 +204,126 @@ function parseUserRegisterValues(userRegText, reg, verbose = true) {
   }
 
   return reg.parse_output;
+}
+
+// ===================================================================================
+// Map raw register addresses to register names and create named register structure
+function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrMask) {
+  // Step 1: map addresses to register names
+  // Step 2: check for duplicate register addresses
+  // Step 3: check if reserved addresses present
+
+  // Check if parse_output exists (in reg object)
+  if (!reg.parse_output) {
+    console.warn('[X_CAN] [Warning, mapRawRegistersToNames()] reg.parse_output not found in reg object. Skipping mapping of <raw registers> to <names>. parseUserRegisterValues(userRegText, reg) must be called before this function.');
+    return;
+  }
+  
+  let mappedCount = 0;
+  let unmappedCount = 0;
+  let reservedCount = 0;
+  
+  // calculate number of nibbles of myRegLocalAddrMask (neeeded for porper hex-address printing)
+  const localAddNibCnt = myRegLocalAddrMask.toString(16).length;
+  console.log(`Local address nibble count: ${localAddNibCnt}`);
+
+  // Mapping: Process each raw register entry
+  for (const rawReg of reg.raw) {
+    const rawRegLocalAddr = rawReg.addr & myRegLocalAddrMask
+    
+    // Step 1: map addresses to register names
+    const mapping = myRegAddrMap[rawRegLocalAddr];
+    if (mapping) {
+      // Step 2: Check if this address is a duplicate (ocurring a second time)
+      if (reg[mapping.shortName]) {
+        // duplicate found, ignore it and warn user
+        reg.parse_output.report.push({
+          severityLevel: sevC.Error,
+          msg: `Duplicate register address found: 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} (=> local address 0x${rawRegLocalAddr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')}). The duplicate will be ignored.`
+        });
+        continue;
+      } else {
+        // No duplicate found, proceed with mapping
+        // Create named register structure
+        const regName = mapping.shortName;
+        reg[regName] = {
+          int32: rawReg.value_int32,
+          name_long: mapping.longName,
+          addr: rawReg.addr
+        };
+
+        mappedCount++;
+        reg.parse_output.report.push({
+          severityLevel: sevC.Info,
+          verbose: true,
+          msg: `Mapped reg. address 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} to ${regName} (${mapping.longName})`
+        });
+      }
+
+    // Step 3: check if reserved addresses present
+    } else if (isReserved(rawRegLocalAddr, myResAddrArray)) {
+      // it is a reserved address
+      reservedCount++;
+      reg.parse_output.report.push({
+        severityLevel: sevC.Info,
+        verbose: true,
+        msg: `Reserved register address: 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} - register will be ignored`
+      });
+    } else {
+      // Unknown address
+      unmappedCount++;
+      reg.parse_output.report.push({
+        severityLevel: sevC.Warn,
+        msg: `Unknown register address: 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} - register will be ignored`
+      });
+    }
+  }
+  
+  // Add summary message
+  reg.parse_output.report.push({
+    severityLevel: sevC.Info,
+    msg: `Address mapping completed: ${mappedCount} mapped, ${reservedCount} reserved, ${unmappedCount} unknown`
+  });
+  
+  // report missing registers in register dump
+  //    compare reg-object with registers in addressMap
+  let missingRegText = 'Missing registers in dump:';
+  let missingRegFound = false;
+  for (const addr in myRegAddrMap) {
+    const regName = myRegAddrMap[addr].shortName;
+    if (!(regName in reg)) {
+      // Register is NO present in reg object
+      const addrNum = Number(addr); // convert key to number for hex formatting
+      missingRegText += `\n0x${addrNum.toString(16).toUpperCase().padStart(localAddNibCnt, '0')}: ${regName.padEnd(5, ' ')} (${myRegAddrMap[addr].longName})`;
+      missingRegFound = true;
+    }
+  }
+  
+  if (missingRegFound) {
+    reg.parse_output.report.push({
+      severityLevel: sevC.Warn,
+      msg: missingRegText
+    });
+  }
+
+  return reg;
+} // end mapRawRegistersToNames
+
+// ===================================================================================
+// Check if an address is within the reserved M_CAN address ranges
+// Only word-aligned addresses (step = 4 bytes) are considered to be in reserved address range
+function isReserved(addr, myResAddrArray) {
+  // Not a word-aligned address -> treat as not reserved (register map is word-based)
+  if ((addr & 0x3) !== 0) {
+    return false;
+  }
+
+  for (const range of myResAddrArray) {
+    if (addr >= range.lowerResAddr && addr <= range.upperResAddr) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // ===================================================================================
@@ -805,28 +927,27 @@ function getVerbositySettingFromHTML() {
 // Process User Register Values from Text Area - Updated main function
 function processUserRegisterValues() {
   // Basic idea of this function:
-  // 1. Parse user input from textarea into raw register array
-  // 2. Process with the appropriate CAN IP Module function
+  // 1. Get Data from HTML
+  // 2. Parse user input from textarea into raw register array
+  // 3. Map parsed register addresses to Register Names
+  // 4. Process with the appropriate CAN IP Module function
   //    This function fills the content of the reg object with calculations
-  // 3. Generate HTML Data to be displayed from reg object
+  // 5. Generate HTML Data to be displayed from reg object
   //    and Display data from params, results, reg in HTML fields and SVGs
 
-  const verbose = getVerbositySettingFromHTML(); // defines verbosity of reports
   const paramsHtml = {}; // Initialize params object for HTML display
   const resultsHtml = {}; // Initialize results object for HTML display
   const reg = {}; // Initialize register object
   reg.general = {};
   reg.general.report = []; // Initialize report array
+  const verbose = getVerbositySettingFromHTML(); // defines verbosity of reports
 
-  // CAN IP Module determination: read value of select field from HTML
+  // Step 1: Get data from HTML =============================================================
+  // CAN IP Module determination (from HTML) -------------------
   const canIpModule = getCanIpModuleFromHTML();
   if (!canIpModule) {
     // If select field is not found, log an error and exit
-    reg.general.report.push({
-      severityLevel: sevC.Error, // error
-      msg: `[Error] CAN IP Module select field not found in HTML.`
-    });
-    displayValidationReport(reg);
+    console.log(`[Error] CAN IP Module select field not found in HTML.`);
     return;
   }
   reg.general.report.push({
@@ -835,34 +956,44 @@ function processUserRegisterValues() {
     msg: `CAN IP Module "${canIpModule}" assumed for register processing`
   });
 
-  // Setup general section with clock frequency
+  // Clock frequency: Report -----------------------------------
+  // CAN Clock frequency automitically copied from HTML to par_clk_freq_g
   reg.general.clk_freq = par_clk_freq_g;
   reg.general.clk_period = 1000/par_clk_freq_g; // 1000 / MHz = ns
   // generate report for CAN Clock
   reg.general.report.push({
       severityLevel: sevC.Info,
       highlight: true,
-      msg: `CAN Clock\nFrequency = ${par_clk_freq_g} MHz\nPeriod    = ${reg.general.clk_period} ns`
+      msg: `CAN Clock\n` + 
+           `Frequency = ${par_clk_freq_g} MHz\n` +
+           `Period    = ${reg.general.clk_period} ns`
   });
 
-  // get the text area content
+  // get the text area content from HTML ----------------------
   const userRegText = document.getElementById('userInputRegisterValues').value;
 
-  // === Step 1: Parse the text and generate raw register array =========================
-  parseUserRegisterValues(userRegText, reg, verbose);
+  // === Step 2: Parse the text and generate raw register array =============================
+  parseUserRegisterValues(userRegText, reg);
   console.log('[Info] Step 1 - Parsed raw register values (reg.raw):', reg.raw);
-  // Check for parsing errors
-  if (reg.parse_output.hasErrors) {
-    // Display all validation reports accumulated so far
-    displayValidationReport(reg);
-    return;
-  }
- 
-  // === Step 2: Process reg object with CAN IP Module specific function =========================
+
+  // === Step 3: Map parsed Register addresses to Register Names ============================
+  // and
+  // === Step 4: Process reg object with CAN IP Module specific function ====================
     switch (canIpModule) {
-    case 'M_CAN': m_can.processRegsOfM_CAN(reg);
+    case 'M_CAN':
+      // Step 3
+      mapRawRegAddrToNames(reg, m_can.regAddrMap, m_can.resAddrArray, m_can.regLocalAddrMask);
+      console.log('[Info] Step 2 - Mapped register values (reg object):', reg);
+      // Step 4:
+      m_can.processRegs(reg);
       break;
-    case 'X_CAN': x_can.processRegsOfX_CAN(reg, verbose);
+
+    case 'X_CAN':
+      // Step 3
+      mapRawRegAddrToNames(reg, x_can.regAddrMap, x_can.resAddrArray, x_can.regLocalAddrMask);
+      console.log('[Info] Step 2 - Mapped register values (reg object):', reg);
+      // Step 4:
+      x_can.processRegs(reg);
       break;
     default:
       reg.general.report.push({
@@ -872,7 +1003,7 @@ function processUserRegisterValues() {
       break;
   }
 
-  // === Step 3: Generate HTML objects from reg object & Display in HTML ========================
+  // === Step 5: Generate HTML objects from reg object & Display in HTML ====================
   // assign parameters and results to paramsHtml and resultsHtml objects (so they can be displayed in HTML later)
   assignHtmlParamsAndResults(reg, paramsHtml, resultsHtml);
 
