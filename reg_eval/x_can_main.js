@@ -158,7 +158,23 @@ export function loadExampleRegisterValues() {
 0xA0020900 0x87654321
 0xA0020904 0x05410817
 0xA0020908 0x00000C11
+# reserved from here
+0xA002090C 0x00000000
+0xA0020910 0x00000000
+0xA0020914 0x00000000
+0xA0020918 0x00000000
+0xA002091C 0x00000000
+# reserved up to here
 0xA0020920 0x00000100
+# reserved from here
+0xA0020924 0x00000000
+0xA0020928 0x00000000
+0xA002092C 0x00000000
+0xA0020930 0x00000000
+0xA0020934 0x00000000
+0xA0020938 0x00000000
+0xA002093C 0x00000000
+# reserved up to here
 0xA0020940 0x00000000
 0xA0020944 0x00000000
 0xA0020948 0x00000000
@@ -349,8 +365,27 @@ export const regAddrMap = {
 // TODO: add correct reserved ranges to array
 // Reserved Address Array: list reserved addresses in M_CAN address range (inclusive, word-aligned step = 4 bytes)
 export const resAddrArray = [
-  { lowerResAddr: 0xB00, upperResAddr: 0xBFC }, // -> 
-  { lowerResAddr: 0x9F0, upperResAddr: 0x9FC }  // -> 
+  { lowerResAddr: 0x02C, upperResAddr: 0x0FC }, // MH global    (0x000...) 
+  { lowerResAddr: 0x19C, upperResAddr: 0x2FC }, // MH TX FQ     (0x100...)
+  { lowerResAddr: 0x31C, upperResAddr: 0x3FC }, // MH TX PQ     (0x300...)
+  { lowerResAddr: 0x4DC, upperResAddr: 0x5FC }, // MH RX FQ     (0x400...)
+  { lowerResAddr: 0x618, upperResAddr: 0x67C }, // MH TX Filter (0x600...)
+  { lowerResAddr: 0x684, upperResAddr: 0x6FC }, // MH RX Filter (0x600...)
+  { lowerResAddr: 0x72C, upperResAddr: 0x7FC }, // MH IR        (0x600...)
+  { lowerResAddr: 0x820, upperResAddr: 0x87C }, // MH Debug     (0x600...)
+  { lowerResAddr: 0x888, upperResAddr: 0x8FC }, // MH CRC CRTL  (0x600...)
+
+  { lowerResAddr: 0x90C, upperResAddr: 0x91C }, // PRT Part 1   (0x900...)
+  { lowerResAddr: 0x924, upperResAddr: 0x93C }, // PRT Part 2   (0x900...)
+  { lowerResAddr: 0x950, upperResAddr: 0x95C }, // PRT Part 3   (0x900...)
+  { lowerResAddr: 0x974, upperResAddr: 0x9FC }, // PRT Part 4   (0x900...)
+
+  { lowerResAddr: 0xA0C, upperResAddr: 0xA0C }, // IRC Part 1   (0xA00...)
+  { lowerResAddr: 0xA2C, upperResAddr: 0xA2C }, // IRC Part 2   (0xA00...)
+  { lowerResAddr: 0xA34, upperResAddr: 0xA3C }, // IRC Part 3   (0xA00...)
+  { lowerResAddr: 0xA44, upperResAddr: 0xAFC }, // IRC Part 4   (0xA00...)
+
+  { lowerResAddr: 0xB00, upperResAddr: 0xFFC }  // after IRC up to 2^12 bit
 ];
 
 // ==== Exported Funktions/Structures up to here =====================================

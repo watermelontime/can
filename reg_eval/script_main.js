@@ -9,6 +9,9 @@
 //        * reports must be in reg.REGNAME.report[]
 //        * must provide data in reg.general.bt_arb / bt_datxl / bt_datfd / bt_global => add detailed format
 //            (these are used for HTML visualisation)
+// add version number and version history that is shown on HTML
+// add menue
+// add howToUse
 
 // import drawing functions
 import * as draw_svg from './draw_bits_svg.js';

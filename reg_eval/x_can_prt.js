@@ -2,6 +2,8 @@
 import { getBits } from './help_functions.js';
 import { sevC } from './help_functions.js';
 
+// TODO: check bit timing check rules, some things might be missing
+
 // ==================================================================================
 // Process Nominal Bit Timing Register: Extract parameters, validate ranges, calculate results, generate report
 export function procRegsPrtBitTiming(reg) {
@@ -311,7 +313,7 @@ export function procRegsPrtBitTiming(reg) {
     if (reg.general.bt_global.set.xl !== undefined && reg.general.bt_global.set.xl === false) {
       // 3. Generate human-readable register report
       reg.XBTP.report.push({
-        severityLevel: sevC.Warn, // warning
+        severityLevel: sevC.Warn,
         msg: `XBTP: ${reg.XBTP.name_long} (0x${reg.XBTP.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
              `XL Operation is disabled (MODE.XLOE=0) OR MODE register not present`
       });
@@ -355,7 +357,7 @@ export function procRegsPrtBitTiming(reg) {
       // Check: CAN Clock Frequency as recommended in CiA 612-1?
       if ((reg.general.clk_freq != 160) && (reg.general.clk_freq != 80)) {
         reg.XBTP.report.push({
-          severityLevel: sevC.Warn, // warning
+          severityLevel: sevC.Warn,
           msg: `CAN XL: Recommended CAN Clock Frequency is 80 MHz or 160 MHz. Current value is ${reg.general.clk_freq} MHz.`
         });
       }
@@ -363,7 +365,7 @@ export function procRegsPrtBitTiming(reg) {
       // Check: check for SJW <= min(PhaseSeg1, PhaseSeg2)?
       if (reg.general.bt_xldata.set.sjw > reg.general.bt_xldata.set.phaseseg2) {
         reg.XBTP.report.push({
-          severityLevel: sevC.Error, // error
+          severityLevel: sevC.Error,
           msg: `XBTP: SJW (${reg.general.bt_xldata.set.sjw}) > PhaseSeg2 (${reg.general.bt_xldata.set.phaseseg2}). ISO 11898-1 requires SJW <= PhaseSeg2.`
         });
       }
@@ -371,7 +373,7 @@ export function procRegsPrtBitTiming(reg) {
       // Check: check for PhaseSeg2 >= 2
       if (reg.general.bt_xldata.set.phaseseg2 < 2) {
         reg.XBTP.report.push({
-          severityLevel: sevC.Error, // error
+          severityLevel: sevC.Error,
           msg: `XBTP: PhaseSeg2 (${reg.general.bt_xldata.set.phaseseg2}) < 2. ISO 11898-1 requires a value >= 2.`
         });
       }
@@ -379,7 +381,7 @@ export function procRegsPrtBitTiming(reg) {
       // Check: SJW choosen as large as possible?
       if (reg.general.bt_xldata.set.sjw < reg.general.bt_xldata.set.phaseseg2) {
         reg.XBTP.report.push({
-          severityLevel: sevC.Warn, // warning
+          severityLevel: sevC.Warn,
           msg: `XBTP: SJW (${reg.general.bt_xldata.set.sjw}) < PhaseSeg2 (${reg.general.bt_xldata.set.phaseseg2}). It is recommended to use SJW=PhaseSeg2.`
         });
       }
@@ -387,7 +389,7 @@ export function procRegsPrtBitTiming(reg) {
       // Check: Number of TQ large enough?
       if (reg.general.bt_fddata.res.tq_per_bit < 8) {
         reg.DBTP.report.push({
-          severityLevel: sevC.Warn, // warning
+          severityLevel: sevC.Warn,
           msg: `XBTP: Number of TQ/Bit is small. If possible, increase the TQ/Bit by reducing BRP or increasing the CAN Clock Freq.`
         });
       }
