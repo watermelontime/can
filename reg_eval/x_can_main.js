@@ -15,6 +15,9 @@ export function processRegs(reg) {
   // c3) Process MH Global registers (VERSION, MH_CTRL, MH_CFG)
   x_can_mh.procRegsMhGlobal(reg);
 
+  // c3) Process MH TX FIFO registers
+  x_can_mh.procRegsMhTXFQ(reg);
+
 
   // TODO: prepare proper testdata with all registers
   // TODO: test the new function => seems to have some halucinations
