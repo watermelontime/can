@@ -22,3 +22,15 @@ export function getBits(regVal, endBit, startBit) {
     return (regVal >> startBit) & mask;
   }
 }
+
+// Generate binary line data for a given register value
+// 0 0 0 0   0 0 0 1   1 0 1 0   0 0 1 1 ...
+export function getBinaryLineData(regValue, bits2print=32) {
+  let lineData = "";
+  for (let i = bits2print - 1; i >= 0; i--) {
+    lineData += getBits(regValue, i, i);
+    if (i > 0) lineData += " ";
+    if (i % 4 === 0 && i > 0) lineData += "  ";
+  }
+  return lineData;
+}

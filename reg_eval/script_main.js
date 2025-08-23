@@ -12,6 +12,7 @@
 // add version number and version history that is shown on HTML
 // add menue
 // add howToUse
+// add version number??
 
 // import drawing functions
 import * as draw_svg from './draw_bits_svg.js';

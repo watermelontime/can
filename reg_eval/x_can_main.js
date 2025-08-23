@@ -15,9 +15,23 @@ export function processRegs(reg) {
   // c3) Process MH Global registers (VERSION, MH_CTRL, MH_CFG)
   x_can_mh.procRegsMhGlobal(reg);
 
-  // c3) Process MH TX FIFO registers
+  // c3) Process MH TX FIFO Queue registers
   x_can_mh.procRegsMhTXFQ(reg);
 
+  // c4) Process MH TX Priority Queue registers
+  x_can_mh.procRegsMhTXPQ(reg);
+
+  // c5) Process MH RX FIFO Queue registers
+  x_can_mh.procRegsMhRXFQ(reg);
+
+  // c6) Process TX and RX Filter registers
+  x_can_mh.procRegsMhRXTXFilter(reg);
+
+  // c7) Process IR CTRL and Status registers
+  x_can_mh.procRegsMhIRCtrlStat(reg); 
+
+  // c8) Process Debug CTRL and Status registers
+  x_can_mh.procRegsMhDebugCtrlStat(reg);
 
   // TODO: prepare proper testdata with all registers
   // TODO: test the new function => seems to have some halucinations
@@ -29,7 +43,7 @@ export function processRegs(reg) {
 // Example Register Values for X_CAN PRT
 export function loadExampleRegisterValues() {
   const clock = 160;
-  const registerString = `# # X_CAN V0.5.6 example
+  const registerString = `# X_CAN V0.5.6 example
 # Format to use: 0xADDR 0xVALUE
 # 0xADDR is internal X_CAN address
 #        or global address (e.g. 32bit)
@@ -156,6 +170,7 @@ export function loadExampleRegisterValues() {
 0xA0020814 0x000001C0
 0xA0020818 0x00000000
 0xA002081C 0x00000000
+0xA0020880 0x00000000
 0xA0020884 0x00000000
 # PRT ################
 0xA0020900 0x87654321
@@ -191,6 +206,9 @@ export function loadExampleRegisterValues() {
 0xA0020A00 0x00000000
 0xA0020A04 0x00000000
 0xA0020A08 0x00000000
+0xA0020A10 0x00000000
+0xA0020A14 0x00000000
+0xA0020A18 0x00000000
 0xA0020A20 0x0F000001
 0xA0020A24 0x00E00000
 0xA0020A28 0x00000008
@@ -370,6 +388,7 @@ export const regAddrMap = {
 export const resAddrArray = [
   { lowerResAddr: 0x02C, upperResAddr: 0x0FC }, // MH global    (0x000...) 
   { lowerResAddr: 0x19C, upperResAddr: 0x2FC }, // MH TX FQ     (0x100...)
+  { lowerResAddr: 0x308, upperResAddr: 0x308 }, // MH TX PQ     (0x300...)
   { lowerResAddr: 0x31C, upperResAddr: 0x3FC }, // MH TX PQ     (0x300...)
   { lowerResAddr: 0x4DC, upperResAddr: 0x5FC }, // MH RX FQ     (0x400...)
   { lowerResAddr: 0x618, upperResAddr: 0x67C }, // MH TX Filter (0x600...)

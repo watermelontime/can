@@ -1,6 +1,7 @@
 // M_CAN: Main script for processing CAN XL registers and calculating bit timing parameters
 import { getBits } from './help_functions.js';
 import { sevC } from './help_functions.js';
+import { getBinaryLineData } from './help_functions.js';
 
 // TODO: IR and IE combined bit wise view: highlight enabled IR
 //       e.g. print vertically (instead of horizontally)
@@ -1334,15 +1335,10 @@ function procRegsPrtOther(reg) {
     // 2. Generate human-readable register report
     // 31 ..                          0
     // 0 0 0 0   1 0 1 0   ...  1 0 0 0
-  let ndat1Msg = `NDAT1: ${reg.NDAT1.name_long} (0x${reg.NDAT1.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n`;
+    let ndat1Msg = `NDAT1: ${reg.NDAT1.name_long} (0x${reg.NDAT1.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n`;
     // Binary headline and bitwise value
     let headline = "Bit: 31                  23                  15                  7               0\n";
-    let binaryLine = "     ";
-    for (let i = 31; i >= 0; i--) {
-      binaryLine += reg.NDAT1.fields[`ND${i}`];
-      if (i > 0) binaryLine += " ";
-      if (i % 4 === 0 && i > 0) binaryLine += "  ";
-    }
+    let binaryLine = "     " + getBinaryLineData(regValue);
     reg.NDAT1.report.push({
       severityLevel: sevC.Info,
       msg: `NDAT1: ${reg.NDAT1.name_long} (0x${reg.NDAT1.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` + headline + binaryLine
@@ -1363,15 +1359,10 @@ function procRegsPrtOther(reg) {
     }
 
     // 2. Generate human-readable register report
-  let ndat2Msg = `NDAT2: ${reg.NDAT2.name_long} (0x${reg.NDAT2.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n`;
+    let ndat2Msg = `NDAT2: ${reg.NDAT2.name_long} (0x${reg.NDAT2.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n`;
     // Binary headline and bitwise value
     let headline2 = "Bit: 63                  55                  47                  39             32\n";
-    let binaryLine2 = "     ";
-    for (let i = 63; i >= 32; i--) {
-      binaryLine2 += reg.NDAT2.fields[`ND${i}`];
-      if (i > 32) binaryLine2 += " ";
-      if (i % 4 === 0 && i > 32) binaryLine2 += "  ";
-    }
+    let binaryLine2 = "     " + getBinaryLineData(regValue);
     reg.NDAT2.report.push({
       severityLevel: sevC.Info,
       msg: `NDAT2: ${reg.NDAT2.name_long} (0x${reg.NDAT2.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` + headline2 + binaryLine2
@@ -1651,12 +1642,7 @@ function procRegsPrtOther(reg) {
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
-    let binaryLine = "     ";
-    for (let i = 31; i >= 0; i--) {
-      binaryLine += ((regValue >> i) & 1);
-      if (i > 0) binaryLine += " ";
-      if (i % 4 === 0 && i > 0) binaryLine += "  ";
-    }
+    let binaryLine = "     " + getBinaryLineData(regValue);
     reg.TXBRP.report.push({
       severityLevel: sevC.Info,
       msg: `TXBRP: ${reg.TXBRP.name_long} (0x${reg.TXBRP.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` + headline + binaryLine
@@ -1675,12 +1661,7 @@ function procRegsPrtOther(reg) {
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
-    let binaryLine = "     ";
-    for (let i = 31; i >= 0; i--) {
-      binaryLine += ((regValue >> i) & 1);
-      if (i > 0) binaryLine += " ";
-      if (i % 4 === 0 && i > 0) binaryLine += "  ";
-    }
+    let binaryLine = "     " + getBinaryLineData(regValue);
     reg.TXBAR.report.push({
       severityLevel: sevC.Info,
       msg: `TXBAR: ${reg.TXBAR.name_long} (0x${reg.TXBAR.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` + headline + binaryLine
@@ -1699,12 +1680,7 @@ function procRegsPrtOther(reg) {
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
-    let binaryLine = "     ";
-    for (let i = 31; i >= 0; i--) {
-      binaryLine += ((regValue >> i) & 1);
-      if (i > 0) binaryLine += " ";
-      if (i % 4 === 0 && i > 0) binaryLine += "  ";
-    }
+    let binaryLine = "     " + getBinaryLineData(regValue);
     reg.TXBCR.report.push({
       severityLevel: sevC.Info,
       msg: `TXBCR: ${reg.TXBCR.name_long} (0x${reg.TXBCR.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` + headline + binaryLine
@@ -1723,12 +1699,7 @@ function procRegsPrtOther(reg) {
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
-    let binaryLine = "     ";
-    for (let i = 31; i >= 0; i--) {
-      binaryLine += ((regValue >> i) & 1);
-      if (i > 0) binaryLine += " ";
-      if (i % 4 === 0 && i > 0) binaryLine += "  ";
-    }
+    let binaryLine = "     " + getBinaryLineData(regValue);
     reg.TXBTO.report.push({
       severityLevel: sevC.Info,
       msg: `TXBTO: ${reg.TXBTO.name_long} (0x${reg.TXBTO.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` + headline + binaryLine
@@ -1747,12 +1718,7 @@ function procRegsPrtOther(reg) {
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
-    let binaryLine = "     ";
-    for (let i = 31; i >= 0; i--) {
-      binaryLine += ((regValue >> i) & 1);
-      if (i > 0) binaryLine += " ";
-      if (i % 4 === 0 && i > 0) binaryLine += "  ";
-    }
+    let binaryLine = "     " + getBinaryLineData(regValue);
     reg.TXBCF.report.push({
       severityLevel: sevC.Info,
       msg: `TXBCF: ${reg.TXBCF.name_long} (0x${reg.TXBCF.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` + headline + binaryLine
@@ -1771,12 +1737,7 @@ function procRegsPrtOther(reg) {
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
-    let binaryLine = "     ";
-    for (let i = 31; i >= 0; i--) {
-      binaryLine += ((regValue >> i) & 1);
-      if (i > 0) binaryLine += " ";
-      if (i % 4 === 0 && i > 0) binaryLine += "  ";
-    }
+    let binaryLine = "     " + getBinaryLineData(regValue);
     reg.TXBTIE.report.push({
       severityLevel: sevC.Info,
       msg: `TXBTIE: ${reg.TXBTIE.name_long} (0x${reg.TXBTIE.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` + headline + binaryLine
@@ -1795,18 +1756,66 @@ function procRegsPrtOther(reg) {
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
-    let binaryLine = "     ";
-    for (let i = 31; i >= 0; i--) {
-      binaryLine += ((regValue >> i) & 1);
-      if (i > 0) binaryLine += " ";
-      if (i % 4 === 0 && i > 0) binaryLine += "  ";
-    }
+    let binaryLine = "     " + getBinaryLineData(regValue);
     reg.TXBCIE.report.push({
       severityLevel: sevC.Info,
       msg: `TXBCIE: ${reg.TXBCIE.name_long} (0x${reg.TXBCIE.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` + headline + binaryLine
     });
   }
   
+  // === M_CAN TX Buffer Summary (TXBRP / TXBTO / TXBAR / TXBCR / TXBCF / TXBTIE / TXBCIE) ===
+  // Same style as X_CAN TXPQ summary: one binary line per register, MSB->LSB
+  try {
+    const lines = [];
+    const header = 'Bit:   31                  23                  15                  7               0\n' +
+                   '------------------------------------------------------------------------------------';
+    lines.push(header);
+
+    // Helper to add a register binary line if present
+    const addRegLine = (label, regName) => {
+      if (regName in reg && reg[regName].int32 !== undefined) {
+        lines.push(label.padEnd(7) + getBinaryLineData(reg[regName].int32));
+      }
+    };
+
+    // Handle possible user typo: TXBRR vs TXBRP (spec register is TXBRP)
+    if ('TXBRR' in reg && !('TXBRP' in reg)) {
+      // Mirror TXBRR content under TXBRP alias for summary (read-only usage)
+      reg.TXBRP = reg.TXBRR;
+    }
+
+    // Order per user request
+    addRegLine('TXBRP', 'TXBRP'); // Transmit Buffer Request Pending
+    addRegLine('TXBTO', 'TXBTO'); // Transmit Buffer Transmission Occurred
+    addRegLine('TXBAR', 'TXBAR'); // Transmit Buffer Add Request
+    addRegLine('TXBCR', 'TXBCR'); // Transmit Buffer Cancellation Request
+    addRegLine('TXBCF', 'TXBCF'); // Transmit Buffer Cancellation Finished
+    addRegLine('TXBTIE','TXBTIE'); // Transmission Interrupt Enable
+    addRegLine('TXBCIE','TXBCIE'); // Cancellation Finished Interrupt Enable
+
+    if (lines.length > 1) { // we have at least one data line
+      // Append to the last logical register present (prefer TXBCIE -> TXBTIE -> TXBCF -> TXBTO -> TXBCR -> TXBAR -> TXBRP)
+      const prefer = ['TXBCIE','TXBTIE','TXBCF','TXBTO','TXBCR','TXBAR','TXBRP'];
+      let target = null;
+      for (const name of prefer) {
+        if (name in reg && reg[name].report && Array.isArray(reg[name].report)) { target = reg[name]; break; }
+      }
+      if (!target) {
+        reg._M_CAN_TXBUF_SUMMARY = reg._M_CAN_TXBUF_SUMMARY || { name_long: 'M_CAN TX Buffer Summary (auto)', report: [] };
+        target = reg._M_CAN_TXBUF_SUMMARY;
+      }
+      target.report.push({
+        severityLevel: sevC.Info,
+        highlight: true,
+        msg: 'M_CAN TX Buffer Summary\n' + lines.join('\n')
+      });
+    }
+  } catch (e) {
+    if (!reg._M_CAN_TXBUF_SUMMARY) reg._M_CAN_TXBUF_SUMMARY = { name_long: 'M_CAN TX Buffer Summary (error)', report: [] };
+    if (!Array.isArray(reg._M_CAN_TXBUF_SUMMARY.report)) reg._M_CAN_TXBUF_SUMMARY.report = [];
+    reg._M_CAN_TXBUF_SUMMARY.report.push({ severityLevel: sevC.Warn, highlight: true, msg: 'M_CAN TX Buffer summary generation failed: ' + (e && e.message ? e.message : e) });
+  }
+
   // === TXEFC: Tx Event FIFO Configuration Register =====================
   if ('TXEFC' in reg && reg.TXEFC.int32 !== undefined) {
     const regValue = reg.TXEFC.int32;
