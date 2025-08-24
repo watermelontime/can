@@ -1,6 +1,7 @@
 // X_CAN: Main script for processing CAN XL registers and calculating bit timing parameters
 import * as x_can_prt from './x_can_prt.js';
-import * as x_can_mh from './x_can_mh.js';
+import * as x_can_mh  from './x_can_mh.js';
+import * as x_can_irc from './x_can_irc.js';
 
 // ===================================================================================
 // X_CAN: Process User Register Values: parse, validate, calculate results, generate report
@@ -33,9 +34,11 @@ export function processRegs(reg) {
   // c8) Process Debug CTRL and Status registers
   x_can_mh.procRegsMhDebugCtrlStat(reg);
 
-  // TODO: prepare proper testdata with all registers
-  // TODO: test the new function => seems to have some halucinations
+  // c9) Process IRC registers
+  x_can_irc.procRegsIRC(reg);
 
+  // TODO: prepare proper testdata with all registers (Merge RX + TX from Kaset)
+  
   console.log('[Info] Registers with data and reports (reg object):', reg);
 }
 

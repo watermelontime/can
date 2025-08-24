@@ -9,6 +9,8 @@ import { getBinaryLineData } from './help_functions.js';
 //       that are replaced in the report print process
 // TODO: visualize gaps in the Memory Map as own rows and also generate according report to inform about this
 // TODO: support different M_CAN version => ask Florian before
+// TODO: better structure reg-object: problem/ugly: non-register fields are mixed with registers (flat) => non-reg stuff should be separted
+
 
 // ===================================================================================
 // X_CAN: Process User Register Values: parse, validate, calculate results, generate report
@@ -630,6 +632,11 @@ function procRegsPrtOther(reg) {
     // 0. Extend existing register structure
     reg.CUST.fields = {};
     reg.CUST.report = []; // Initialize report array
+
+    // 1. Decode all individual bits of TEST register
+    // but fields must contain value to be recognized as decoded by main function
+    reg.CUST.fields.BITS = regValue;
+
 
     // Generate human-readable register report
     reg.CUST.report.push({
@@ -1639,6 +1646,8 @@ function procRegsPrtOther(reg) {
     reg.TXBRP.report = [];
 
     // 1. No bit field decoding required, just show as binary (like NDAT1)
+    // but fields must contain value to be recognized as decoded by main function
+    reg.TXBRP.fields.BITS = regValue;
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
@@ -1658,6 +1667,8 @@ function procRegsPrtOther(reg) {
     reg.TXBAR.report = [];
 
     // 1. No bit field decoding required, just show as binary (like NDAT1)
+    // but fields must contain value to be recognized as decoded by main function
+    reg.TXBAR.fields.BITS = regValue;
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
@@ -1677,6 +1688,8 @@ function procRegsPrtOther(reg) {
     reg.TXBCR.report = [];
 
     // 1. No bit field decoding required, just show as binary (like NDAT1)
+    // but fields must contain value to be recognized as decoded by main function
+    reg.TXBCR.fields.BITS = regValue;
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
@@ -1696,6 +1709,8 @@ function procRegsPrtOther(reg) {
     reg.TXBTO.report = [];
 
     // 1. No bit field decoding required, just show as binary (like NDAT1)
+    // but fields must contain value to be recognized as decoded by main function
+    reg.TXBTO.fields.BITS = regValue;
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
@@ -1715,6 +1730,8 @@ function procRegsPrtOther(reg) {
     reg.TXBCF.report = [];
 
     // 1. No bit field decoding required, just show as binary (like NDAT1)
+    // but fields must contain value to be recognized as decoded by main function
+    reg.TXBCF.fields.BITS = regValue;
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
@@ -1734,6 +1751,8 @@ function procRegsPrtOther(reg) {
     reg.TXBTIE.report = [];
 
     // 1. No bit field decoding required, just show as binary (like NDAT1)
+    // but fields must contain value to be recognized as decoded by main function
+    reg.TXBTIE.fields.BITS = regValue;
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
@@ -1753,6 +1772,8 @@ function procRegsPrtOther(reg) {
     reg.TXBCIE.report = [];
 
     // 1. No bit field decoding required, just show as binary (like NDAT1)
+    // but fields must contain value to be recognized as decoded by main function
+    reg.TXBCIE.fields.BITS = regValue;
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";

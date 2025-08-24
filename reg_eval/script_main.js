@@ -223,9 +223,10 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
     return;
   }
   
-  let mappedCount = 0;
-  let unmappedCount = 0;
-  let reservedCount = 0;
+  let mappedRegCount = 0;
+  let unmappedRegCount = 0;
+  let reservedRegCount = 0;
+  let missingRegCount = 0;
   
   // calculate number of nibbles of myRegLocalAddrMask (neeeded for porper hex-address printing)
   const localAddNibCnt = myRegLocalAddrMask.toString(16).length;
@@ -256,7 +257,7 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
           addr: rawReg.addr
         };
 
-        mappedCount++;
+        mappedRegCount++;
         reg.parse_output.report.push({
           severityLevel: sevC.Info,
           verbose: true,
@@ -267,7 +268,7 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
     // Step 3: check if reserved addresses present
     } else if (isReserved(rawRegLocalAddr, myResAddrArray)) {
       // it is a reserved address
-      reservedCount++;
+      reservedRegCount++;
       reg.parse_output.report.push({
         severityLevel: sevC.Info,
         verbose: true,
@@ -275,7 +276,7 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
       });
     } else {
       // Unknown address
-      unmappedCount++;
+      unmappedRegCount++;
       reg.parse_output.report.push({
         severityLevel: sevC.Warn,
         msg: `Unknown register address: 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} - register will be ignored`
@@ -286,29 +287,34 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
   // Add summary message
   reg.parse_output.report.push({
     severityLevel: sevC.Info,
-    msg: `Address mapping completed: ${mappedCount} mapped, ${reservedCount} reserved, ${unmappedCount} unknown`
+    msg: `Address mapping completed: ${mappedRegCount} mapped, ${reservedRegCount} reserved, ${unmappedRegCount} unknown`
   });
   
   // report missing registers in register dump
   //    compare reg-object with registers in addressMap
   let missingRegText = 'Missing registers in dump:';
-  let missingRegFound = false;
   for (const addr in myRegAddrMap) {
     const regName = myRegAddrMap[addr].shortName;
     if (!(regName in reg)) {
       // Register is NO present in reg object
       const addrNum = Number(addr); // convert key to number for hex formatting
       missingRegText += `\n0x${addrNum.toString(16).toUpperCase().padStart(localAddNibCnt, '0')}: ${regName.padEnd(5, ' ')} (${myRegAddrMap[addr].longName})`;
-      missingRegFound = true;
+      missingRegCount++;
     }
   }
   
-  if (missingRegFound) {
+  if (missingRegCount > 0) {
     reg.parse_output.report.push({
       severityLevel: sevC.Warn,
       msg: missingRegText
     });
   }
+
+  // store counters in reg.parse_output
+  reg.parse_output.mappedRegCount = mappedRegCount;
+  reg.parse_output.reservedRegCount = reservedRegCount;
+  reg.parse_output.unmappedRegCount = unmappedRegCount;
+  reg.parse_output.missingRegCount = missingRegCount;
 
   return reg;
 } // end mapRawRegistersToNames
@@ -427,6 +433,12 @@ function displayValidationReport(reg, printVerbose) {
   if (counts.recommendations > 0) reportText += `<span class="report-recommendation">💡 Recommendations: ${counts.recommendations}</span>\n`;
   if (counts.info > 0) reportText += `<span class="report-info">ℹ️ Info: ${counts.info}</span>\n`;
   if (counts.calculated > 0) reportText += `<span class="report-infoCalculated">🧮 Calculated: ${counts.calculated}</span>\n`;
+  reportText += `Registers in memory dump: ${reg.parse_output.mappedRegCount} found, ` +
+                           `${reg.parse_output.reservedRegCount} reserved, ` + 
+                           `${reg.parse_output.unmappedRegCount} unknown, ` +
+                           `${reg.parse_output.decodedRegCount} decoded, ` +
+                           `${reg.parse_output.missingRegCount} missing, ` +
+                           `(Total addr. lines: ${reg.parse_output.mappedRegCount + reg.parse_output.reservedRegCount + reg.parse_output.unmappedRegCount})\n`;
   reportText += '<span class="report-header">' + '--- Reports ---------------------------------------' + '</span>\n';
 
   // Generate detailed reports
@@ -927,6 +939,34 @@ function getVerbositySettingFromHTML() {
   }
 }
 
+function CountDecodedRegs(reg) {
+  // Summary of decoded registers: a register is considered decoded if reg.REG.fields exists and has at least one property
+  if (!reg || typeof reg !== 'object') return;
+  if (!reg.parse_output) reg.parse_output = {};
+  if (!Array.isArray(reg.parse_output.report)) reg.parse_output.report = [];
+
+  const decoded = [];
+  let decodedRegCount = 0;
+  for (const [name, obj] of Object.entries(reg)) {
+    if (name === 'general' || name === 'parse_output' || name === 'raw' || name === 'memmap') continue; // skip meta sections
+    if (!obj || typeof obj !== 'object') continue;
+    if (obj.fields && typeof obj.fields === 'object' && Object.keys(obj.fields).length > 0) {
+      decodedRegCount++;
+    } else {
+      console.log(`[Info] Register "${name}" is in dump but not decoded`);
+    }
+  }
+
+  reg.parse_output.report.push({
+    severityLevel: sevC.Info,
+    msg: `Registers decoded successfully: ${decodedRegCount}`
+  });
+
+  // store values in reg.parse_output
+  reg.parse_output.decodedRegCount = decodedRegCount;
+
+}
+
 // ===================================================================================
 // Process User Register Values from Text Area - Updated main function
 function processUserRegisterValues() {
@@ -1006,6 +1046,9 @@ function processUserRegisterValues() {
       });
       break;
   }
+
+  // Count decoded registers
+  CountDecodedRegs(reg);
 
   // === Step 5: Generate HTML objects from reg object & Display in HTML ====================
   // assign parameters and results to paramsHtml and resultsHtml objects (so they can be displayed in HTML later)
