@@ -86,7 +86,7 @@ function initEventListeners() {
     console.warn('[Warning] Load example register button not found in HTML');
   }
 
-  // HTML CLK_FREQ NPUT: Add event listener for the CAN clock frequency input field
+  // HTML CLK_FREQ INPUT: Add event listener for the CAN clock frequency input field
   const clkFreqHtmlField = document.getElementById('par_clk_freq');
   if (clkFreqHtmlField) {
     clkFreqHtmlField.addEventListener('change', handleClockFrequencyChange); // fires when focus leaves field
@@ -110,8 +110,10 @@ function handleClockFrequencyChange(event) {
     // Remove error highlighting if value is valid
     clkFreqField.classList.remove("input-error");
     
-    // Execute processUserRegisterValues() after updating the global variable
-    processUserRegisterValues();
+    // Update Clock Period in HTML (calculated)
+    const clkPeriodHtmlField = document.getElementById('res_clk_period');
+    clkPeriodHtmlField.value = (1000.0 / par_clk_freq_g).toFixed(2); // in ns
+
   } else {
     console.warn('[Warning] Invalid clock frequency value:', event.target.value);
     // Add error highlighting to the input field
@@ -657,6 +659,8 @@ function displaySVGs(reg) {
 // Assign HTML Parameters and Results from reg object
 function assignHtmlParamsAndResults(reg, paramsHtml, resultsHtml) {
   // Assign clock frequency parameter: Not assigned because not printed in HTML
+
+  // Do not assign par_clk_freq, because this is a USER INPUT PARAMETER (The other parameters are from registers)
   // paramsHtml['par_clk_freq'] = reg.general.clk_freq;
 
   if (reg.general && reg.general.bt_global && reg.general.bt_global.set) {
@@ -1046,6 +1050,7 @@ function processUserRegisterValues() {
       });
       break;
   }
+  console.log('[Info] Registers with data and reports (reg object):', reg);
 
   // Count decoded registers
   CountDecodedRegs(reg);
@@ -1063,6 +1068,6 @@ function processUserRegisterValues() {
   // Display SVGs in HTML
   displaySVGs(reg); 
 
-  // Display: Validation Reports in HTML textarea
+  // Display Reports in HTML textarea
   displayValidationReport(reg, verbose);
 }

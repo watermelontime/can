@@ -530,7 +530,7 @@ export function procRegsMhTXFQ(reg) {
       reg[sizeName].report.push({
         severityLevel: sevC.Info,
         msg: `${sizeName}: ${reg[sizeName].name_long} (0x${reg[sizeName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-             `[MAX_DESC] TXFQ${q} Max Descriptors = ${maxDesc}${maxDesc>0?` (allocate ${memBytes} bytes in S_MEM)`:''}`
+             `[MAX_DESC] TXFQ${q} Max Descriptors = ${maxDesc}${maxDesc>0?` (allocates ${memBytes} bytes in S_MEM)`:''}`
       });
     }
   }
@@ -1038,7 +1038,7 @@ export function procRegsMhRXFQ(reg) {
       reg[sizeName].report.push({
         severityLevel: sevC.Info,
         msg: `${sizeName}: ${reg[sizeName].name_long} (0x${reg[sizeName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-             `[MAX_DESC] RXFQ${q} Size                = ${maxDesc}${maxDesc>0?` (allocate ${descBytes} bytes in S_MEM)`:''}\n` +
+             `[MAX_DESC] RXFQ${q} Size                = ${maxDesc}${maxDesc>0?` (allocates ${descBytes} bytes in S_MEM)`:''}\n` +
              `[DC_SIZE ] RXFQ${q} Data Container Size = ${dcSize}${dcInfo}`
       });
     }
@@ -1251,7 +1251,7 @@ export function procRegsMhRXTXFilter(reg) {
            `[ANMF     ] Accept Non-Matching Frames         = ${reg.RX_FILTER_CTRL.fields.ANMF}\n`+
            `[ANMF_FQ  ] Default RX FIFO Queue (ANMF/ANFF)  = ${reg.RX_FILTER_CTRL.fields.ANMF_FQ}\n`+
            `[THRESHOLD] Threshold (words, if ANFF=1)       = ${reg.RX_FILTER_CTRL.fields.THRESHOLD}\n`+
-           `[NB_FE    ] Number of RX Filter Elements       = ${reg.RX_FILTER_CTRL.fields.NB_FE}\n`
+           `[NB_FE    ] Number of RX Filter Elements       = ${reg.RX_FILTER_CTRL.fields.NB_FE}`
     });
   }
 }

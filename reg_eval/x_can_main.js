@@ -36,10 +36,6 @@ export function processRegs(reg) {
 
   // c9) Process IRC registers
   x_can_irc.procRegsIRC(reg);
-
-  // TODO: prepare proper testdata with all registers (Merge RX + TX from Kaset)
-  
-  console.log('[Info] Registers with data and reports (reg object):', reg);
 }
 
 // ==================================================================================

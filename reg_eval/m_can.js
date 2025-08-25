@@ -24,8 +24,6 @@ export function processRegs(reg) {
 
   // c3) check MRAM Memory Map and visualise it
   checkMcanMessageRamMap(reg);
-
-  console.log('[Info] Registers with data and reports, reg object:', reg);
 }
 
 // ==================================================================================
