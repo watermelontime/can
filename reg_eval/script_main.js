@@ -61,10 +61,10 @@ function init() {
   initializeClockFrequencyHtmlField();
 
   // Initialize textarea with default register values
-  loadRegisterValuesExample();
+  //loadRegisterValuesExample();
     
   // Process the default register values
-  processUserRegisterValues();
+  //processUserRegisterValues();
 }
 
 // ===================================================================================
@@ -129,6 +129,8 @@ function initializeClockFrequencyHtmlField() {
     // Set the input field to the global variable value (default 160 MHz)
     clkFreqHtmlField.value = par_clk_freq_g;
     console.log(`[Info] Initialized HTML clock frequency field to: ${par_clk_freq_g} MHz`);
+    // trigger change event (reason: the change will cause the clock period to be updated in HTML)
+    clkFreqHtmlField.dispatchEvent(new Event('change', { bubbles: true }));
   } else {
     console.warn('[Warning] initializeClockFrequencyHtmlField(): Clock frequency input field not found in HTML');
   }
@@ -433,7 +435,7 @@ function displayValidationReport(reg, printVerbose) {
   if (counts.errors > 0) reportText += `<span class="report-error">❌ Errors: ${counts.errors}</span>\n`;
   if (counts.warnings > 0) reportText += `<span class="report-warning">⚠️ Warnings: ${counts.warnings}</span>\n`;
   if (counts.recommendations > 0) reportText += `<span class="report-recommendation">💡 Recommendations: ${counts.recommendations}</span>\n`;
-  if (counts.info > 0) reportText += `<span class="report-info">ℹ️ Info: ${counts.info}</span>\n`;
+  if (counts.info > 0) reportText += `<span class="report-info">ℹ️ Info/Decoded: ${counts.info}</span>\n`;
   if (counts.calculated > 0) reportText += `<span class="report-infoCalculated">🧮 Calculated: ${counts.calculated}</span>\n`;
   reportText += `Registers in memory dump: ${reg.parse_output.mappedRegCount} found, ` +
                            `${reg.parse_output.reservedRegCount} reserved, ` + 
