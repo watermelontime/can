@@ -384,3 +384,14 @@ svg {
     margin-top: 0rem;
     margin-bottom: 1rem;
 }
+/* ================= Footer ================= */
+.site-footer {background:#a3a3a3;color:#eee;padding:1.2rem 1rem;margin-top:2rem;border-radius:12px;font-size:0.9rem;}
+.footer-content {display:flex;flex-wrap:wrap;align-items:center;gap:1rem;}
+.footer-brand {display:flex;align-items:center;gap:0.6rem;}
+.footer-version {background:#8e8e8e;color:#fff;padding:0.1rem 0.5rem;border-radius:6px;font-size:0.7rem;letter-spacing:0.5px;}
+.footer-nav {display:flex;gap:1.2rem;}
+.footer-nav a {color:#ffd27f;text-decoration:none;font-weight:600;}
+.footer-nav a:hover,.footer-nav a:focus {text-decoration:underline;color:#ffe3ad;}
+.footer-copy {white-space:nowrap;}
+.footer-spacer {flex:1 1 auto;}
+.legal-main {background:white;border-radius:20px;padding:1rem;max-width:900px;margin:0 auto;}

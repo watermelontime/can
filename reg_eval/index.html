@@ -7,6 +7,7 @@
   <!-- <link rel="manifest" href="manifest.json" /> -->
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <script data-goatcounter="https://watermelon.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
 <main>
@@ -233,7 +234,7 @@
   <!-- Column 2: Register Values -->
   <div class="column register-column">
     <h3>Register Values</h3>
-    <label for="canIpModuleSelect">CAN IP Module (source of register dump):</label>
+    <label for="canIpModuleSelect">CAN Module (source of register dump):</label>
     <div class="select-button-row">
       <select id="canIpModuleSelect" class="styled-select">
         <option value="M_CAN">M_CAN</option>
@@ -261,7 +262,7 @@ Memory dump can contain also reserved addresses. They will be detected and ignor
 0x008 0x000F0104
 
 === Hints ===
-1. Create a memory dump of the complete CAN controller address space.
+1. Create a memory dump of the complete CAN module address space.
 2. Load example memory via button
 "></textarea>
   </div>
@@ -273,14 +274,14 @@ Memory dump can contain also reserved addresses. They will be detected and ignor
         <input type="checkbox" id="par_report_verbose"/> verbose
       </label>
     </h3>
-    <pre id="reportTextArea" class="register-textarea report-textarea" readonly>The "Register validation report" will appear here after processing ...
+    <pre id="reportTextArea" class="register-textarea report-textarea" readonly>The "Register evaluations report" will appear here after processing ...
 
 === HOW TO USE THIS REGISTER EVALUTOR? ========================
-Step 1: Set the "CAN clock frequency" (e.g. to 160 MHz).
-Step 2: Select the CAN Controller (drop down field)
-Step 2a: Copy the memory dump of your CAN Controller to "Register Values" text area.
-Step 2b: Load example memory dump for your selected CAN Controller alternatively.
-Step 3: Press button "process register values" to generate the evaluation report.
+Step 1:  Set the "CAN clock frequency" (e.g. 160 MHz for CAN XL, 80 MHz for CAN FD).
+Step 2:  Select the CAN Module (drop down field, also refered to as CAN Controller)
+Step 2a: Copy the memory dump of your CAN Module to "Register Values" text area.
+Step 2b: Alternatively, load example memory dump for your selected CAN Module.
+Step 3:  Press button "process register values" to generate the evaluation report.
     </pre>
   </div>
 
@@ -296,6 +297,7 @@ Step 3: Press button "process register values" to generate the evaluation report
 -->
 
 </main>
-
+<div id="site-footer"></div>
+<script type="module" src="footer.js"></script>
 </body>
 </html>

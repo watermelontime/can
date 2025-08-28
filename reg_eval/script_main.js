@@ -12,12 +12,15 @@
 // add version number and version history that is shown on HTML
 // add menue
 // add howToUse
-// add version number??
+// keep results as global variable & add filters for warning & error & calculated => change of checkbox performs HTML update but no re-evaluation of register values
+// X_CAN: LMEM Memory Map
+// TODO: better structure reg-object: problem/ugly: non-register fields are mixed with registers (flat) => non-reg stuff should be separted
 
 // import drawing functions
 import * as draw_svg from './draw_bits_svg.js';
 import * as m_can from './m_can.js';
 import * as x_can from './x_can_main.js';
+import * as xs_can from './xs_can_main.js';
 import { sevC } from './help_functions.js';
 
 // global variable definitions
@@ -59,6 +62,10 @@ function init() {
 
   // Initialize the clock frequency input field with default value
   initializeClockFrequencyHtmlField();
+
+  // draw empty SVGs, so it looks better
+  let dummyReg = {};
+  displaySVGs(dummyReg);
 
   // Initialize textarea with default register values
   //loadRegisterValuesExample();
@@ -528,7 +535,8 @@ function displaySVGs(reg) {
 
   // Show SSP optionally, if TDC is enabled and TMS is disabled: generate variable here and use variable in drawBitTiming()
   let showSSP = false;
-  if (reg.general.bt_global &&
+  if (reg.general &&
+      reg.general.bt_global &&
       reg.general.bt_global.set &&
       reg.general.bt_global.set.tdc !== undefined && reg.general.bt_global.set.tdc === true &&
       reg.general.bt_global.set.tms !== undefined && reg.general.bt_global.set.tms !== true) {
@@ -1003,7 +1011,7 @@ function processUserRegisterValues() {
   reg.general.report.push({
     severityLevel: sevC.Info,
     highlight: true,
-    msg: `CAN IP Module "${canIpModule}" assumed for register processing`
+    msg: `CAN Module "${canIpModule}" assumed for register processing`
   });
 
   // Clock frequency: Report -----------------------------------

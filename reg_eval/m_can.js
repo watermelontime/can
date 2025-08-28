@@ -9,7 +9,6 @@ import { getBinaryLineData } from './help_functions.js';
 //       that are replaced in the report print process
 // TODO: visualize gaps in the Memory Map as own rows and also generate according report to inform about this
 // TODO: support different M_CAN version => ask Florian before
-// TODO: better structure reg-object: problem/ugly: non-register fields are mixed with registers (flat) => non-reg stuff should be separted
 
 
 // ===================================================================================
@@ -1143,54 +1142,64 @@ function procRegsPrtOther(reg) {
     });
   } // ILS
 
-  // Horziontal & Bit-wise view of IR Flags and IE 
-  //       
-  //     A P P W          E
-  //     R E A D    B E E L
-  //     A D E I    O W P O
-  // IR: 0 0 0 0    1 1 1 1  ...
-  // IE  0 0 0 0    0 0 1 1  ...
+  // IR Summary (only enabled IR shown)
+  // (each line one IR flag)
   if (reg.IE !== undefined && reg.IR !== undefined) {
-    // Use IR bit names and order for both IR and IE
-    const irBitNames = [
-      "ARA", "PED", "PEA", "WDI", "BO", "EW", "EP", "ELO", "BEU", "BEC", "DRX", "TOO", "MRAF", "TSW",
-      "TEFL", "TEFF", "TEFW", "TEFN", "TFE", "TCF", "TC", "HPM", "RF1L", "RF1F", "RF1W", "RF1N", "RF0L", "RF0F", "RF0W", "RF0N"
+    // add IR Summary here: show only enabled IR flags
+    const defs = [
+      {bit:29, key:'ARA',  longName:'Accept Remote Access'},
+      {bit:28, key:'PED',  longName:'Protocol Error Detected'},
+      {bit:27, key:'PEA',  longName:'Protocol Error Active'},
+      {bit:26, key:'WDI',  longName:'Watchdog Interrupt'},
+      {bit:25, key:'BO',   longName:'Bus-Off'},
+      {bit:24, key:'EW',   longName:'Error Warning'},
+      {bit:23, key:'EP',   longName:'Error Passive'},
+      {bit:22, key:'ELO',  longName:'Error Logging Overflow'},
+      {bit:21, key:'BEU',  longName:'Bus Error Uncorrectable'},
+      {bit:20, key:'BEC',  longName:'Bus Error Correctable'},
+      {bit:19, key:'DRX',  longName:'Data Reception Error'},
+      {bit:18, key:'TOO',  longName:'Timeout Occurred'},
+      {bit:17, key:'MRAF', longName:'Message RAM Access Failure'},
+      {bit:16, key:'TSW',  longName:'Timestamp Wraparound'},
+      {bit:15, key:'TEFL', longName:'Transmit Error Flow Control'},
+      {bit:14, key:'TEFF', longName:'Transmit Error Frame Format'},
+      {bit:13, key:'TEFW', longName:'Transmit Error Frame Width'},
+      {bit:12, key:'TEFN', longName:'Transmit Error Frame Number'},
+      {bit:11, key:'TFE',  longName:'Transmit Frame Error'},
+      {bit:10, key:'TCF',  longName:'Transmit Collision Failure'},
+      {bit: 9, key:'TC',   longName:'Transmit Collision'},
+      {bit: 8, key:'HPM',  longName:'High Priority Message'},
+      {bit: 7, key:'RF1L', longName:'Receive FIFO 1 Level'},
+      {bit: 6, key:'RF1F', longName:'Receive FIFO 1 Full'},
+      {bit: 5, key:'RF1W', longName:'Receive FIFO 1 Watermark'},
+      {bit: 4, key:'RF1N', longName:'Receive FIFO 1 Not Empty'},
+      {bit: 3, key:'RF0L', longName:'Receive FIFO 0 Level'},
+      {bit: 2, key:'RF0F', longName:'Receive FIFO 0 Full'},
+      {bit: 1, key:'RF0W', longName:'Receive FIFO 0 Watermark'},
+      {bit: 0, key:'RF0N', longName:'Receive FIFO 0 Not Empty'},
     ];
-    // Build vertical bit name header
-    let header = "    ";
-    const maxLen = Math.max(...irBitNames.map(n => n.length));
-    // Bottom align: print from top, but pad each name at the top so the last char is at the bottom
-    for (let row = 0; row < maxLen; row++) {
-      let line = "";
-      for (let i = 0; i < irBitNames.length; i++) {
-        const idx = row - (maxLen - irBitNames[i].length);
-        line += (idx >= 0 && idx < irBitNames[i].length ? irBitNames[i][idx] : " ") + " ";
-        if ((i + 1) % 4 === 0 && i !== irBitNames.length - 1) line += "  ";
-      }
-      header += line + "\n    ";
+    
+    // Keep only enabled (IE.*E == 1)
+    const enabled = defs.filter(d => reg.IE.fields && reg.IE.fields[d.key + 'E'] === 1);
+    const nameWidth = Math.max(4, ...enabled.map(e => e.key.length));
+    let lines;
+    if (enabled.length === 0) {
+      lines = 'No M_CAN interrupts enabled (all IE bits = 0)';
+    } else {
+      lines = enabled.map(d => {
+        const irV = (reg.IR.fields && reg.IR.fields[d.key] !== undefined) ? reg.IR.fields[d.key] : '-';
+        const ieV = reg.IE.fields[d.key + 'E'];
+        return `${d.bit.toString().padStart(2,' ')}   ${d.key.padEnd(nameWidth,' ')}  ${String(irV)}  ${String(ieV)}   (${d.longName})`;
+      }).join('\n');
     }
-    header = header.trimEnd() + "\n";
-    // Build IR and IE bit value lines
-    let irLine = "IR: ";
-    let ieLine = "IE: ";
-    for (let i = 0; i < irBitNames.length; i++) {
-      const irVal = reg.IR.fields[irBitNames[i]] !== undefined ? reg.IR.fields[irBitNames[i]] : " ";
-      const ieVal = reg.IE.fields[irBitNames[i]+"E"] !== undefined ? reg.IE.fields[irBitNames[i]+"E"] : " ";
-      irLine += irVal + " ";
-      ieLine += ieVal + " ";
-      if ((i + 1) % 4 === 0 && i !== irBitNames.length - 1) {
-        irLine += "  ";
-        ieLine += "  ";
-      }
-    }
-    irLine = irLine.trimEnd() + "\n";
-    ieLine = ieLine.trimEnd(); // no new line, since this is the bottom line
-    // Add to report
     reg.IE.report.push({
       severityLevel: sevC.Info,
-      msg: `IR and IE - combined bit wise view\n`+ header + irLine + ieLine
+      highlight: true,
+      msg: `M_CAN Interrupt Summary (only enabled IE bits)\n`+
+           `Bit  Name${' '.repeat(nameWidth-4)}  IR IE  (description)\n`+
+           `${lines}`
     });
-  } // IR and IE
+  }
 
   // === ILE: Interrupt Line Enable Register =============================
   if ('ILE' in reg && reg.ILE.int32 !== undefined) {
