@@ -15,6 +15,7 @@
 // keep results as global variable & add filters for warning & error & calculated => change of checkbox performs HTML update but no re-evaluation of register values
 // X_CAN: LMEM Memory Map
 // TODO: better structure reg-object: problem/ugly: non-register fields are mixed with registers (flat) => non-reg stuff should be separted
+// TODO: donate button
 
 // import drawing functions
 import * as draw_svg from './draw_bits_svg.js';

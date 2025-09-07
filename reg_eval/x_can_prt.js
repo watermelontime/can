@@ -38,8 +38,6 @@ export function procRegsPrtBitTiming(reg) {
     reg.MODE.report = []; // Initialize report array
 
     // 1. Decode all individual bits of MODE register
-    reg.MODE.fields.TSSE = getBits(regValue, 13, 13);  // Transceiver Sharing Switch Enable
-    reg.MODE.fields.LCHB = getBits(regValue, 12, 12);  // Light Commander High Bit Rate
     reg.MODE.fields.FIME = getBits(regValue, 11, 11);  // Fault Injection Module Enable
     reg.MODE.fields.EFDI = getBits(regValue, 10, 10);  // Error Flag/Frame Dissable
     reg.MODE.fields.XLTR = getBits(regValue, 9, 9);    // TMS Enable (XL Transceiver present)
@@ -64,20 +62,18 @@ export function procRegsPrtBitTiming(reg) {
   reg.MODE.report.push({
     severityLevel: sevC.Info, // info
         msg: `MODE: ${reg.MODE.name_long} (0x${reg.MODE.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `[TSSE] Transceiver Sharing Switch Enable            = ${reg.MODE.fields.TSSE}\n` +
-             `[LCHB] FD Light Commander High Bit Rate Mode Enable = ${reg.MODE.fields.LCHB}\n` +
-             `[FIME] Fault Injection Module Enable                = ${reg.MODE.fields.FIME}\n` +
-             `[EFDI] Error Flag/Frame Disable                     = ${reg.MODE.fields.EFDI}\n` +
-             `[XLTR] Transceiver Mode Switching (TMS) Enable      = ${reg.MODE.fields.XLTR}\n` +
-             `[SFS ] Time Stamp Position: SOF(1), EOF(0)          = ${reg.MODE.fields.SFS}\n` +
-             `[RSTR] Restricted Mode Enable                       = ${reg.MODE.fields.RSTR}\n` +
-             `[MON ] (Bus) Monitoring Mode Enable                 = ${reg.MODE.fields.MON}\n` +
-             `[TXP ] TX Pause                                     = ${reg.MODE.fields.TXP}\n` +
-             `[EFBI] Edge Filtering during Bus Integration        = ${reg.MODE.fields.EFBI}\n` +
-             `[PXHD] Protocol Exception Handling Disable          = ${reg.MODE.fields.PXHD}\n` +
-             `[TDCE] Transmitter Delay Compensation (TDC) Enable  = ${reg.MODE.fields.TDCE}\n` +
-             `[XLOE] XL Operation Enable                          = ${reg.MODE.fields.XLOE}\n` +
-             `[FDOE] FD Operation Enable                          = ${reg.MODE.fields.FDOE}`
+             `[FIME] Fault Injection Module Enable               = ${reg.MODE.fields.FIME}\n` +
+             `[EFDI] Error Flag/Frame Disable                    = ${reg.MODE.fields.EFDI}\n` +
+             `[XLTR] Transceiver Mode Switching (TMS) Enable     = ${reg.MODE.fields.XLTR}\n` +
+             `[SFS ] Time Stamp Position: SOF(1), EOF(0)         = ${reg.MODE.fields.SFS}\n` +
+             `[RSTR] Restricted Mode Enable                      = ${reg.MODE.fields.RSTR}\n` +
+             `[MON ] (Bus) Monitoring Mode Enable                = ${reg.MODE.fields.MON}\n` +
+             `[TXP ] TX Pause                                    = ${reg.MODE.fields.TXP}\n` +
+             `[EFBI] Edge Filtering during Bus Integration       = ${reg.MODE.fields.EFBI}\n` +
+             `[PXHD] Protocol Exception Handling Disable         = ${reg.MODE.fields.PXHD}\n` +
+             `[TDCE] Transmitter Delay Compensation (TDC) Enable = ${reg.MODE.fields.TDCE}\n` +
+             `[XLOE] XL Operation Enable                         = ${reg.MODE.fields.XLOE}\n` +
+             `[FDOE] FD Operation Enable                         = ${reg.MODE.fields.FDOE}`
     });
 
     // Check: FDOE is set when XLOE is also set
@@ -765,7 +761,7 @@ export function procRegsPrtOther(reg) {
     reg.TEST.fields.USOS     = getBits(regValue, 17, 17); // Trigger for IR (for testing)
     reg.TEST.fields.ABORTED  = getBits(regValue, 16, 16); // Trigger for IR (for testing)
     reg.TEST.fields.HWT      = getBits(regValue, 15, 15); // Hardware Test Mode enabled
-    reg.TEST.fields.TXD      = getBits(regValue, 5, 4);   // TX Signal Control
+    reg.TEST.fields.TXC      = getBits(regValue, 5, 4);   // TX Signal Control
     reg.TEST.fields.RXD      = getBits(regValue, 3, 3);   // RX Signal value
     reg.TEST.fields.LBCK     = getBits(regValue, 0, 0);   // Loop-back mode
 
@@ -787,11 +783,39 @@ export function procRegsPrtOther(reg) {
            `[USOS    ] Trigger IR USOS     = ${reg.TEST.fields.USOS}\n` +
            `[ABORTED ] Trigger IR ABORTED  = ${reg.TEST.fields.ABORTED}\n` +
            `[HWT     ] Hardware Test Mode  = ${reg.TEST.fields.HWT}\n` +
-           `[TXD     ] TX Signal Control   = ${reg.TEST.fields.TXD} (0: PRT controlled, 1: PRT controlled, 2: Dominant, 3: Recessive)\n` +
+           `[TXC     ] TX Signal Control   = ${reg.TEST.fields.TXC} (0: normal, 1: normal for loopback (RX ignored), 2: output=0, 3: output=1)\n` +
            `[RXD     ] RX Signal value     = ${reg.TEST.fields.RXD}\n` +
            `[LBCK    ] Loop-back mode      = ${reg.TEST.fields.LBCK}`
     });
 
+    // 3. Additional checks/warnings
+    if (reg.TEST.fields.LBCK === 1) {
+      if (reg.TEST.fields.TXC === 0) {
+        reg.TEST.report.push({
+          severityLevel: sevC.Error,
+          msg: `TEST: Loop-back mode enabled (LBCK = ${reg.TEST.fields.LBCK}) but TXC = ${reg.TEST.fields.TXC}. Loop-back configuration is not functional.\n` +
+               `In Loop-back mode TXC must be set to\n` +
+               `TXC=1: external loop-back (TX shows frame, RX ignored)\n` +
+               `TXC=3: internal loop-back (TX forced 1).`
+        });
+      } else if (reg.TEST.fields.TXC === 1) { // External Loop-back
+        reg.TEST.report.push({
+          severityLevel: sevC.Warn,
+          msg: `TEST: External Loop-back mode enabled (LBCK = ${reg.TEST.fields.LBCK} and TXC = ${reg.TEST.fields.TXC}). TX shows frame, RX ignored.`
+        });
+      } else if (reg.TEST.fields.TXC === 2) {
+        reg.TEST.report.push({
+          severityLevel: sevC.Warn,
+          msg: `TEST: Internal Loop-back mode enabled (LBCK = ${reg.TEST.fields.LBCK} and TXC = ${reg.TEST.fields.TXC}). ATTENTION: TX forced 0, RX ignored.`
+        });
+      } else if (reg.TEST.fields.TXC === 3) {
+        reg.TEST.report.push({
+          severityLevel: sevC.Warn,
+          msg: `TEST: Internal Loop-back mode enabled (LBCK = ${reg.TEST.fields.LBCK} and TXC = ${reg.TEST.fields.TXC}). TX forced 1, RX ignored.`
+        });
+      }
+    } // if
+
   } // TEST
- 
+
 } // PRT others

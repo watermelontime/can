@@ -234,7 +234,7 @@
   <!-- Column 2: Register Values -->
   <div class="column register-column">
     <h3>Register Values</h3>
-    <label for="canIpModuleSelect">CAN Module (source of register dump):</label>
+    <label for="canIpModuleSelect">CAN Module</label>
     <div class="select-button-row">
       <select id="canIpModuleSelect" class="styled-select">
         <option value="M_CAN">M_CAN</option>
@@ -272,6 +272,12 @@ Memory dump can contain also reserved addresses. They will be detected and ignor
     <h3 class="report-headline">Evaluation Report
       <label class="inline-control">
         <input type="checkbox" id="par_report_verbose"/> verbose
+        <input type="checkbox" id="par_report_info" checked/> info
+        <input type="checkbox" id="par_report_info_highlighted" checked/> info highlighted
+        <input type="checkbox" id="par_report_calculated" checked/> calculated
+        <input type="checkbox" id="par_report_warning" checked/> warning
+        <input type="checkbox" id="par_report_error" checked/> error
+
       </label>
     </h3>
     <pre id="reportTextArea" class="register-textarea report-textarea" readonly>The "Register evaluations report" will appear here after processing ...
