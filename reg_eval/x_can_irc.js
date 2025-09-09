@@ -48,7 +48,7 @@ export function procRegsIRC(reg) {
     reg.FUNC_RAW.fields.MH_TX_FQ0_IRQ    = getBits(v,0,0);
     // 2. Report
     reg.FUNC_RAW.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `FUNC_RAW: ${reg.FUNC_RAW.name_long || 'Functional Raw Event Status'} (0x${reg.FUNC_RAW.addr !== undefined ? reg.FUNC_RAW.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[31 -               ] Reserved                   = - \n`+
            `[30 -               ] Reserved                   = - \n`+
@@ -119,7 +119,7 @@ export function procRegsIRC(reg) {
     reg.ERR_RAW.fields.MH_RX_FILTER_ERR = getBits(v,0,0);
     // 2. Report
     reg.ERR_RAW.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `ERR_RAW: ${reg.ERR_RAW.name_long || 'Error Raw Event Status'} (0x${reg.ERR_RAW.addr !== undefined ? reg.ERR_RAW.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[31 -               ] Reserved                   = - \n`+
            `[30 -               ] Reserved                   = - \n`+
@@ -190,7 +190,7 @@ export function procRegsIRC(reg) {
     reg.SAFETY_RAW.fields.MH_RX_FILTER_ERR = getBits(v,0,0);
     // 2. Report
     reg.SAFETY_RAW.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `SAFETY_RAW: ${reg.SAFETY_RAW.name_long || 'Safety Raw Event Status'} (0x${reg.SAFETY_RAW.addr !== undefined ? reg.SAFETY_RAW.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[31 -               ] Reserved                   = - \n`+
            `[30 -               ] Reserved                   = - \n`+
@@ -240,7 +240,7 @@ export function procRegsIRC(reg) {
     reg.FUNC_CLR.fields.BITS = v;
     // 2. Report
     reg.FUNC_CLR.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `FUNC_CLR: ${reg.FUNC_CLR.name_long || 'Functional Raw Event Clear'} (0x${reg.FUNC_CLR.addr !== undefined ? reg.FUNC_CLR.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `Read-Only register. Writing 1 to a bit clears the corresponding bit in FUNC_RAW.`
     });
@@ -257,7 +257,7 @@ export function procRegsIRC(reg) {
     reg.ERR_CLR.fields.BITS = v;
     // 2. Report
     reg.ERR_CLR.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `ERR_CLR: ${reg.ERR_CLR.name_long || 'Error Raw Event Clear'} (0x${reg.ERR_CLR.addr !== undefined ? reg.ERR_CLR.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `Read-Only register. Writing 1 to a bit clears the corresponding bit in ERR_RAW.`
     });
@@ -274,7 +274,7 @@ export function procRegsIRC(reg) {
     reg.SAFETY_CLR.fields.BITS = v;
     // 2. Report
     reg.SAFETY_CLR.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `SAFETY_CLR: ${reg.SAFETY_CLR.name_long || 'Safety Raw Event Clear'} (0x${reg.SAFETY_CLR.addr !== undefined ? reg.SAFETY_CLR.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `Read-Only register. Writing 1 to a bit clears the corresponding bit in SAFETY_RAW.`
     });
@@ -316,7 +316,7 @@ export function procRegsIRC(reg) {
     reg.FUNC_ENA.fields.MH_TX_FQ0_IRQ    = getBits(v,0,0);
     // 2. Report
     reg.FUNC_ENA.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `FUNC_ENA: ${reg.FUNC_ENA.name_long || 'Functional Raw Event Enable'} (0x${reg.FUNC_ENA.addr !== undefined ? reg.FUNC_ENA.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[31 -               ] Reserved                   = - \n`+
            `[30 -               ] Reserved                   = - \n`+
@@ -385,7 +385,7 @@ export function procRegsIRC(reg) {
     reg.ERR_ENA.fields.MH_RX_FILTER_ERR = getBits(v,0,0);
     // 2. Report
     reg.ERR_ENA.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `ERR_ENA: ${reg.ERR_ENA.name_long || 'Error Raw Event Enable'} (0x${reg.ERR_ENA.addr !== undefined ? reg.ERR_ENA.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[31 -               ] Reserved                   = - \n`+
            `[30 -               ] Reserved                   = - \n`+
@@ -454,7 +454,7 @@ export function procRegsIRC(reg) {
     reg.SAFETY_ENA.fields.MH_RX_FILTER_ERR = getBits(v,0,0);
     // 2. Report
     reg.SAFETY_ENA.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `SAFETY_ENA: ${reg.SAFETY_ENA.name_long || 'Safety Raw Event Enable'} (0x${reg.SAFETY_ENA.addr !== undefined ? reg.SAFETY_ENA.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[31 -               ] Reserved                   = -\n`+
            `[30 -               ] Reserved                   = -\n`+
@@ -537,8 +537,7 @@ export function procRegsIRC(reg) {
     }
     reg.FUNC_ENA = reg.FUNC_ENA || { report: [] };
     reg.FUNC_ENA.report.push({
-      severityLevel: sevC.Info,
-      highlight: true,
+      severityLevel: sevC.infoHighlighted,
       msg: `FUNC Interrupt Summary (only enabled IRs)\n`+
            `Bit  Name${' '.repeat(nameWidth-4)}  RAW ENA\n`+
            `${lines}`
@@ -585,8 +584,7 @@ export function procRegsIRC(reg) {
       }).join('\n');
     }
     reg.ERR_ENA.report.push({
-      severityLevel: sevC.Info,
-      highlight: true,
+      severityLevel: sevC.infoHighlighted,
       msg: `ERR Interrupt Summary (only enabled IRs)\n`+
            `Bit  Name${' '.repeat(nameWidthErr-4)}  RAW ENA\n`+
            `${linesErr}`
@@ -633,8 +631,7 @@ export function procRegsIRC(reg) {
       }).join('\n');
     }
     reg.SAFETY_ENA.report.push({
-      severityLevel: sevC.Info,
-      highlight: true,
+      severityLevel: sevC.infoHighlighted,
       msg: `SAFETY Interrupt Summary (only enabled IRs)\n`+
            `Bit  Name${' '.repeat(nameWidthSaf-4)}  RAW ENA\n`+
            `${linesSaf}`
@@ -657,7 +654,7 @@ export function procRegsIRC(reg) {
     const expected = 0x7;
     // 2. Report
     reg.CAPTURING_MODE.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `CAPTURING_MODE: ${reg.CAPTURING_MODE.name_long || 'IRC Capturing Mode'} (0x${reg.CAPTURING_MODE.addr !== undefined ? reg.CAPTURING_MODE.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `Expected fixed value: 0x${expected.toString(16).toUpperCase()} (all Edge).${v!==expected? ' (NOTE: Value differs from expected !)':''}\n`+
            `[SAFETY ] SAFETY RAW input flag Capturing Mode = ${reg.CAPTURING_MODE.fields.SAFETY} (${modeStr(reg.CAPTURING_MODE.fields.SAFETY)})\n`+
@@ -676,7 +673,7 @@ export function procRegsIRC(reg) {
     reg.HDP.fields.HDP_SEL = getBits(v,0,0); // 0 = Message Handler, 1 = Protocol Controller
     // 2. Report
     reg.HDP.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `HDP: ${reg.HDP.name_long || 'Hardware Debug Port Control'} (0x${reg.HDP.addr !== undefined ? reg.HDP.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[HDP_SEL] HDP Select (0=MH, 1=PRT) = ${reg.HDP.fields.HDP_SEL} (${reg.HDP.fields.HDP_SEL? 'PRT selected':'MH selected'})`
     });

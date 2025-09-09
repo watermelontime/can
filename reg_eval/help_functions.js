@@ -1,10 +1,12 @@
 // Severity level constants as an object
 export const sevC = {
-  Info: 0,
-  Recom: 1,
-  Warn: 2,
-  Error: 3,
-  InfoCalc: 4
+  info: 0,
+  infoVerbose: 1,
+  infoHighlighted: 2,
+  warning: 3,
+  error: 4,
+  recommendation: 5,
+  calculation: 6,
 };
 
 // Helper function to extract bits from register value
@@ -34,3 +36,6 @@ export function getBinaryLineData(regValue, bits2print=32) {
   }
   return lineData;
 }
+
+// Clear all elements of an object
+export function clearObject(o) { Object.keys(o).forEach(k => delete o[k]); }

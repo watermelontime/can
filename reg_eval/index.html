@@ -246,17 +246,23 @@
     <button type="button" id="processRegisterValuesButton" class="styled-button">process register values</button>
     <textarea id="userInputRegisterValues" class="register-textarea" placeholder="Enter your register values (memory dump) here.
 
-=== Required format ===
+=== Required format ==========
 0xADDR<space>0xVALUE
-- 0xADDR can be local or global
-  (e.g. 12 bit or 32 bit address)
-- 0xVALUE is a 32 bit value
-  (8 hex digits), MSBit on the left
-  
-Comments: lines starting with '#' are ignored
-Memory dump can contain also reserved addresses. They will be detected and ignored.
+- 0xADDR is a hex value,
+  can be local or global
+  (e.g. 12, 32, or 64 bit address)
+- 0xVALUE is a hex value,
+  only 32 LSBit decoded,
 
-=== Example ===
+MSBit is on the left, LSB on the right
+
+Values are interpreted as hex values, even if leading '0x' is missing.
+
+Comments: lines starting with '#' are ignored
+
+Reserved Addresses: Memory dump can contain also reserved addresses. They will be detected and ignored.
+
+=== Example ==================
 # This is a comment
 0x004 0x87654321
 0x008 0x000F0104
@@ -270,15 +276,16 @@ Memory dump can contain also reserved addresses. They will be detected and ignor
   <!-- Column 3: Validation Report -->
   <div class="column report-column">
     <h3 class="report-headline">Evaluation Report
-      <label class="inline-control">
-        <input type="checkbox" id="par_report_verbose"/> verbose
+      <div class="inline-control" role="group" aria-label="Report filters">
         <input type="checkbox" id="par_report_info" checked/> info
-        <input type="checkbox" id="par_report_info_highlighted" checked/> info highlighted
-        <input type="checkbox" id="par_report_calculated" checked/> calculated
+        <input type="checkbox" id="par_report_infoVerbose"/> info verbose
+        <input type="checkbox" id="par_report_infoHighlighted" checked/> info highlighted
+        <input type="checkbox" id="par_report_calculation" checked/> calculation
+        <input type="checkbox" id="par_report_recommendation" checked/> recommendation
         <input type="checkbox" id="par_report_warning" checked/> warning
         <input type="checkbox" id="par_report_error" checked/> error
 
-      </label>
+      </div>
     </h3>
     <pre id="reportTextArea" class="register-textarea report-textarea" readonly>The "Register evaluations report" will appear here after processing ...
 

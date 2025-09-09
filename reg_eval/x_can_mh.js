@@ -25,7 +25,7 @@ export function procRegsMhGlobal(reg) {
   // 1. Decode all individual bits of MODE register
   // Bit fields (BCD-coded date fields per spec)
     reg.VERSION.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `VERSION: ${reg.VERSION.name_long} (0x${reg.VERSION.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[REL    ] Release  = 0x${reg.VERSION.fields.REL.toString(16).toUpperCase()}\n` +
            `[STEP   ] Step     = 0x${reg.VERSION.fields.STEP.toString(16).toUpperCase()}\n` +
@@ -37,8 +37,7 @@ export function procRegsMhGlobal(reg) {
 
     // 2. Generate human-readable register report
     reg.VERSION.report.push({
-      severityLevel: sevC.Info,
-      highlight: true,
+      severityLevel: sevC.infoHighlighted,
       msg: `VERSION: X_CAN MH V${reg.VERSION.fields.REL.toString(16).toUpperCase()}.${reg.VERSION.fields.STEP.toString(16).toUpperCase()}.${reg.VERSION.fields.SUBSTEP.toString(16).toUpperCase()}, Date ${reg.VERSION.fields.DAY.toString(16).toUpperCase().padStart(2,'0')}.${reg.VERSION.fields.MON.toString(16).toUpperCase().padStart(2,'0')}.202${reg.VERSION.fields.YEAR.toString(16).toUpperCase()}`
     });
   } // VERSION
@@ -56,7 +55,7 @@ export function procRegsMhGlobal(reg) {
 
     // 2. Generate human-readable register report
     reg.MH_CTRL.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `MH_CTRL: ${reg.MH_CTRL.name_long} (0x${reg.MH_CTRL.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[START] Start MH = ${reg.MH_CTRL.fields.START} (1: started and MH config. regs. locked)`
     });
@@ -77,7 +76,7 @@ export function procRegsMhGlobal(reg) {
 
     // 2. Generate human-readable register report
     reg.MH_CFG.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `MH_CFG: ${reg.MH_CFG.name_long} (0x${reg.MH_CFG.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[INS_NUM    ] Instance Number (of X_CAN IP)     = ${reg.MH_CFG.fields.INS_NUM}\n` +
            `[MAX_RETRANS] Maximum TX re-transmissions       = ${reg.MH_CFG.fields.MAX_RETRANS} (0: NO, 1-6: 1-6, 7: unlimited)\n` +
@@ -100,7 +99,7 @@ export function procRegsMhGlobal(reg) {
 
     // 2. Generate human-readable register report
     reg.MH_STS.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `MH_STS: ${reg.MH_STS.name_long} (0x${reg.MH_STS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[CLOCK_ACTIVE] MH Core Clock Active = ${reg.MH_STS.fields.CLOCK_ACTIVE} (1: clock active)\n` +
            `[ENABLE      ] PRT Enable Signal    = ${reg.MH_STS.fields.ENABLE} (1: PRT is started)\n` +
@@ -124,7 +123,7 @@ export function procRegsMhGlobal(reg) {
 
     // 2. Generate human-readable register report
     reg.MH_SFTY_CFG.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `MH_SFTY_CFG: ${reg.MH_SFTY_CFG.name_long} (0x${reg.MH_SFTY_CFG.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[PRESCALER ] Watchdog Tick Prescaler = ${reg.MH_SFTY_CFG.fields.PRESCALER} (0: clk/32, 1: clk/64, 2: clk/128, 3: clk/512)\n` +
            `[PRT_TO_VAL] PRT/MH IF Timeout Ticks = ${reg.MH_SFTY_CFG.fields.PRT_TO_VAL}\n` +
@@ -156,7 +155,7 @@ export function procRegsMhGlobal(reg) {
 
     // 2. Generate human-readable register report
     reg.MH_SFTY_CTRL.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `MH_SFTY_CTRL: ${reg.MH_SFTY_CTRL.name_long} (0x${reg.MH_SFTY_CTRL.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
       `[PRT_TO_EN      ] PRT IF Watchdog Enable           = ${reg.MH_SFTY_CTRL.fields.PRT_TO_EN}\n` +
       `[MEM_TO_EN      ] MEM AXI Watchdog Enable          = ${reg.MH_SFTY_CTRL.fields.MEM_TO_EN}\n` +
@@ -176,13 +175,13 @@ export function procRegsMhGlobal(reg) {
     const sftyToVal = reg.MH_SFTY_CFG && reg.MH_SFTY_CFG.fields ? reg.MH_SFTY_CFG.fields : null;
     if (sftyToVal) {
       if (sftyEna.DMA_TO_EN === 1 && sftyToVal.DMA_TO_VAL === 0) {
-        reg.MH_SFTY_CTRL.report.push({ severityLevel: sevC.Warn, msg: 'MH_STY_CTRL: DMA_TO_VAL is 0 while DMA_TO_EN=1: DMA timeout would trigger immediately.' });
+        reg.MH_SFTY_CTRL.report.push({ severityLevel: sevC.warning, msg: 'MH_STY_CTRL: DMA_TO_VAL is 0 while DMA_TO_EN=1: DMA timeout would trigger immediately.' });
       }
       if (sftyEna.MEM_TO_EN === 1 && sftyToVal.MEM_TO_VAL === 0) {
-        reg.MH_SFTY_CTRL.report.push({ severityLevel: sevC.Warn, msg: 'MH_STY_CTRL: MEM_TO_VAL is 0 while MEM_TO_EN=1: MEM timeout would trigger immediately.' });
+        reg.MH_SFTY_CTRL.report.push({ severityLevel: sevC.warning, msg: 'MH_STY_CTRL: MEM_TO_VAL is 0 while MEM_TO_EN=1: MEM timeout would trigger immediately.' });
       }
       if (sftyEna.PRT_TO_EN === 1 && sftyToVal.PRT_TO_VAL === 0) {
-        reg.MH_SFTY_CTRL.report.push({ severityLevel: sevC.Warn, msg: 'MH_STY_CTRL: PRT_TO_VAL is 0 while PRT_TO_EN=1: PRT timeout would trigger immediately.' });
+        reg.MH_SFTY_CTRL.report.push({ severityLevel: sevC.warning, msg: 'MH_STY_CTRL: PRT_TO_VAL is 0 while PRT_TO_EN=1: PRT timeout would trigger immediately.' });
       }
     }
   }
@@ -202,12 +201,12 @@ export function procRegsMhGlobal(reg) {
 
     // 2. Generate human-readable register report
     reg.RX_FILTER_MEM_ADD.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `RX_FILTER_MEM_ADD: ${reg.RX_FILTER_MEM_ADD.name_long} (0x${reg.RX_FILTER_MEM_ADD.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[BASE_ADDR] RX Filter Base Address (L_MEM) = 0x${base.toString(16).toUpperCase().padStart(5,'0')} (16 bit, expected bits[1:0]=0)`
     });
     if (!alignOk) {
-      reg.RX_FILTER_MEM_ADD.report.push({ severityLevel: sevC.Warn, msg: 'RX_FILTER_MEM_ADD: RX Filter Base Address not word-aligned (LSBs [1:0] should be 0).' });
+      reg.RX_FILTER_MEM_ADD.report.push({ severityLevel: sevC.warning, msg: 'RX_FILTER_MEM_ADD: RX Filter Base Address not word-aligned (LSBs [1:0] should be 0).' });
     }
   }
 
@@ -227,16 +226,16 @@ export function procRegsMhGlobal(reg) {
 
     // 2. Generate human-readable register report
     reg.TX_DESC_MEM_ADD.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_DESC_MEM_ADD: ${reg.TX_DESC_MEM_ADD.name_long} (0x${reg.TX_DESC_MEM_ADD.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[PQ_BASE_ADDR] TX Priority Queue Base Address = 0x${reg.TX_DESC_MEM_ADD.fields.PQ_BASE_ADDR.toString(16).toUpperCase().padStart(4,'0')} (16 bit, expected bits[1:0]=0)\n` +
            `[FQ_BASE_ADDR] TX FIFO Queue Base Address     = 0x${reg.TX_DESC_MEM_ADD.fields.FQ_BASE_ADDR.toString(16).toUpperCase().padStart(4,'0')} (16 bit, expected bits[1:0]=0)`
     });
     if (!alignPqOk) {
-      reg.TX_DESC_MEM_ADD.report.push({ severityLevel: sevC.Warn, msg: 'TX_DESC_MEM_ADD: TX PQ Base Address not word-aligned (LSBs [1:0] should be 0).' });
+      reg.TX_DESC_MEM_ADD.report.push({ severityLevel: sevC.warning, msg: 'TX_DESC_MEM_ADD: TX PQ Base Address not word-aligned (LSBs [1:0] should be 0).' });
     }
     if (!alignFqOk) {
-      reg.TX_DESC_MEM_ADD.report.push({ severityLevel: sevC.Warn, msg: 'TX_DESC_MEM_ADD: TX FQ Base Address not word-aligned (LSBs [1:0] should be 0).' });
+      reg.TX_DESC_MEM_ADD.report.push({ severityLevel: sevC.warning, msg: 'TX_DESC_MEM_ADD: TX FQ Base Address not word-aligned (LSBs [1:0] should be 0).' });
     }
   }
 
@@ -251,7 +250,7 @@ export function procRegsMhGlobal(reg) {
 
     // 2. Generate human-readable register report
     reg.AXI_ADD_EXT.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `AXI_ADD_EXT: ${reg.AXI_ADD_EXT.name_long} (0x${reg.AXI_ADD_EXT.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[VAL] AXI Address Extension = 0x${reg.AXI_ADD_EXT.fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
     });
@@ -279,7 +278,7 @@ export function procRegsMhGlobal(reg) {
     };
 
     reg.AXI_PARAMS.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `AXI_PARAMS: ${reg.AXI_PARAMS.name_long} (0x${reg.AXI_PARAMS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[AW_MAX_PEND] Max pending AXI writes = ${reg.AXI_PARAMS.fields.AW_MAX_PEND} (= ${pendMap(reg.AXI_PARAMS.fields.AW_MAX_PEND,'write')})\n` +
            `[AR_MAX_PEND] Max pending AXI reads  = ${reg.AXI_PARAMS.fields.AR_MAX_PEND} (= ${pendMap(reg.AXI_PARAMS.fields.AR_MAX_PEND,'read ')})`
@@ -300,7 +299,7 @@ export function procRegsMhGlobal(reg) {
 
     // 2. Generate human-readable register report
     reg.MH_LOCK.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `MH_LOCK: ${reg.MH_LOCK.name_long} (0x${reg.MH_LOCK.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[TMK] Test Mode Key = 0x${reg.MH_LOCK.fields.TMK.toString(16).toUpperCase().padStart(4,'0')}\n` +
            `[ULK] Unlock Key    = 0x${reg.MH_LOCK.fields.ULK.toString(16).toUpperCase().padStart(4,'0')}`
@@ -332,7 +331,7 @@ export function procRegsMhTXFQ(reg) {
 
     // 2. Generate human-readable register report
     reg.TX_DESC_ADD_PT.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_DESC_ADD_PT: ${reg.TX_DESC_ADD_PT.name_long} (0x${reg.TX_DESC_ADD_PT.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[VAL] TX Descriptor Address (SMEM) currently used by MH = 0x${reg.TX_DESC_ADD_PT.fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
     });
@@ -352,7 +351,7 @@ export function procRegsMhTXFQ(reg) {
 
     // 2. Generate human-readable register report
     reg.TX_STATISTICS.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_STATISTICS: ${reg.TX_STATISTICS.name_long} (0x${reg.TX_STATISTICS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[UNSUCC] Unsuccessful TX Count = ${reg.TX_STATISTICS.fields.UNSUCC}\n` +
            `[SUCC  ] Successful   TX Count = ${reg.TX_STATISTICS.fields.SUCC}`
@@ -376,7 +375,7 @@ export function procRegsMhTXFQ(reg) {
 
     // 2. Generate human-readable register report
     reg.TX_FQ_STS0.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_FQ_STS0: ${reg.TX_FQ_STS0.name_long} (0x${reg.TX_FQ_STS0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[STOP] On Hold Queues = 0x${reg.TX_FQ_STS0.fields.STOP.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${stopIdx.length?stopIdx.join(', '):'none'}\n` +
            `[BUSY] Active  Queues = 0x${reg.TX_FQ_STS0.fields.BUSY.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${busyIdx.length?busyIdx.join(', '):'none'}`
@@ -400,7 +399,7 @@ export function procRegsMhTXFQ(reg) {
 
     // 2. Generate human-readable register report
     reg.TX_FQ_STS1.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_FQ_STS1: ${reg.TX_FQ_STS1.name_long} (0x${reg.TX_FQ_STS1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[ERROR  ] Descriptor with ERROR   Queues = 0x${reg.TX_FQ_STS1.fields.ERROR.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${errIdx.length?errIdx.join(', '):'none'}\n` +
            `[UNVALID] Descriptor with VALID=0 Queues = 0x${reg.TX_FQ_STS1.fields.UNVALID.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${invIdx.length?invIdx.join(', '):'none'}`
@@ -421,7 +420,7 @@ export function procRegsMhTXFQ(reg) {
 
     // 2. Generate human-readable register report
     reg.TX_FQ_CTRL2.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_FQ_CTRL2: ${reg.TX_FQ_CTRL2.name_long} (0x${reg.TX_FQ_CTRL2.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[ENABLE] Enabled Queues = 0x${reg.TX_FQ_CTRL2.fields.ENABLE.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${enaIdx.length?enaIdx.join(', '):'none'}`
     });
@@ -441,7 +440,7 @@ export function procRegsMhTXFQ(reg) {
 
     // 2. Generate human-readable register report
     reg.TX_FQ_CTRL1.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_FQ_CTRL1: ${reg.TX_FQ_CTRL1.name_long} (0x${reg.TX_FQ_CTRL1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[ABORT] Aborted Queues = 0x${reg.TX_FQ_CTRL1.fields.ABORT.toString(16).toUpperCase().padStart(2,'0')}  => FIFOs: ${abortIdx.length?abortIdx.join(', '):'none'}`
     });
@@ -461,7 +460,7 @@ export function procRegsMhTXFQ(reg) {
 
     // 2. Generate human-readable register report
     reg.TX_FQ_CTRL0.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_FQ_CTRL0: ${reg.TX_FQ_CTRL0.name_long} (0x${reg.TX_FQ_CTRL0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[START] Started Queues = 0x${reg.TX_FQ_CTRL0.fields.START.toString(16).toUpperCase().padStart(2,'0')}) => FIFOs: ${startIdx.length?startIdx.join(', '):'none'}`
     });
@@ -475,11 +474,11 @@ export function procRegsMhTXFQ(reg) {
         if (((enaMask >>> q) & 1) === 0) notEnabled.push(q);
       }
       if (notEnabled.length) {
-        reg.TX_FQ_CTRL0.report.push({ severityLevel: sevC.Warn, msg: `TX_FQ_CTRL0: START requested for disabled queues: ${notEnabled.join(', ')}` });
+        reg.TX_FQ_CTRL0.report.push({ severityLevel: sevC.warning, msg: `TX_FQ_CTRL0: START requested for disabled queues: ${notEnabled.join(', ')}` });
       }
     }
     if (startIdx.length && prtEnable === 0) {
-      reg.TX_FQ_CTRL0.report.push({ severityLevel: sevC.Warn, msg: 'TX_FQ_CTRL0: START requested while PRT ENABLE=0 (MH_STS.ENABLE=0).' });
+      reg.TX_FQ_CTRL0.report.push({ severityLevel: sevC.warning, msg: 'TX_FQ_CTRL0: START requested while PRT ENABLE=0 (MH_STS.ENABLE=0).' });
     }
   }
 
@@ -496,7 +495,7 @@ export function procRegsMhTXFQ(reg) {
       reg[addPtName].report = [];
       reg[addPtName].fields.VAL = getBits(regValue, 31, 0);
       reg[addPtName].report.push({
-        severityLevel: sevC.Info,
+        severityLevel: sevC.info,
         msg: `${addPtName}: ${reg[addPtName].name_long} (0x${reg[addPtName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
              `[VAL] TXFQ${q} Head Descriptor Address (SMEM) = 0x${reg[addPtName].fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
       });
@@ -510,12 +509,12 @@ export function procRegsMhTXFQ(reg) {
       reg[startAddName].fields.VAL = getBits(regValue, 31, 0);
       const alignOk = (regValue & 0x3) === 0;
       reg[startAddName].report.push({
-        severityLevel: sevC.Info,
+        severityLevel: sevC.info,
         msg: `${startAddName}: ${reg[startAddName].name_long} (0x${reg[startAddName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
              `[VAL] TXFQ${q} Start Address (SMEM)           = 0x${reg[startAddName].fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
       });
       if (!alignOk) {
-        reg[startAddName].report.push({ severityLevel: sevC.Warn, msg: `${startAddName}: Address not word-aligned (LSBs [1:0] should be 0).` });
+        reg[startAddName].report.push({ severityLevel: sevC.warning, msg: `${startAddName}: Address not word-aligned (LSBs [1:0] should be 0).` });
       }
     }
 
@@ -528,7 +527,7 @@ export function procRegsMhTXFQ(reg) {
       const maxDesc = reg[sizeName].fields.MAX_DESC;
       const memBytes = maxDesc > 0 ? (maxDesc * 32) >>> 0 : 0;
       reg[sizeName].report.push({
-        severityLevel: sevC.Info,
+        severityLevel: sevC.info,
         msg: `${sizeName}: ${reg[sizeName].name_long} (0x${reg[sizeName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
              `[MAX_DESC] TXFQ${q} Max Descriptors = ${maxDesc}${maxDesc>0?` (allocates ${memBytes} bytes in S_MEM)`:''}`
       });
@@ -588,8 +587,7 @@ export function procRegsMhTXFQ(reg) {
       target = reg.TX_FQ_SIZE0;
     }
     target.report.push({
-      severityLevel: sevC.Info,
-      highlight: true,
+      severityLevel: sevC.infoHighlighted,
       msg: 'TX FIFO Queues Summary\n' + lines.join('\n')
     });
   } catch (e) {
@@ -599,7 +597,7 @@ export function procRegsMhTXFQ(reg) {
       reg._TX_FIFO_SUMMARY = { name_long: 'TX FIFO Summary (error)', report: [] };
     }
     if (!Array.isArray(reg._TX_FQ_SUMMARY.report)) reg._TX_FQ_SUMMARY.report = [];
-    reg._TX_FQ_SUMMARY.report.push({ severityLevel: sevC.Warn, highlight: true, msg });
+    reg._TX_FQ_SUMMARY.report.push({ severityLevel: sevC.warning, msg });
   }
 }
 
@@ -631,7 +629,7 @@ export function procRegsMhTXPQ(reg) {
     let binLineData = "Slot " + getBinaryLineData(regValue);
 
     reg.TX_PQ_STS0.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_PQ_STS0: ${reg.TX_PQ_STS0.name_long} (0x${reg.TX_PQ_STS0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[BUSY] Active Slots (TX Pending) = 0x${reg.TX_PQ_STS0.fields.BUSY.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${busyIdx.length?busyIdx.join(', '):'none'}\n` +
            binLineHead +
@@ -656,7 +654,7 @@ export function procRegsMhTXPQ(reg) {
     let binLineHead = "Bit: 31                  23                  15                  7               0\n";
     let binLineData = "Slot " + getBinaryLineData(regValue);
     reg.TX_PQ_STS1.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_PQ_STS1: ${reg.TX_PQ_STS1.name_long} (0x${reg.TX_PQ_STS1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[SENT] Sent (TX Desc. SMEM update) = 0x${reg.TX_PQ_STS1.fields.SENT.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${sentIdx.length?sentIdx.join(', '):'none'}\n` +
            binLineHead +
@@ -679,7 +677,7 @@ export function procRegsMhTXPQ(reg) {
     let binLineHead = "Bit: 31                  23                  15                  7               0\n";
     let binLineData = "Slot " + getBinaryLineData(regValue);    
     reg.TX_PQ_CTRL0.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_PQ_CTRL0: ${reg.TX_PQ_CTRL0.name_long} (0x${reg.TX_PQ_CTRL0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[START] Started Slots              = 0x${reg.TX_PQ_CTRL0.fields.START.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${startIdx.length?startIdx.join(', '):'none'}\n` +
            binLineHead +
@@ -703,7 +701,7 @@ export function procRegsMhTXPQ(reg) {
     let binLineHead = "Bit: 31                  23                  15                  7               0\n";
     let binLineData = "Slot " + getBinaryLineData(regValue);    
     reg.TX_PQ_CTRL1.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_PQ_CTRL1: ${reg.TX_PQ_CTRL1.name_long} (0x${reg.TX_PQ_CTRL1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[ABORT] Aborted Slots (requested)  = 0x${reg.TX_PQ_CTRL1.fields.ABORT.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${abortIdx.length?abortIdx.join(', '):'none'}\n` +
            binLineHead +
@@ -727,7 +725,7 @@ export function procRegsMhTXPQ(reg) {
     let binLineHead = "Bit: 31                  23                  15                  7               0\n";
     let binLineData = "Slot " + getBinaryLineData(regValue);    
     reg.TX_PQ_CTRL2.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_PQ_CTRL2: ${reg.TX_PQ_CTRL2.name_long} (0x${reg.TX_PQ_CTRL2.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[ENABLE] Enabled Slots             = 0x${reg.TX_PQ_CTRL2.fields.ENABLE.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${enaIdx.length?enaIdx.join(', '):'none'}\n` +
            binLineHead +
@@ -748,12 +746,12 @@ export function procRegsMhTXPQ(reg) {
 
     // 2. Generate human-readable register report
     reg.TX_PQ_START_ADD.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_PQ_START_ADD: ${reg.TX_PQ_START_ADD.name_long} (0x${reg.TX_PQ_START_ADD.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[VAL] TXPQ Start Address (SMEM) = 0x${reg.TX_PQ_START_ADD.fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
     });
     if (!alignOk) {
-      reg.TX_PQ_START_ADD.report.push({ severityLevel: sevC.Warn, msg: 'TX_PQ_START_ADD: Address not word-aligned (LSBs [1:0] should be 0).' });
+      reg.TX_PQ_START_ADD.report.push({ severityLevel: sevC.warning, msg: 'TX_PQ_START_ADD: Address not word-aligned (LSBs [1:0] should be 0).' });
     }
   }
 
@@ -794,8 +792,7 @@ export function procRegsMhTXPQ(reg) {
         target = reg._TX_PQ_SUMMARY;
       }
       target.report.push({
-        severityLevel: sevC.Info,
-        highlight: true,
+        severityLevel: sevC.infoHighlighted,
         msg: 'TX Priority Queue Slot Summary\n' + lines.join('\n')
       });
     }
@@ -803,7 +800,7 @@ export function procRegsMhTXPQ(reg) {
     // On error create synthetic summary register with warning
     if (!reg._TX_PQ_SUMMARY) reg._TX_PQ_SUMMARY = { name_long: 'TX PQ Summary (error)', report: [] };
     if (!Array.isArray(reg._TX_PQ_SUMMARY.report)) reg._TX_PQ_SUMMARY.report = [];
-    reg._TX_PQ_SUMMARY.report.push({ severityLevel: sevC.Warn, highlight: true, msg: 'TX PQ summary generation failed: ' + (e && e.message ? e.message : e) });
+    reg._TX_PQ_SUMMARY.report.push({ severityLevel: sevC.warning, msg: 'TX PQ summary generation failed: ' + (e && e.message ? e.message : e) });
   }
 } // TX Priority Queue
 
@@ -830,7 +827,7 @@ export function procRegsMhRXFQ(reg) {
 
     // 2. Generate human-readable register report
     reg.RX_DESC_ADD_PT.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `RX_DESC_ADD_PT: ${reg.RX_DESC_ADD_PT.name_long} (0x${reg.RX_DESC_ADD_PT.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[VAL] RX Descriptor Address (SMEM) currently used by MH = 0x${reg.RX_DESC_ADD_PT.fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
     });
@@ -850,7 +847,7 @@ export function procRegsMhRXFQ(reg) {
 
     // 2. Generate human-readable register report
     reg.RX_STATISTICS.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `RX_STATISTICS: ${reg.RX_STATISTICS.name_long} (0x${reg.RX_STATISTICS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[UNSUCC] Unsuccessful RX Count = ${reg.RX_STATISTICS.fields.UNSUCC}\n` +
            `[SUCC  ] Successful   RX Count = ${reg.RX_STATISTICS.fields.SUCC}`
@@ -874,7 +871,7 @@ export function procRegsMhRXFQ(reg) {
 
     // 2. Generate human-readable register report
     reg.RX_FQ_STS0.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `RX_FQ_STS0: ${reg.RX_FQ_STS0.name_long} (0x${reg.RX_FQ_STS0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[STOP] On Hold Queues = 0x${reg.RX_FQ_STS0.fields.STOP.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${stopIdx.length?stopIdx.join(', '):'none'}\n` +
            `[BUSY] Active  Queues = 0x${reg.RX_FQ_STS0.fields.BUSY.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${busyIdx.length?busyIdx.join(', '):'none'}`
@@ -898,7 +895,7 @@ export function procRegsMhRXFQ(reg) {
 
     // 2. Generate human-readable register report
     reg.RX_FQ_STS1.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `RX_FQ_STS1: ${reg.RX_FQ_STS1.name_long} (0x${reg.RX_FQ_STS1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[ERROR  ] Descriptor with ERROR   Queues = 0x${reg.RX_FQ_STS1.fields.ERROR.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${errIdx.length?errIdx.join(', '):'none'}\n` +
            `[UNVALID] Descriptor with VALID=0 Queues = 0x${reg.RX_FQ_STS1.fields.UNVALID.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${invIdx.length?invIdx.join(', '):'none'}`
@@ -919,7 +916,7 @@ export function procRegsMhRXFQ(reg) {
 
     // 2. Generate report
     reg.RX_FQ_STS2.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `RX_FQ_STS2: ${reg.RX_FQ_STS2.name_long} (0x${reg.RX_FQ_STS2.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[DC_FULL] Data Container Full for Queues = 0x${reg.RX_FQ_STS2.fields.DC_FULL.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${fullIdx.length?fullIdx.join(', '):'none'}`
     });
@@ -939,7 +936,7 @@ export function procRegsMhRXFQ(reg) {
 
     // 2. Report
     reg.RX_FQ_CTRL0.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `RX_FQ_CTRL0: ${reg.RX_FQ_CTRL0.name_long} (0x${reg.RX_FQ_CTRL0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[START] Started Queues = 0x${reg.RX_FQ_CTRL0.fields.START.toString(16).toUpperCase().padStart(2,'0')}) => FIFOs: ${startIdx.length?startIdx.join(', '):'none'}`
     });
@@ -959,7 +956,7 @@ export function procRegsMhRXFQ(reg) {
 
     // 2. Report
     reg.RX_FQ_CTRL1.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `RX_FQ_CTRL1: ${reg.RX_FQ_CTRL1.name_long} (0x${reg.RX_FQ_CTRL1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[ABORT] Aborted Queues = 0x${reg.RX_FQ_CTRL1.fields.ABORT.toString(16).toUpperCase().padStart(2,'0')}  => FIFOs: ${abortIdx.length?abortIdx.join(', '):'none'}`
     });
@@ -979,7 +976,7 @@ export function procRegsMhRXFQ(reg) {
 
     // 2. Report
     reg.RX_FQ_CTRL2.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `RX_FQ_CTRL2: ${reg.RX_FQ_CTRL2.name_long} (0x${reg.RX_FQ_CTRL2.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[ENABLE] Enabled Queues = 0x${reg.RX_FQ_CTRL2.fields.ENABLE.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${enaIdx.length?enaIdx.join(', '):'none'}`
     });
@@ -1000,7 +997,7 @@ export function procRegsMhRXFQ(reg) {
       reg[addPtName].report = [];
       reg[addPtName].fields.VAL = getBits(regValue, 31, 0);
       reg[addPtName].report.push({
-        severityLevel: sevC.Info,
+        severityLevel: sevC.info,
         msg: `${addPtName}: ${reg[addPtName].name_long} (0x${reg[addPtName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
              `[VAL] RXFQ${q} Current Descriptor Address (SMEM) = 0x${reg[addPtName].fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
       });
@@ -1014,12 +1011,12 @@ export function procRegsMhRXFQ(reg) {
       reg[startAddName].fields.VAL = getBits(regValue, 31, 0);
       const alignOk = (regValue & 0x3) === 0;
       reg[startAddName].report.push({
-        severityLevel: sevC.Info,
+        severityLevel: sevC.info,
         msg: `${startAddName}: ${reg[startAddName].name_long} (0x${reg[startAddName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
              `[VAL] RXFQ${q} Start Address (SMEM)                = 0x${reg[startAddName].fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
       });
       if (!alignOk) {
-        reg[startAddName].report.push({ severityLevel: sevC.Warn, msg: `${startAddName}: Address not word-aligned (LSBs [1:0] should be 0).` });
+        reg[startAddName].report.push({ severityLevel: sevC.warning, msg: `${startAddName}: Address not word-aligned (LSBs [1:0] should be 0).` });
       }
     }
 
@@ -1036,7 +1033,7 @@ export function procRegsMhRXFQ(reg) {
       let dcInfo = '';
       if (dcSize > 0) dcInfo = ` (in Normal Mode = ${getBits(dcSize, 6, 0)* 32} bytes; in Continuous Mode = ${dcSize * 32} byte)`;
       reg[sizeName].report.push({
-        severityLevel: sevC.Info,
+        severityLevel: sevC.info,
         msg: `${sizeName}: ${reg[sizeName].name_long} (0x${reg[sizeName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
              `[MAX_DESC] RXFQ${q} Size                = ${maxDesc}${maxDesc>0?` (allocates ${descBytes} bytes in S_MEM)`:''}\n` +
              `[DC_SIZE ] RXFQ${q} Data Container Size = ${dcSize}${dcInfo}`
@@ -1051,12 +1048,12 @@ export function procRegsMhRXFQ(reg) {
       reg[dcStartAddName].fields.VAL = getBits(regValue, 31, 0);
       const alignOk = (regValue & 0x3) === 0;
       reg[dcStartAddName].report.push({
-        severityLevel: sevC.Info,
+        severityLevel: sevC.info,
         msg: `${dcStartAddName}: ${reg[dcStartAddName].name_long} (0x${reg[dcStartAddName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
              `[VAL] RXFQ${q} Data Container Start Address (SMEM) = 0x${reg[dcStartAddName].fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
       });
       if (!alignOk) {
-        reg[dcStartAddName].report.push({ severityLevel: sevC.Warn, msg: `${dcStartAddName}: Address not word-aligned (LSBs [1:0] should be 0).` });
+        reg[dcStartAddName].report.push({ severityLevel: sevC.warning, msg: `${dcStartAddName}: Address not word-aligned (LSBs [1:0] should be 0).` });
       }
     }
 
@@ -1069,12 +1066,12 @@ export function procRegsMhRXFQ(reg) {
       const initialSpecial = (regValue & 0x3) === 0x3; // initial required 0b11 for start according to manual
       const alignedLater   = (regValue & 0x3) === 0x0; // after initial should be aligned
       reg[rdAddPtName].report.push({
-        severityLevel: sevC.Info,
+        severityLevel: sevC.info,
         msg: `${rdAddPtName}: ${reg[rdAddPtName].name_long} (0x${reg[rdAddPtName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
              `[VAL] RXFQ${q} Data Container Read Address (SMEM)  = 0x${reg[rdAddPtName].fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
       });
       if (!initialSpecial && !alignedLater) {
-        reg[rdAddPtName].report.push({ severityLevel: sevC.Warn, msg: `${rdAddPtName}: LSBs [1:0] must be =0. Exception: initial value can be 0b11.` });
+        reg[rdAddPtName].report.push({ severityLevel: sevC.warning, msg: `${rdAddPtName}: LSBs [1:0] must be =0. Exception: initial value can be 0b11.` });
       }
     }
   }
@@ -1135,15 +1132,14 @@ export function procRegsMhRXFQ(reg) {
       target = reg._RX_FQ_SUMMARY;
     }
     target.report.push({
-      severityLevel: sevC.Info,
-      highlight: true,
+      severityLevel: sevC.infoHighlighted,
       msg: 'RX FIFO Queues Summary\n' + lines.join('\n')
     });
   } catch (e) {
     const msg = 'RX FIFO summary generation failed: ' + (e && e.message ? e.message : e);
     if (!reg._RX_FQ_SUMMARY) reg._RX_FQ_SUMMARY = { name_long: 'RX FIFO Summary (error)', report: [] };
     if (!Array.isArray(reg._RX_FQ_SUMMARY.report)) reg._RX_FQ_SUMMARY.report = [];
-    reg._RX_FQ_SUMMARY.report.push({ severityLevel: sevC.Warn, highlight: true, msg });
+    reg._RX_FQ_SUMMARY.report.push({ severityLevel: sevC.warning, msg });
   }
 } // RX FIFO Queue
 
@@ -1173,7 +1169,7 @@ export function procRegsMhRXTXFilter(reg) {
     let combIdxPairsString = combIdx.map((v, i) => `${2*v+1}/${2*v}`).join(', ');
     // 2. Report
     reg.TX_FILTER_CTRL0.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_FILTER_CTRL0: ${reg.TX_FILTER_CTRL0.name_long} (0x${reg.TX_FILTER_CTRL0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[IRQ_EN] Interrupt on Rejection Enabled = ${reg.TX_FILTER_CTRL0.fields.IRQ_EN}\n` +
            `[EN    ] TX Filter Global Enable        = ${reg.TX_FILTER_CTRL0.fields.EN}\n`+
@@ -1198,7 +1194,7 @@ export function procRegsMhRXTXFilter(reg) {
     const fieldIdx = listSetIdx16(reg.TX_FILTER_CTRL1.fields.FIELD);
     const validIdx = listSetIdx16(reg.TX_FILTER_CTRL1.fields.VALID);
     reg.TX_FILTER_CTRL1.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_FILTER_CTRL1: ${reg.TX_FILTER_CTRL1.name_long} (0x${reg.TX_FILTER_CTRL1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[VALID] Active Ref Value Indexes: REF_VALx = 0x${reg.TX_FILTER_CTRL1.fields.VALID.toString(16).toUpperCase().padStart(4,'0')} => ${validIdx.length?validIdx.join(', '):'none'}\n`+
            `[FIELD] Compared field: SDT(1) or VCID(0)  = 0x${reg.TX_FILTER_CTRL1.fields.FIELD.toString(16).toUpperCase().padStart(4,'0')} => binary (15:0) ${getBinaryLineData(reg.TX_FILTER_CTRL1.fields.FIELD, 16)}`
@@ -1217,7 +1213,7 @@ export function procRegsMhRXTXFilter(reg) {
       reg[name].fields.REF_VAL2 = getBits(regValue,23,16);
       reg[name].fields.REF_VAL3 = getBits(regValue,31,24);
       reg[name].report.push({
-        severityLevel: sevC.Info,
+        severityLevel: sevC.info,
         msg: `${name}: ${reg[name].name_long} (0x${reg[name].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
              `[REF_VAL3] global REF_VAL${(index*4+3).toString().padEnd(2,' ')} = 0x${reg[name].fields.REF_VAL3.toString(16).toUpperCase().padStart(2,'0')}\n`+
              `[REF_VAL2] global REF_VAL${(index*4+2).toString().padEnd(2,' ')} = 0x${reg[name].fields.REF_VAL2.toString(16).toUpperCase().padStart(2,'0')}\n`+
@@ -1245,7 +1241,7 @@ export function procRegsMhRXTXFilter(reg) {
     reg.RX_FILTER_CTRL.fields.NB_FE      = getBits(regValue, 7, 0);
     // 2.
     reg.RX_FILTER_CTRL.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `RX_FILTER_CTRL: ${reg.RX_FILTER_CTRL.name_long} (0x${reg.RX_FILTER_CTRL.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[ANFF     ] Threshold for RX DMA FIFO (=cache) = ${reg.RX_FILTER_CTRL.fields.ANFF}\n`+
            `[ANMF     ] Accept Non-Matching Frames         = ${reg.RX_FILTER_CTRL.fields.ANMF}\n`+
@@ -1274,7 +1270,7 @@ export function procRegsMhIRCtrlStat(reg) {
     const sentIdx= listSet(reg.TX_FQ_INT_STS.fields.SENT,7);
     // 2. Report
     reg.TX_FQ_INT_STS.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_FQ_INT_STS: ${reg.TX_FQ_INT_STS.name_long} (0x${reg.TX_FQ_INT_STS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[UNVALID ] TXFQ Descriptor VALID=0 IR = 0x${reg.TX_FQ_INT_STS.fields.UNVALID.toString(16).toUpperCase().padStart(2,'0')} => Queues: ${unvIdx.length?unvIdx.join(', '):'none'}\n`+
            `[SENT    ] TXFQ Message Dequeued   IR = 0x${reg.TX_FQ_INT_STS.fields.SENT.toString(16).toUpperCase().padStart(2,'0')} => Queues: ${sentIdx.length?sentIdx.join(', '):'none'}`
@@ -1294,7 +1290,7 @@ export function procRegsMhIRCtrlStat(reg) {
     const unvIdx = listSet(reg.RX_FQ_INT_STS.fields.UNVALID,7);
     const rcvIdx = listSet(reg.RX_FQ_INT_STS.fields.RECEIVED,7);
     reg.RX_FQ_INT_STS.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `RX_FQ_INT_STS: ${reg.RX_FQ_INT_STS.name_long} (0x${reg.RX_FQ_INT_STS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[UNVALID ] RXFQ Descriptor VALID=0 IR = 0x${reg.RX_FQ_INT_STS.fields.UNVALID.toString(16).toUpperCase().padStart(2,'0')} => Queues: ${unvIdx.length?unvIdx.join(', '):'none'}\n`+
            `[RECEIVED] RXFQ Message Enqueued   IR = 0x${reg.RX_FQ_INT_STS.fields.RECEIVED.toString(16).toUpperCase().padStart(2,'0')} => Queues: ${rcvIdx.length?rcvIdx.join(', '):'none'}`
@@ -1314,7 +1310,7 @@ export function procRegsMhIRCtrlStat(reg) {
     let binLineHead = "Bit: 31                  23                  15                  7               0\n";
     let binLineData = "Slot " + getBinaryLineData(regValue);
     reg.TX_PQ_INT_STS0.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_PQ_INT_STS0: ${reg.TX_PQ_INT_STS0.name_long} (0x${reg.TX_PQ_INT_STS0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[SENT] TXPQ Messages Dequeued IR      = 0x${reg.TX_PQ_INT_STS0.fields.SENT.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${sentIdx.length?sentIdx.join(', '):'none'}\n` +
            binLineHead +
@@ -1335,7 +1331,7 @@ export function procRegsMhIRCtrlStat(reg) {
     let binLineHead = "Bit: 31                  23                  15                  7               0\n";
     let binLineData = "Slot " + getBinaryLineData(regValue);
     reg.TX_PQ_INT_STS1.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_PQ_INT_STS1: ${reg.TX_PQ_INT_STS1.name_long} (0x${reg.TX_PQ_INT_STS1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[UNVALID] TXPQ Descriptor VALID=0 IR  = 0x${reg.TX_PQ_INT_STS1.fields.UNVALID.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${unvIdx.length?unvIdx.join(', '):'none'}\n` +
            binLineHead +
@@ -1356,7 +1352,7 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.STATS_INT_STS.fields.TX_SUCC   = getBits(regValue,0,0);
     // 2. Report
     reg.STATS_INT_STS.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `STATS_INT_STS: ${reg.STATS_INT_STS.name_long} (0x${reg.STATS_INT_STS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[RX_UNSUCC] RX unsuccessful counter = ${reg.STATS_INT_STS.fields.RX_UNSUCC}\n`+
            `[RX_SUCC  ] RX successful counter   = ${reg.STATS_INT_STS.fields.RX_SUCC}\n`+
@@ -1379,7 +1375,7 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.ERR_INT_STS.fields.DP_TX_ACK_DO_ERR  = getBits(regValue,0,0);
     // 2. Report
     reg.ERR_INT_STS.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `ERR_INT_STS: ${reg.ERR_INT_STS.name_long} (0x${reg.ERR_INT_STS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[DP_RX_SEQ_ERR    ] Data Path RX sequence error            = ${reg.ERR_INT_STS.fields.DP_RX_SEQ_ERR}\n`+
            `[DP_TX_SEQ_ERR    ] Data Path TX sequence error            = ${reg.ERR_INT_STS.fields.DP_TX_SEQ_ERR}\n`+
@@ -1416,7 +1412,7 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.SFTY_INT_STS.fields.DMA_AXI_WR_TO_ERR = getBits(regValue,0,0);
     // 2. Report
     reg.SFTY_INT_STS.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `SFTY_INT_STS: ${reg.SFTY_INT_STS.name_long} (0x${reg.SFTY_INT_STS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[ACK_RX_PARITY_ERR] RX Ack Data Parity Issue        = ${reg.SFTY_INT_STS.fields.ACK_RX_PARITY_ERR}\n`+
            `[ACK_TX_PARITY_ERR] TX Ack Data Parity Issue        = ${reg.SFTY_INT_STS.fields.ACK_TX_PARITY_ERR}\n`+
@@ -1452,7 +1448,7 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.AXI_ERR_INFO.fields.DMA_ID   = getBits(regValue,1,0);
     // 2. Report
     reg.AXI_ERR_INFO.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `AXI_ERR_INFO: ${reg.AXI_ERR_INFO.name_long} (0x${reg.AXI_ERR_INFO.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[MEM_RESP] MEM AXI Response                                = ${reg.AXI_ERR_INFO.fields.MEM_RESP} (0: Okay, 1: res, 2: SLVERR, 3: DECERR)\n`+
            `[MEM_ID  ] MEM AXI ID (in case of RD or WR Error Response) = ${reg.AXI_ERR_INFO.fields.MEM_ID}\n`+
@@ -1471,7 +1467,7 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.DESC_ERR_INFO0.fields.ADD = getBits(regValue,31,0);
     // 2. Report
     reg.DESC_ERR_INFO0.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `DESC_ERR_INFO0: ${reg.DESC_ERR_INFO0.name_long} (0x${reg.DESC_ERR_INFO0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[ADD] Descriptor Address = 0x${reg.DESC_ERR_INFO0.fields.ADD.toString(16).toUpperCase().padStart(8,'0')}`
     });
@@ -1492,7 +1488,7 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.DESC_ERR_INFO1.fields.FQN_PQSN = getBits(regValue,4,0);
     // 2. Report
     reg.DESC_ERR_INFO1.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `DESC_ERR_INFO1: ${reg.DESC_ERR_INFO1.name_long} (0x${reg.DESC_ERR_INFO1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[CRC     ] Descriptor CRC Value        = 0x${reg.DESC_ERR_INFO1.fields.CRC.toString(16).toUpperCase().padStart(2,'0')}\n`+
            `[RX_TX   ] RX(1) or TX(0) Descriptor   = ${reg.DESC_ERR_INFO1.fields.RX_TX}\n`+
@@ -1514,7 +1510,7 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.TX_FILTER_ERR_INFO.fields.FQ      = getBits(regValue,0,0); // 1=TX FIFO Queue, 0=TX PQ slot
     // 2. Report
     reg.TX_FILTER_ERR_INFO.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_FILTER_ERR_INFO: ${reg.TX_FILTER_ERR_INFO.name_long} (0x${reg.TX_FILTER_ERR_INFO.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[FQ     ] TX Queue type FQ(1), PQ(0) = ${reg.TX_FILTER_ERR_INFO.fields.FQ}\n`+
            `[FQN_PQS] FIFO Queue/Slot Number     = ${reg.TX_FILTER_ERR_INFO.fields.FQN_PQS}`
@@ -1538,7 +1534,7 @@ export function procRegsMhDebugCtrlStat(reg) {
     reg.DEBUG_TEST_CTRL.fields.TEST_IRQ_EN = getBits(regValue,0,0);
     // 2. Report
     reg.DEBUG_TEST_CTRL.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `DEBUG_TEST_CTRL: ${reg.DEBUG_TEST_CTRL.name_long} (0x${reg.DEBUG_TEST_CTRL.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[HDP_SEL    ] HDP Signal Set        = ${reg.DEBUG_TEST_CTRL.fields.HDP_SEL}\n`+
            `[HDP_EN     ] HDP Port Enable       = ${reg.DEBUG_TEST_CTRL.fields.HDP_EN}\n`+
@@ -1557,7 +1553,7 @@ export function procRegsMhDebugCtrlStat(reg) {
     reg.INT_TEST0.fields.TX_FQ_IRQ = getBits(regValue,7,0);
     // 2. Report
     reg.INT_TEST0.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `INT_TEST0: ${reg.INT_TEST0.name_long} (0x${reg.INT_TEST0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[RX_FQ_IRQ] Trigger RX_FQ IRQs = 0x${reg.INT_TEST0.fields.RX_FQ_IRQ.toString(16).toUpperCase().padStart(2,'0')}\n`+
            `[TX_FQ_IRQ] Trigger TX_FQ IRQs = 0x${reg.INT_TEST0.fields.TX_FQ_IRQ.toString(16).toUpperCase().padStart(2,'0')}`
@@ -1593,7 +1589,7 @@ export function procRegsMhDebugCtrlStat(reg) {
     reg.INT_TEST1.fields.RESP_ERR      = getBits(regValue,1,0);
     // 2. Report
     reg.INT_TEST1.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `INT_TEST1: ${reg.INT_TEST1.name_long} (0x${reg.INT_TEST1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[TX_PQ_IRQ    ] Trigger TX Priority Queue IRQ      = ${reg.INT_TEST1.fields.TX_PQ_IRQ}\n`+
            `[STATS_IRQ    ] Trigger Statistics IRQ             = ${reg.INT_TEST1.fields.STATS_IRQ}\n`+
@@ -1635,7 +1631,7 @@ export function procRegsMhDebugCtrlStat(reg) {
     reg.TX_SCAN_FC.fields.FQ_PQ0    = getBits(regValue,0,0);
     // 2. Report
     reg.TX_SCAN_FC.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_SCAN_FC: ${reg.TX_SCAN_FC.name_long} (0x${reg.TX_SCAN_FC.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[FQN_PQSN3] 4th cand. Queue/Slot    = ${reg.TX_SCAN_FC.fields.FQN_PQSN3}\n`+
            `[FQ_PQ3   ] TX Queue type FQ(0), PQ(1) = ${reg.TX_SCAN_FC.fields.FQ_PQ3}\n`+
@@ -1663,7 +1659,7 @@ export function procRegsMhDebugCtrlStat(reg) {
     reg.TX_SCAN_BC.fields.FH_PQ        = getBits(regValue,0,0);
     // 2. Report
     reg.TX_SCAN_BC.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_SCAN_BC: ${reg.TX_SCAN_BC.name_long} (0x${reg.TX_SCAN_BC.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[SH_OFFSET  ] 2nd cand. Offset (32byte/Desc)       = ${reg.TX_SCAN_BC.fields.SH_OFFSET} (valid if SH_PQ=0, Offset = ${reg.TX_SCAN_BC.fields.SH_OFFSET}*32byte = ${reg.TX_SCAN_BC.fields.SH_OFFSET * 32} byte)\n`+
            `[SH_FQN_PQSN] 2nd cand. FIFO Queue/Slot Number     = ${reg.TX_SCAN_BC.fields.SH_FQN_PQSN}\n`+
@@ -1687,7 +1683,7 @@ export function procRegsMhDebugCtrlStat(reg) {
     const cnIdx = listSet(reg.TX_FQ_DESC_VALID.fields.DESC_CN_VALID,7);
     // 2. Report
     reg.TX_FQ_DESC_VALID.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_FQ_DESC_VALID: ${reg.TX_FQ_DESC_VALID.name_long} (0x${reg.TX_FQ_DESC_VALID.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[DESC_NC_VALID] Next/Current Descriptors is in L_MEM = 0x${reg.TX_FQ_DESC_VALID.fields.DESC_NC_VALID.toString(16).toUpperCase().padStart(2,'0')} => TX FIFO Queues: ${ncIdx.length?ncIdx.join(', '):'none'}\n`+
            `[DESC_CN_VALID] Current/Next Descriptors is in L_MEM = 0x${reg.TX_FQ_DESC_VALID.fields.DESC_CN_VALID.toString(16).toUpperCase().padStart(2,'0')} => TX FIFO Queues: ${cnIdx.length?cnIdx.join(', '):'none'}`
@@ -1706,7 +1702,7 @@ export function procRegsMhDebugCtrlStat(reg) {
     let binLineHead = "Bit: 31                  23                  15                  7               0\n";
     let binLineData = "Slot " + getBinaryLineData(regValue);
     reg.TX_PQ_DESC_VALID.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `TX_PQ_DESC_VALID: ${reg.TX_PQ_DESC_VALID.name_long} (0x${reg.TX_PQ_DESC_VALID.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[DESC_VALID] PQ Slot Descriptors is in LMEM = 0x${reg.TX_PQ_DESC_VALID.fields.DESC_VALID.toString(16).toUpperCase().padStart(8,'0')}\n`+
            binLineHead +
@@ -1724,7 +1720,7 @@ export function procRegsMhDebugCtrlStat(reg) {
     reg.CRC_CTRL.fields.START = getBits(regValue,0,0);
     // 2. Report
     reg.CRC_CTRL.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `CRC_CTRL: ${reg.CRC_CTRL.name_long} (0x${reg.CRC_CTRL.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[START] Trigger Register Bank CRC Check = ${reg.CRC_CTRL.fields.START} (this is a write-only register)`
     });
@@ -1740,7 +1736,7 @@ export function procRegsMhDebugCtrlStat(reg) {
     reg.CRC_REG.fields.CRC = regValue >>> 0;
     // 2. Report
     reg.CRC_REG.report.push({
-      severityLevel: sevC.Info,
+      severityLevel: sevC.info,
       msg: `CRC_REG: ${reg.CRC_REG.name_long} (0x${reg.CRC_REG.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[CRC] Register Bank CRC Value = 0x${reg.CRC_REG.fields.CRC.toString(16).toUpperCase().padStart(8,'0')}`
     });

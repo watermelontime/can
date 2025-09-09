@@ -17,18 +17,45 @@
 // TODO: better structure reg-object: problem/ugly: non-register fields are mixed with registers (flat) => non-reg stuff should be separted
 // TODO: donate button
 
+// TODO: Valiation report should be shown, even if all filters are off (header/footer)
+
 // import drawing functions
 import * as draw_svg from './draw_bits_svg.js';
 import * as m_can from './m_can.js';
 import * as x_can from './x_can_main.js';
 import * as xs_can from './xs_can_main.js';
-import { sevC } from './help_functions.js';
+import { sevC, clearObject } from './help_functions.js';
 
 // global variable definitions
 let par_clk_freq_g = 160; // Global variable for CAN clock frequency in MHz
 
+// Initialize GLOBAL register result object
+let reg = {};
+
+// initialize report verbosity object
+const reportVerbosity = {
+  info: false,
+  infoVerbose: false,
+  infoHighlighted: false,
+  calculation: false,
+  recommendation: false,
+  warning: false,
+  error: false
+};
+
 const floatParams = [
   'par_clk_freq'
+];
+
+// Report Verbosity  report filter checkboxes (must match IDs in index.html)
+const checkboxReportVerbosityParams = [
+  'par_report_infoVerbose',
+  'par_report_info',
+  'par_report_infoHighlighted',
+  'par_report_calculation',
+  'par_report_recommendation',
+  'par_report_warning',
+  'par_report_error'
 ];
 
 const checkboxParams = [
@@ -68,11 +95,8 @@ function init() {
   let dummyReg = {};
   displaySVGs(dummyReg);
 
-  // Initialize textarea with default register values
-  //loadRegisterValuesExample();
-    
-  // Process the default register values
-  //processUserRegisterValues();
+  // read verbosity checkboxes from HTML
+  getReportVerbositySettingFromHTML(reportVerbosity);
 }
 
 // ===================================================================================
@@ -102,6 +126,25 @@ function initEventListeners() {
   } else {
     console.warn('[Warning] Clock frequency input field not found in HTML');
   }
+
+  // HTML Verbosity checkboxes: Add event listeners for the report verbosity checkboxes
+  checkboxReportVerbosityParams.forEach(param => {
+    const checkbox = document.getElementById(param);
+    if (checkbox) {
+      checkbox.addEventListener('change', (event) => {
+        getReportVerbositySettingFromHTML(reportVerbosity);
+        // Refresh report view without re-processing registers: condition = reg object exists = user already processed registers once
+        console.log(`[Info] Report reg object = ${reg}`);
+        // check if reg object has content, means the register values were already processed once
+        if (reg.general) {
+          displayValidationReport(reg, reportVerbosity);
+        }
+      });
+    } else {
+      console.warn(`[Warning] Verbosity checkbox "${param}" not found in HTML`);
+    }
+  });
+
 }
 
 // ===================================================================================
@@ -166,8 +209,7 @@ function parseUserRegisterValues(userRegText, reg) {
       if (trimmedLine.startsWith('#')) {
         // Ignore comment lines - add info report for visibility
         reg.parse_output.report.push({
-          severityLevel: sevC.Info,
-          verbose: true,
+          severityLevel: sevC.infoVerbose,
           msg: `Ignored comment line: "${trimmedLine}"`
         });
         continue; // Skip to next line
@@ -190,20 +232,19 @@ function parseUserRegisterValues(userRegText, reg) {
           });
           
           reg.parse_output.report.push({
-            severityLevel: sevC.Info,
-            verbose: true,
+            severityLevel: sevC.infoVerbose,
             msg: `Parsed register at address 0x${addrHex.toUpperCase()}: 0x${valueHex.toUpperCase()}`
           });
         } else {
           // Invalid Input
           reg.parse_output.report.push({
-            severityLevel: sevC.Error,
+            severityLevel: sevC.error,
             msg: `Invalid hex values in line: "${trimmedLine}"`
           });
         }
       } else {
         reg.parse_output.report.push({
-          severityLevel: sevC.Error,
+          severityLevel: sevC.error,
           msg: `Invalid line format: "${trimmedLine}". Expected format: "<address><space><value>, e.g. 0x0123 0x87654321"`
         });
       }
@@ -214,7 +255,7 @@ function parseUserRegisterValues(userRegText, reg) {
   const registerCount = reg.raw.length;
   if (registerCount > 0) {
     reg.parse_output.report.push({
-      severityLevel: sevC.Info, // info
+      severityLevel: sevC.info, // info
       msg: `Raw registers parsed successfully: ${registerCount}`
     });
   }
@@ -255,7 +296,7 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
       if (reg[mapping.shortName]) {
         // duplicate found, ignore it and warn user
         reg.parse_output.report.push({
-          severityLevel: sevC.Error,
+          severityLevel: sevC.error,
           msg: `Duplicate register address found: 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} (=> local address 0x${rawRegLocalAddr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')}). The duplicate will be ignored.`
         });
         continue;
@@ -271,8 +312,7 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
 
         mappedRegCount++;
         reg.parse_output.report.push({
-          severityLevel: sevC.Info,
-          verbose: true,
+          severityLevel: sevC.infoVerbose,
           msg: `Mapped reg. address 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} to ${regName} (${mapping.longName})`
         });
       }
@@ -282,15 +322,14 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
       // it is a reserved address
       reservedRegCount++;
       reg.parse_output.report.push({
-        severityLevel: sevC.Info,
-        verbose: true,
+        severityLevel: sevC.infoVerbose,
         msg: `Reserved register address: 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} - register will be ignored`
       });
     } else {
       // Unknown address
       unmappedRegCount++;
       reg.parse_output.report.push({
-        severityLevel: sevC.Warn,
+        severityLevel: sevC.warning,
         msg: `Unknown register address: 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} - register will be ignored`
       });
     }
@@ -298,7 +337,7 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
   
   // Add summary message
   reg.parse_output.report.push({
-    severityLevel: sevC.Info,
+    severityLevel: sevC.info,
     msg: `Address mapping completed: ${mappedRegCount} mapped, ${reservedRegCount} reserved, ${unmappedRegCount} unknown`
   });
   
@@ -317,7 +356,7 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
   
   if (missingRegCount > 0) {
     reg.parse_output.report.push({
-      severityLevel: sevC.Warn,
+      severityLevel: sevC.warning,
       msg: missingRegText
     });
   }
@@ -350,7 +389,7 @@ function isReserved(addr, myResAddrArray) {
 
 // ===================================================================================
 // displayValidationReport: Format and display validation reports in HTML with colors
-function displayValidationReport(reg, printVerbose) {
+function displayValidationReport(reg, reportVerbosity) {
   const reportTextArea = document.getElementById('reportTextArea');
   if (!reportTextArea) {
     console.warn('[Warning] displayValidationReport(): Report textarea not found in HTML');
@@ -360,35 +399,59 @@ function displayValidationReport(reg, printVerbose) {
   // Clear previous content
   reportTextArea.innerHTML = '';
   
-  // Generate allRegReports from reg object
+  // Generate allRegReports from reg object with per-entry filtering
   const allReports = [];
   if (reg && typeof reg === 'object') {
-    // Add reports from each register section
     Object.values(reg).forEach(regSection => {
-      if (regSection && regSection.report && Array.isArray(regSection.report)) {
-        if (printVerbose === true) {
-          allReports.push(...regSection.report);
-        } else {
-          // leave out reports from .report-array that are marked "verbose===true"
-          allReports.push(...regSection.report.filter(report => report.verbose !== true));
-        } // printVerbose
+      if (!regSection || !Array.isArray(regSection.report)) return;
+      for (const reportInstance of regSection.report) {
+        // Severity filters
+        switch (reportInstance.severityLevel) {
+          case sevC.info:
+            if (reportVerbosity.info !== true) continue;
+            break;
+          case sevC.infoVerbose:
+            if (reportVerbosity.infoVerbose !== true) continue;
+            break;
+          case sevC.infoHighlighted:
+            if (reportVerbosity.infoHighlighted !== true) continue;
+            break;
+          case sevC.warning:
+            if (reportVerbosity.warning !== true) continue;
+            break;
+          case sevC.error:
+            if (reportVerbosity.error !== true) continue;
+            break;
+          case sevC.calculation:
+            if (reportVerbosity.calculation !== true) continue;
+            break;
+          case sevC.recommendation:
+            if (reportVerbosity.recommendation !== true) continue;
+            break;
+          default:
+            // Unknown types: require verbose to show
+            console.warn(`[Warning] displayValidationReport(): Unknown report severity level: ${reportInstance.severityLevel}`);
+        }
+        allReports.push(reportInstance);
       }
     });
   }
 
-  if (allReports.length === 0) {
-    reportTextArea.innerHTML = 'No validation reports available.';
-    return;
-  }
+  //if (allReports.length === 0) {
+  //  reportTextArea.innerHTML = 'No evaluation reports to show.';
+  //  return;
+  //}
   
   // Helper function to get severity level text
   function getSeverityText(level) {
     switch (level) {
-      case sevC.Info: return 'I';
-      case sevC.Recom: return 'R';
-      case sevC.Warn: return 'W';
-      case sevC.Error: return 'E';
-      case sevC.InfoCalc: return 'C';
+      case sevC.info: return 'I';
+      case sevC.infoVerbose: return 'V';
+      case sevC.infoHighlighted: return 'H';
+      case sevC.calculation: return 'C';
+      case sevC.recommendation: return 'R';
+      case sevC.warning: return 'W';
+      case sevC.error: return 'E';
       default: return 'UNKNOWN';
     }
   }
@@ -396,11 +459,13 @@ function displayValidationReport(reg, printVerbose) {
   // Helper function to get severity symbol
   function getSeveritySymbol(level) {
     switch (level) {
-      case sevC.Info: return 'ℹ️';
-      case sevC.Recom: return '💡';
-      case sevC.Warn: return '⚠️';
-      case sevC.Error: return '❌';
-      case sevC.InfoCalc: return '🧮';
+      case sevC.info: return 'ℹ️';
+      case sevC.infoVerbose: return 'ℹ️';
+      case sevC.infoHighlighted: return 'ℹ️';
+      case sevC.calculation: return '🧮';
+      case sevC.recommendation: return '💡';
+      case sevC.warning: return '⚠️';
+      case sevC.error: return '❌';
       default: return '❓';
     }
   }
@@ -408,24 +473,28 @@ function displayValidationReport(reg, printVerbose) {
   // Helper function to get CSS class for severity level
   function getSeverityClass(level) {
     switch (level) {
-      case sevC.Info: return 'report-info';
-      case sevC.Recom: return 'report-recommendation';
-      case sevC.Warn: return 'report-warning';
-      case sevC.Error: return 'report-error';
-      case sevC.InfoCalc: return 'report-infoCalculated';
+      case sevC.info: return 'report-info';
+      case sevC.infoVerbose: return 'report-infoVerbose';
+      case sevC.infoHighlighted: return 'report-infoHighlighted';
+      case sevC.calculation: return 'report-infoCalculation';
+      case sevC.recommendation: return 'report-recommendation';
+      case sevC.warning: return 'report-warning';
+      case sevC.error: return 'report-error';
       default: return 'report-info';
     }
   }
   
   // Count reports by severity
-  const counts = { errors: 0, warnings: 0, recommendations: 0, info: 0, calculated: 0 };
+  const counts = { info: 0, infoV: 0, infoH: 0, calc: 0, recom: 0, warn: 0, errors: 0};
   allReports.forEach(report => {
     switch (report.severityLevel) {
-      case sevC.Info: counts.info++; break;
-      case sevC.Recom: counts.recommendations++; break;
-      case sevC.Error: counts.errors++; break;
-      case sevC.Warn: counts.warnings++; break;
-      case sevC.InfoCalc: counts.calculated++; break;
+      case sevC.info: counts.info++; break;
+      case sevC.infoVerbose: counts.infoV++; break;
+      case sevC.infoHighlighted: counts.infoH++; break;
+      case sevC.calculation: counts.calc++; break;
+      case sevC.recommendation: counts.recom++; break;
+      case sevC.error: counts.errors++; break;
+      case sevC.warning: counts.warn++; break;
     }
   });
   
@@ -440,11 +509,13 @@ function displayValidationReport(reg, printVerbose) {
   });
   let reportText = `<span class="report-header">=== VALIDATION REPORT ${timestamp} ========</span>\n`;
   reportText += '<span class="report-header">' + '--- Summary ---------------------------------------' + '</span>\n';
-  if (counts.errors > 0) reportText += `<span class="report-error">❌ Errors: ${counts.errors}</span>\n`;
-  if (counts.warnings > 0) reportText += `<span class="report-warning">⚠️ Warnings: ${counts.warnings}</span>\n`;
-  if (counts.recommendations > 0) reportText += `<span class="report-recommendation">💡 Recommendations: ${counts.recommendations}</span>\n`;
-  if (counts.info > 0) reportText += `<span class="report-info">ℹ️ Info/Decoded: ${counts.info}</span>\n`;
-  if (counts.calculated > 0) reportText += `<span class="report-infoCalculated">🧮 Calculated: ${counts.calculated}</span>\n`;
+  if (counts.info > 0) reportText += `<span class="${getSeverityClass(sevC.info)}">${getSeveritySymbol(sevC.info)} Info: ${counts.info}</span>\n`;
+  if (counts.infoV > 0) reportText += `<span class="${getSeverityClass(sevC.infoVerbose)}">${getSeveritySymbol(sevC.infoVerbose)} Info Verbose: ${counts.infoV}</span>\n`;
+  if (counts.infoH > 0) reportText += `<span class="${getSeverityClass(sevC.infoHighlighted)}">${getSeveritySymbol(sevC.infoHighlighted)} Info Highlighted: ${counts.infoH}</span>\n`;
+  if (counts.calc > 0) reportText += `<span class="${getSeverityClass(sevC.calculation)}">${getSeveritySymbol(sevC.calculation)} Calculated: ${counts.calc}</span>\n`;
+  if (counts.recom > 0) reportText += `<span class="${getSeverityClass(sevC.recommendation)}">${getSeveritySymbol(sevC.recommendation)} Recommendations: ${counts.recom}</span>\n`;
+  if (counts.warn > 0) reportText += `<span class="${getSeverityClass(sevC.warning)}">${getSeveritySymbol(sevC.warning)} Warnings: ${counts.warn}</span>\n`;
+  if (counts.errors > 0) reportText += `<span class="${getSeverityClass(sevC.error)}">${getSeveritySymbol(sevC.error)} Errors: ${counts.errors}</span>\n`;
   reportText += `Registers in memory dump: ${reg.parse_output.mappedRegCount} found, ` +
                            `${reg.parse_output.reservedRegCount} reserved, ` + 
                            `${reg.parse_output.unmappedRegCount} unknown, ` +
@@ -458,17 +529,16 @@ function displayValidationReport(reg, printVerbose) {
     const severityText = getSeverityText(report.severityLevel);
     const severitySymbol = getSeveritySymbol(report.severityLevel);
     const severityClass = getSeverityClass(report.severityLevel);
-    const highlightClass = (report.highlight !== undefined && report.highlight === true) ? ' report-highlight' : '';
+    //const highlightClass = (report.highlight !== undefined && report.highlight === true) ? ' report-highlight' : '';
 
-    // Add 10 spaces after line breaks for proper alignment and escape HTML
+    // Add spaces after line breaks for proper alignment and escape HTML
     const formattedMsg = report.msg
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/\n/g, '\n      '); // indentation of lines 2 to N
     
-    //reportText += `<span class="${severityClass}">${severitySymbol} [${severityText}] ${formattedMsg}</span>\n`;
-    reportText += `<span class="${severityClass}${highlightClass}">${severitySymbol} ${formattedMsg}</span>\n`;
+    reportText += `<span class="${severityClass}">${severitySymbol} ${formattedMsg}</span>\n`;
   });
   
   // Add footer
@@ -942,16 +1012,42 @@ function getCanIpModuleFromHTML() {
 
 // ===================================================================================
 // Get selected CAN IP Module from HTML select field
-function getVerbositySettingFromHTML() {
-  const verboseCheckbox = document.getElementById('par_report_verbose');
-  if (verboseCheckbox) {
-    const isChecked = verboseCheckbox.checked;
-    console.log('[Info] Verbose reporting is', isChecked ? 'enabled' : 'disabled');
-    return isChecked;
-  } else {
-    console.error('[Error] Verbose reporting checkbox not found in HTML');
-    return false;
-  }
+function getReportVerbositySettingFromHTML(reportVerbosity) {
+  // loop through all checkboxes with class 'report-verbosity-checkbox' and strore check-box status in object
+  checkboxReportVerbosityParams.forEach(param => {
+    const checkbox = document.getElementById(param);
+    if (checkbox) {
+      const isChecked = checkbox.checked;
+      switch (param) {
+        case 'par_report_info': // info messages
+          reportVerbosity.info = isChecked;
+          break;
+        case 'par_report_infoVerbose': // info verbose
+          reportVerbosity.infoVerbose = isChecked;
+          break;
+        case 'par_report_infoHighlighted': // highlighted info messages
+          reportVerbosity.infoHighlighted = isChecked;
+          break;
+        case 'par_report_calculation': // calculated values
+          reportVerbosity.calculation = isChecked;
+          break;
+        case 'par_report_recommendation': // recommended values
+          reportVerbosity.recommendation = isChecked;
+          break;
+        case 'par_report_warning': // warning messages
+          reportVerbosity.warning = isChecked;
+          break;
+        case 'par_report_error': // error messages
+          reportVerbosity.error = isChecked;
+          break;
+        default:
+          console.error(`[Error] Unknown verbosity checkbox "${param}" in HTML`);
+      }
+    } else {
+      console.warn(`[Warning] Verbosity checkbox "${param}" not found in HTML`);
+    }
+  });
+  console.log('[Info] Report verbosity settings:', reportVerbosity);
 }
 
 function CountDecodedRegs(reg) {
@@ -973,7 +1069,7 @@ function CountDecodedRegs(reg) {
   }
 
   reg.parse_output.report.push({
-    severityLevel: sevC.Info,
+    severityLevel: sevC.info,
     msg: `Registers decoded successfully: ${decodedRegCount}`
   });
 
@@ -994,12 +1090,12 @@ function processUserRegisterValues() {
   // 5. Generate HTML Data to be displayed from reg object
   //    and Display data from params, results, reg in HTML fields and SVGs
 
+  clearObject(reg); // Clear global register object (keep the reference)
+  reg.general = {}; // Initialize general section
+  reg.general.report = []; // Initialize report array
+
   const paramsHtml = {}; // Initialize params object for HTML display
   const resultsHtml = {}; // Initialize results object for HTML display
-  const reg = {}; // Initialize register object
-  reg.general = {};
-  reg.general.report = []; // Initialize report array
-  const verbose = getVerbositySettingFromHTML(); // defines verbosity of reports
 
   // Step 1: Get data from HTML =============================================================
   // CAN IP Module determination (from HTML) -------------------
@@ -1010,8 +1106,7 @@ function processUserRegisterValues() {
     return;
   }
   reg.general.report.push({
-    severityLevel: sevC.Info,
-    highlight: true,
+    severityLevel: sevC.infoHighlighted,
     msg: `CAN Module "${canIpModule}" assumed for register processing`
   });
 
@@ -1021,8 +1116,7 @@ function processUserRegisterValues() {
   reg.general.clk_period = 1000/par_clk_freq_g; // 1000 / MHz = ns
   // generate report for CAN Clock
   reg.general.report.push({
-      severityLevel: sevC.Info,
-      highlight: true,
+      severityLevel: sevC.infoHighlighted,
       msg: `CAN Clock\n` + 
            `Frequency = ${par_clk_freq_g} MHz\n` +
            `Period    = ${reg.general.clk_period} ns`
@@ -1056,7 +1150,7 @@ function processUserRegisterValues() {
       break;
     default:
       reg.general.report.push({
-        severityLevel: sevC.Error, // error
+        severityLevel: sevC.error, // error
         msg: `Decoding of "${canIpModule}" is not yet implemented.`
       });
       break;
@@ -1080,5 +1174,5 @@ function processUserRegisterValues() {
   displaySVGs(reg); 
 
   // Display Reports in HTML textarea
-  displayValidationReport(reg, verbose);
+  displayValidationReport(reg, reportVerbosity);
 }
