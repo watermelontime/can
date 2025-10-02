@@ -49,7 +49,7 @@ export function procRegsIRC(reg) {
     // 2. Report
     reg.FUNC_RAW.report.push({
       severityLevel: sevC.info,
-      msg: `FUNC_RAW: ${reg.FUNC_RAW.name_long || 'Functional Raw Event Status'} (0x${reg.FUNC_RAW.addr !== undefined ? reg.FUNC_RAW.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
+      msg: `FUNC_RAW: ${reg.FUNC_RAW.name_long} (0x${reg.FUNC_RAW.addr !== undefined ? reg.FUNC_RAW.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[31 -               ] Reserved                   = - \n`+
            `[30 -               ] Reserved                   = - \n`+
            `[29 -               ] Reserved                   = - \n`+
@@ -120,7 +120,7 @@ export function procRegsIRC(reg) {
     // 2. Report
     reg.ERR_RAW.report.push({
       severityLevel: sevC.info,
-      msg: `ERR_RAW: ${reg.ERR_RAW.name_long || 'Error Raw Event Status'} (0x${reg.ERR_RAW.addr !== undefined ? reg.ERR_RAW.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
+      msg: `ERR_RAW: ${reg.ERR_RAW.name_long} (0x${reg.ERR_RAW.addr !== undefined ? reg.ERR_RAW.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[31 -               ] Reserved                   = - \n`+
            `[30 -               ] Reserved                   = - \n`+
            `[29 -               ] Reserved                   = - \n`+
@@ -191,7 +191,7 @@ export function procRegsIRC(reg) {
     // 2. Report
     reg.SAFETY_RAW.report.push({
       severityLevel: sevC.info,
-      msg: `SAFETY_RAW: ${reg.SAFETY_RAW.name_long || 'Safety Raw Event Status'} (0x${reg.SAFETY_RAW.addr !== undefined ? reg.SAFETY_RAW.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
+      msg: `SAFETY_RAW: ${reg.SAFETY_RAW.name_long} (0x${reg.SAFETY_RAW.addr !== undefined ? reg.SAFETY_RAW.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[31 -               ] Reserved                   = - \n`+
            `[30 -               ] Reserved                   = - \n`+
            `[29 -               ] Reserved                   = - \n`+
@@ -227,8 +227,6 @@ export function procRegsIRC(reg) {
     });
   }
 
-// Add new IRC registers here
-
   // === FUNC_CLR: Functional Raw Event Clear ======================
   if ('FUNC_CLR' in reg && reg.FUNC_CLR.int32 !== undefined) {
     const v = reg.FUNC_CLR.int32;
@@ -241,10 +239,17 @@ export function procRegsIRC(reg) {
     // 2. Report
     reg.FUNC_CLR.report.push({
       severityLevel: sevC.info,
-      msg: `FUNC_CLR: ${reg.FUNC_CLR.name_long || 'Functional Raw Event Clear'} (0x${reg.FUNC_CLR.addr !== undefined ? reg.FUNC_CLR.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `Read-Only register. Writing 1 to a bit clears the corresponding bit in FUNC_RAW.`
+      msg: `FUNC_CLR:   ${reg.FUNC_CLR.name_long} (write-only) (0x${reg.FUNC_CLR.addr !== undefined ? reg.FUNC_CLR.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})`
     });
-  }
+
+    // 3. Check values
+    if (reg.FUNC_CLR.int32 !== 0) {
+      reg.FUNC_CLR.report.push({
+        severityLevel: sevC.warning,
+        msg: `FUNC_CLR: read-value (0x${v.toString(16).toUpperCase().padStart(8,'0')}) should be = 0..0! (write-only register)`
+      });
+    }
+    }
 
   // === ERR_CLR: Error Raw Event Clear ============================
   if ('ERR_CLR' in reg && reg.ERR_CLR.int32 !== undefined) {
@@ -258,9 +263,16 @@ export function procRegsIRC(reg) {
     // 2. Report
     reg.ERR_CLR.report.push({
       severityLevel: sevC.info,
-      msg: `ERR_CLR: ${reg.ERR_CLR.name_long || 'Error Raw Event Clear'} (0x${reg.ERR_CLR.addr !== undefined ? reg.ERR_CLR.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `Read-Only register. Writing 1 to a bit clears the corresponding bit in ERR_RAW.`
+      msg: `ERR_CLR:    ${reg.ERR_CLR.name_long}      (write-only) (0x${reg.ERR_CLR.addr !== undefined ? reg.ERR_CLR.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})`
     });
+    
+    // 3. Check values
+    if (reg.ERR_CLR.int32 !== 0) {
+      reg.ERR_CLR.report.push({
+        severityLevel: sevC.warning,
+        msg: `ERR_CLR: read-value (0x${v.toString(16).toUpperCase().padStart(8,'0')}) should be = 0..0! (write-only register)`
+      });
+    }
   }
 
   // === SAFETY_CLR: Safety Raw Event Clear ========================
@@ -275,9 +287,16 @@ export function procRegsIRC(reg) {
     // 2. Report
     reg.SAFETY_CLR.report.push({
       severityLevel: sevC.info,
-      msg: `SAFETY_CLR: ${reg.SAFETY_CLR.name_long || 'Safety Raw Event Clear'} (0x${reg.SAFETY_CLR.addr !== undefined ? reg.SAFETY_CLR.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `Read-Only register. Writing 1 to a bit clears the corresponding bit in SAFETY_RAW.`
+      msg: `SAFETY_CLR: ${reg.SAFETY_CLR.name_long}     (write-only) (0x${reg.SAFETY_CLR.addr !== undefined ? reg.SAFETY_CLR.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})`
     });
+    
+    // 3. Check values
+    if (reg.SAFETY_CLR.int32 !== 0) {
+      reg.SAFETY_CLR.report.push({
+      severityLevel: sevC.warning,
+      msg: `SAFETY_CLR: read-value (0x${v.toString(16).toUpperCase().padStart(8,'0')}) should be = 0..0! (write-only register)`
+    });
+    }
   }
 
   // === FUNC_ENA: Functional Raw Event Enable =====================
@@ -317,7 +336,7 @@ export function procRegsIRC(reg) {
     // 2. Report
     reg.FUNC_ENA.report.push({
       severityLevel: sevC.info,
-      msg: `FUNC_ENA: ${reg.FUNC_ENA.name_long || 'Functional Raw Event Enable'} (0x${reg.FUNC_ENA.addr !== undefined ? reg.FUNC_ENA.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
+      msg: `FUNC_ENA: ${reg.FUNC_ENA.name_long} (0x${reg.FUNC_ENA.addr !== undefined ? reg.FUNC_ENA.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[31 -               ] Reserved                   = - \n`+
            `[30 -               ] Reserved                   = - \n`+
            `[29 -               ] Reserved                   = - \n`+
@@ -386,7 +405,7 @@ export function procRegsIRC(reg) {
     // 2. Report
     reg.ERR_ENA.report.push({
       severityLevel: sevC.info,
-      msg: `ERR_ENA: ${reg.ERR_ENA.name_long || 'Error Raw Event Enable'} (0x${reg.ERR_ENA.addr !== undefined ? reg.ERR_ENA.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
+      msg: `ERR_ENA: ${reg.ERR_ENA.name_long} (0x${reg.ERR_ENA.addr !== undefined ? reg.ERR_ENA.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[31 -               ] Reserved                   = - \n`+
            `[30 -               ] Reserved                   = - \n`+
            `[29 -               ] Reserved                   = - \n`+
@@ -455,7 +474,7 @@ export function procRegsIRC(reg) {
     // 2. Report
     reg.SAFETY_ENA.report.push({
       severityLevel: sevC.info,
-      msg: `SAFETY_ENA: ${reg.SAFETY_ENA.name_long || 'Safety Raw Event Enable'} (0x${reg.SAFETY_ENA.addr !== undefined ? reg.SAFETY_ENA.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
+      msg: `SAFETY_ENA: ${reg.SAFETY_ENA.name_long} (0x${reg.SAFETY_ENA.addr !== undefined ? reg.SAFETY_ENA.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[31 -               ] Reserved                   = -\n`+
            `[30 -               ] Reserved                   = -\n`+
            `[29 -               ] Reserved                   = -\n`+
@@ -655,7 +674,7 @@ export function procRegsIRC(reg) {
     // 2. Report
     reg.CAPTURING_MODE.report.push({
       severityLevel: sevC.info,
-      msg: `CAPTURING_MODE: ${reg.CAPTURING_MODE.name_long || 'IRC Capturing Mode'} (0x${reg.CAPTURING_MODE.addr !== undefined ? reg.CAPTURING_MODE.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
+      msg: `CAPTURING_MODE: ${reg.CAPTURING_MODE.name_long} (0x${reg.CAPTURING_MODE.addr !== undefined ? reg.CAPTURING_MODE.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `Expected fixed value: 0x${expected.toString(16).toUpperCase()} (all Edge).${v!==expected? ' (NOTE: Value differs from expected !)':''}\n`+
            `[SAFETY ] SAFETY RAW input flag Capturing Mode = ${reg.CAPTURING_MODE.fields.SAFETY} (${modeStr(reg.CAPTURING_MODE.fields.SAFETY)})\n`+
            `[ERR    ] ERR    RAW input flag Capturing Mode = ${reg.CAPTURING_MODE.fields.ERR} (${modeStr(reg.CAPTURING_MODE.fields.ERR)})\n`+
@@ -674,7 +693,7 @@ export function procRegsIRC(reg) {
     // 2. Report
     reg.HDP.report.push({
       severityLevel: sevC.info,
-      msg: `HDP: ${reg.HDP.name_long || 'Hardware Debug Port Control'} (0x${reg.HDP.addr !== undefined ? reg.HDP.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
+      msg: `HDP: ${reg.HDP.name_long} (0x${reg.HDP.addr !== undefined ? reg.HDP.addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[HDP_SEL] HDP Select (0=MH, 1=PRT) = ${reg.HDP.fields.HDP_SEL} (${reg.HDP.fields.HDP_SEL? 'PRT selected':'MH selected'})`
     });
   }

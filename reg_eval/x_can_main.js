@@ -352,7 +352,7 @@ export const regAddrMap = {
   0x818: { shortName: 'TX_FQ_DESC_VALID', longName: 'Valid TX FIFO Queue descriptors in local memory' },
   0x81C: { shortName: 'TX_PQ_DESC_VALID', longName: 'Valid TX Priority Queue descriptors in local memory' },
   // ====== MH: CRC control ======
-  0x880: { shortName: 'CRC_CTRL', longName: 'CRC Control register write-only 0x0' },
+  0x880: { shortName: 'CRC_CTRL', longName: 'CRC Control register' },
   0x884: { shortName: 'CRC_REG', longName: 'CRC register' },
   // ====== PRT ======
   0x900: { shortName: 'ENDN', longName: 'Endianness Test Register' },
@@ -372,9 +372,9 @@ export const regAddrMap = {
   0xA00: { shortName: 'FUNC_RAW', longName: 'Functional raw event status register' },
   0xA04: { shortName: 'ERR_RAW', longName: 'Error raw event status register' },
   0xA08: { shortName: 'SAFETY_RAW', longName: 'Safety raw event status register' },
-  0xA10: { shortName: 'FUNC_CLR', longName: 'Functional raw event clear register write-only 0x0' },
-  0xA14: { shortName: 'ERR_CLR', longName: 'Error raw event clear register write-only 0x0' },
-  0xA18: { shortName: 'SAFETY_CLR', longName: 'Safety raw event clear register write-only 0x0' },
+  0xA10: { shortName: 'FUNC_CLR', longName: 'Functional raw event clear register' },
+  0xA14: { shortName: 'ERR_CLR', longName: 'Error raw event clear register' },
+  0xA18: { shortName: 'SAFETY_CLR', longName: 'Safety raw event clear register' },
   0xA20: { shortName: 'FUNC_ENA', longName: 'Functional raw event enable register' },
   0xA24: { shortName: 'ERR_ENA', longName: 'Error raw event enable register' },
   0xA28: { shortName: 'SAFETY_ENA', longName: 'Safety raw event enable register' },

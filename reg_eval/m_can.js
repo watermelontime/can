@@ -31,7 +31,7 @@ export function loadExampleRegisterValues() {
   const clock = 80;
   const registerString = `# M_CAN example register values
 # Format to use: 0xADDR 0xVALUE
-# 0xADDR is internal X_CAN address
+# 0xADDR is internal M_CAN address
 #        or global address (e.g. 32bit)
 0x000 0x32150323
 0x004 0x87654321
@@ -308,40 +308,11 @@ function procRegsPrtBitTiming(reg) {
     reg.NBTP.report.push({
         severityLevel: sevC.info, // info
         msg: `NBTP: ${reg.NBTP.name_long} (0x${reg.NBTP.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `[NSJW  ] Nominal Synchronization JW = ${reg.NBTP.fields.NSJW} (range: 1-128)\n` +
-             `[NBRP  ] Nominal Bit Rate Prescaler = ${reg.NBTP.fields.NBRP} (range: 1-128)\n` +
-             `[NTSEG1] Nominal Time Segment 1     = ${reg.NBTP.fields.NTSEG1} (range: 1-256)\n` +
-             `[NTSEG2] Nominal Time Segment 2     = ${reg.NBTP.fields.NTSEG2} (range: 1-128)`
+             `[NSJW  ] Nominal SJW                = ${reg.NBTP.fields.NSJW.toString(10).padStart(3,' ')} (range: 1-128) TQ\n` +
+             `[NBRP  ] Nominal Bit Rate Prescaler = ${reg.NBTP.fields.NBRP.toString(10).padStart(3,' ')} (range: 1-128)\n` +
+             `[NTSEG1] Nominal Time Segment 1     = ${reg.NBTP.fields.NTSEG1.toString(10).padStart(3,' ')} (range: 1-256) TQ\n` +
+             `[NTSEG2] Nominal Time Segment 2     = ${reg.NBTP.fields.NTSEG2.toString(10).padStart(3,' ')} (range: 1-128) TQ`
     });
-
-    // Validate bit field ranges according to M_CAN specification
-    if (reg.NBTP.fields.NBRP < 1 || reg.NBTP.fields.NBRP > 128) {
-      reg.NBTP.report.push({
-        severityLevel: sevC.error, // error
-        msg: `NBTP: NBRP value ${reg.NBTP.fields.NBRP} is out of valid range (1-128)`
-      });
-    }
-
-    if (reg.NBTP.fields.NTSEG1 < 1 || reg.NBTP.fields.NTSEG1 > 256) {
-      reg.NBTP.report.push({
-        severityLevel: sevC.error, // error
-        msg: `NBTP: NTSEG1 value ${reg.NBTP.fields.NTSEG1} is out of valid range (1-256)`
-      });
-    }
-
-    if (reg.NBTP.fields.NTSEG2 < 1 || reg.NBTP.fields.NTSEG2 > 128) {
-      reg.NBTP.report.push({
-        severityLevel: sevC.error, // error
-        msg: `NBTP: NTSEG2 value ${reg.NBTP.fields.NTSEG2} is out of valid range (2-128)`
-      });
-    }
-
-    if (reg.NBTP.fields.NSJW < 1 || reg.NBTP.fields.NSJW > 128) {
-      reg.NBTP.report.push({
-        severityLevel: sevC.error, // error
-        msg: `NBTP: NSJW value ${reg.NBTP.fields.NSJW} is out of valid range (1-128)`
-      });
-    }
 
     // 4. Calculate arbitration phase results and store in general structure
     reg.general.bt_arb.res.tq_len = reg.general.clk_period * reg.general.bt_arb.set.brp;
@@ -470,11 +441,11 @@ function procRegsPrtBitTiming(reg) {
     reg.DBTP.report.push({
       severityLevel: sevC.info, // info
       msg: `DBTP: ${reg.DBTP.name_long} (0x${reg.DBTP.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[TDC   ] Transmitter Delay Compensation = ${reg.DBTP.fields.TDC}\n` +
-           `[DBRP  ] Data Bit Rate Prescaler        = ${reg.DBTP.fields.DBRP} (range: 1-32)\n` +
-           `[DTSEG1] Data Time Segment 1            = ${reg.DBTP.fields.DTSEG1} (range: 1-32)\n` +
-           `[DTSEG2] Data Time Segment 2            = ${reg.DBTP.fields.DTSEG2} (range: 1-16)\n` +
-           `[DSJW  ] Data Synchronization JW        = ${reg.DBTP.fields.DSJW} (range: 1-16)`
+           `[TDC   ] Transmitter Delay Compensation =  ${reg.DBTP.fields.TDC} (on/off)\n` +
+           `[DBRP  ] Data Bit Rate Prescaler        = ${reg.DBTP.fields.DBRP.toString(10).padStart(2,' ')} (range: 1-32)\n` +
+           `[DTSEG1] Data Time Segment 1            = ${reg.DBTP.fields.DTSEG1.toString(10).padStart(2,' ')} (range: 1-32) TQ\n` +
+           `[DTSEG2] Data Time Segment 2            = ${reg.DBTP.fields.DTSEG2.toString(10).padStart(2,' ')} (range: 1-16) TQ\n` +
+           `[DSJW  ] Data SJW                       = ${reg.DBTP.fields.DSJW.toString(10).padStart(2,' ')} (range: 1-16) TQ`
       });
 
       // 4. Calculate FD data phase results and store in general structure

@@ -1721,9 +1721,16 @@ export function procRegsMhDebugCtrlStat(reg) {
     // 2. Report
     reg.CRC_CTRL.report.push({
       severityLevel: sevC.info,
-      msg: `CRC_CTRL: ${reg.CRC_CTRL.name_long} (0x${reg.CRC_CTRL.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[START] Trigger Register Bank CRC Check = ${reg.CRC_CTRL.fields.START} (this is a write-only register)`
+      msg: `CRC_CTRL: ${reg.CRC_CTRL.name_long} (write-only) (0x${reg.CRC_CTRL.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})`
     });
+
+    // 3. Check values
+    if (reg.CRC_CTRL.int32 !== 0) {
+      reg.CRC_CTRL.report.push({
+        severityLevel: sevC.warning,
+        msg: `CRC_CTRL: read-value (0x${regValue.toString(16).toUpperCase().padStart(8,'0')}) should be = 0..0! (write-only register)`
+      });
+    }
   }
 
   // === CRC_REG =====================================================

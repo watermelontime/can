@@ -437,11 +437,6 @@ function displayValidationReport(reg, reportVerbosity) {
     });
   }
 
-  //if (allReports.length === 0) {
-  //  reportTextArea.innerHTML = 'No evaluation reports to show.';
-  //  return;
-  //}
-  
   // Helper function to get severity level text
   function getSeverityText(level) {
     switch (level) {
@@ -637,7 +632,7 @@ function displaySVGs(reg) {
     draw_svg.drawErrorMessage(
       'DrawingBTArb',
       'Arbitration Phase',
-      'Missing parameters'
+      'No register'
     );
   }
 
@@ -671,7 +666,7 @@ function displaySVGs(reg) {
     draw_svg.drawErrorMessage(
       'DrawingBTFDdata',
       'FD Data Phase',
-      'Missing parameters or ES=OFF or TMS=ON'
+      'No register or ES=OFF or TMS=ON'
     );
   }
 
@@ -705,7 +700,7 @@ function displaySVGs(reg) {
     draw_svg.drawErrorMessage(
       'DrawingBTXLdata',
       'XL Data Phase',
-      'Missing parameters'
+      'No register'
     );
   }
 
@@ -728,7 +723,7 @@ function displaySVGs(reg) {
     draw_svg.drawErrorMessage(
       'DrawingBTXLdataPWM',
       'XL Data Phase PWM symbols',
-      'Missing parameters or TMS = off'
+      'No register or TMS = off'
     );
   }
 

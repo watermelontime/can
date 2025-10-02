@@ -117,10 +117,10 @@ export function procRegsPrtBitTiming(reg) {
   reg.NBTP.report.push({
     severityLevel: sevC.info, // info
         msg: `NBTP: ${reg.NBTP.name_long} (0x${reg.NBTP.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `[BRP   ] Bit Rate Prescaler     = ${reg.NBTP.fields.BRP}\n` +
-             `[NTSEG1] Nominal Time Segment 1 = ${reg.NBTP.fields.NTSEG1}\n` +
-             `[NTSEG2] Nominal Time Segment 2 = ${reg.NBTP.fields.NTSEG2}\n` +
-             `[NSJW  ] Nominal SJW            = ${reg.NBTP.fields.NSJW}`
+             `[BRP   ] Bit Rate Prescaler     = ${reg.NBTP.fields.BRP.toString(10).padStart(3,' ')} (range: 1- 32)\n` +
+             `[NTSEG1] Nominal Time Segment 1 = ${reg.NBTP.fields.NTSEG1.toString(10).padStart(3,' ')} (range: 1-512) TQ\n` +
+             `[NTSEG2] Nominal Time Segment 2 = ${reg.NBTP.fields.NTSEG2.toString(10).padStart(3,' ')} (range: 1-128) TQ\n` +
+             `[NSJW  ] Nominal SJW            = ${reg.NBTP.fields.NSJW.toString(10).padStart(3,' ')} (range: 1-128) TQ`
     });
 
     // 4. Calculate arbitration phase results and store in general structure
@@ -209,10 +209,10 @@ export function procRegsPrtBitTiming(reg) {
       reg.DBTP.report.push({
         severityLevel: sevC.info, // info
           msg: `DBTP: ${reg.DBTP.name_long} (0x${reg.DBTP.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-               `[DTDCO ] FD TDC Offset     = ${reg.DBTP.fields.DTDCO}\n` +
-               `[DTSEG1] FD Time Segment 1 = ${reg.DBTP.fields.DTSEG1}\n` +
-               `[DTSEG2] FD Time Segment 2 = ${reg.DBTP.fields.DTSEG2}\n` +
-               `[DSJW  ] FD SJW            = ${reg.DBTP.fields.DSJW}`
+               `[DTDCO ] FD TDC Offset     = ${reg.DBTP.fields.DTDCO.toString(10).padStart(3,' ')} (range: 0-255) clock periods\n` +
+               `[DTSEG1] FD Time Segment 1 = ${reg.DBTP.fields.DTSEG1.toString(10).padStart(3,' ')} (range: 1-256) TQ\n` +
+               `[DTSEG2] FD Time Segment 2 = ${reg.DBTP.fields.DTSEG2.toString(10).padStart(3,' ')} (range: 1-128) TQ\n` +
+               `[DSJW  ] FD SJW            = ${reg.DBTP.fields.DSJW.toString(10).padStart(3,' ')} (range: 1-128) TQ`
         });
 
       // 4. Calculate FD data phase results and store in general structure
@@ -319,10 +319,10 @@ export function procRegsPrtBitTiming(reg) {
     reg.XBTP.report.push({
       severityLevel: sevC.info, // info
           msg: `XBTP: ${reg.XBTP.name_long} (0x${reg.XBTP.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-               `[XTDCO ] XL TDC Offset     = ${reg.XBTP.fields.XTDCO}\n` +
-               `[XTSEG1] XL Time Segment 1 = ${reg.XBTP.fields.XTSEG1}\n` +
-               `[XTSEG2] XL Time Segment 2 = ${reg.XBTP.fields.XTSEG2}\n` +
-               `[XSJW  ] XL SJW            = ${reg.XBTP.fields.XSJW}`
+               `[XTDCO ] XL TDC Offset     = ${reg.XBTP.fields.XTDCO.toString(10).padStart(3,' ')} (range: 0-255) clock periods\n` +
+               `[XTSEG1] XL Time Segment 1 = ${reg.XBTP.fields.XTSEG1.toString(10).padStart(3,' ')} (range: 1-256) TQ\n` +
+               `[XTSEG2] XL Time Segment 2 = ${reg.XBTP.fields.XTSEG2.toString(10).padStart(3,' ')} (range: 1-128) TQ\n` +
+               `[XSJW  ] XL SJW            = ${reg.XBTP.fields.XSJW.toString(10).padStart(3,' ')} (range: 1-128) TQ`
       });
 
       // 4. Calculate XL data phase results and store in general structure
