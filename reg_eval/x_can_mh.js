@@ -72,15 +72,15 @@ export function procRegsMhGlobal(reg) {
     // 1. Decode all individual bits of MODE register
     reg.MH_CFG.fields.INS_NUM     = getBits(regValue, 18, 16);
     reg.MH_CFG.fields.MAX_RETRANS = getBits(regValue, 10, 8);
-    reg.MH_CFG.fields.RC_CONT_DC  = getBits(regValue, 0, 0);
+    reg.MH_CFG.fields.RX_CONT_DC  = getBits(regValue, 0, 0);
 
     // 2. Generate human-readable register report
     reg.MH_CFG.report.push({
       severityLevel: sevC.info,
       msg: `MH_CFG: ${reg.MH_CFG.name_long} (0x${reg.MH_CFG.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[INS_NUM    ] Instance Number (of X_CAN IP)     = ${reg.MH_CFG.fields.INS_NUM}\n` +
+           `[INST_NUM   ] Instance Number (of X_CAN IP)     = ${reg.MH_CFG.fields.INS_NUM}\n` +
            `[MAX_RETRANS] Maximum TX re-transmissions       = ${reg.MH_CFG.fields.MAX_RETRANS} (0: NO, 1-6: 1-6, 7: unlimited)\n` +
-           `[RC_CONT_DC ] RX Continuous Data Container mode = ${reg.MH_CFG.fields.RC_CONT_DC}`
+           `[RX_CONT_DC ] RX Continuous Data Container mode = ${reg.MH_CFG.fields.RX_CONT_DC}`
     });
   } // MH_CFG
 
@@ -157,7 +157,7 @@ export function procRegsMhGlobal(reg) {
     reg.MH_SFTY_CTRL.report.push({
       severityLevel: sevC.info,
       msg: `MH_SFTY_CTRL: ${reg.MH_SFTY_CTRL.name_long} (0x${reg.MH_SFTY_CTRL.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-      `[PRT_TO_EN      ] PRT IF Watchdog Enable           = ${reg.MH_SFTY_CTRL.fields.PRT_TO_EN}\n` +
+      `[PRT_TO_EN      ] PRT IF  Watchdog Enable          = ${reg.MH_SFTY_CTRL.fields.PRT_TO_EN}\n` +
       `[MEM_TO_EN      ] MEM AXI Watchdog Enable          = ${reg.MH_SFTY_CTRL.fields.MEM_TO_EN}\n` +
       `[DMA_TO_EN      ] DMA AXI Watchdog Enable          = ${reg.MH_SFTY_CTRL.fields.DMA_TO_EN}\n` +
       `[DMA_CH_CHK_EN  ] DMA Channel Routing Check Enable = ${reg.MH_SFTY_CTRL.fields.DMA_CH_CHK_EN}\n` +
@@ -175,13 +175,13 @@ export function procRegsMhGlobal(reg) {
     const sftyToVal = reg.MH_SFTY_CFG && reg.MH_SFTY_CFG.fields ? reg.MH_SFTY_CFG.fields : null;
     if (sftyToVal) {
       if (sftyEna.DMA_TO_EN === 1 && sftyToVal.DMA_TO_VAL === 0) {
-        reg.MH_SFTY_CTRL.report.push({ severityLevel: sevC.warning, msg: 'MH_STY_CTRL: DMA_TO_VAL is 0 while DMA_TO_EN=1: DMA timeout would trigger immediately.' });
+        reg.MH_SFTY_CTRL.report.push({ severityLevel: sevC.warning, msg: 'MH_STY_CTRL: DMA_TO_VAL is 0 while DMA_TO_EN=1: DMA timeout triggers immediately.'});
       }
       if (sftyEna.MEM_TO_EN === 1 && sftyToVal.MEM_TO_VAL === 0) {
-        reg.MH_SFTY_CTRL.report.push({ severityLevel: sevC.warning, msg: 'MH_STY_CTRL: MEM_TO_VAL is 0 while MEM_TO_EN=1: MEM timeout would trigger immediately.' });
+        reg.MH_SFTY_CTRL.report.push({ severityLevel: sevC.warning, msg: 'MH_STY_CTRL: MEM_TO_VAL is 0 while MEM_TO_EN=1: MEM timeout triggers immediately.'});
       }
       if (sftyEna.PRT_TO_EN === 1 && sftyToVal.PRT_TO_VAL === 0) {
-        reg.MH_SFTY_CTRL.report.push({ severityLevel: sevC.warning, msg: 'MH_STY_CTRL: PRT_TO_VAL is 0 while PRT_TO_EN=1: PRT timeout would trigger immediately.' });
+        reg.MH_SFTY_CTRL.report.push({ severityLevel: sevC.warning, msg: 'MH_STY_CTRL: PRT_TO_VAL is 0 while PRT_TO_EN=1: PRT timeout triggers immediately.'});
       }
     }
   }
@@ -205,8 +205,10 @@ export function procRegsMhGlobal(reg) {
       msg: `RX_FILTER_MEM_ADD: ${reg.RX_FILTER_MEM_ADD.name_long} (0x${reg.RX_FILTER_MEM_ADD.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
            `[BASE_ADDR] RX Filter Base Address (L_MEM) = 0x${base.toString(16).toUpperCase().padStart(5,'0')} (16 bit, expected bits[1:0]=0)`
     });
-    if (!alignOk) {
-      reg.RX_FILTER_MEM_ADD.report.push({ severityLevel: sevC.warning, msg: 'RX_FILTER_MEM_ADD: RX Filter Base Address not word-aligned (LSBs [1:0] should be 0).' });
+
+    // 3. Check Address Alignment
+    if ((reg.RX_FILTER_MEM_ADD.fields.BASE_ADDR & 0x3) !== 0) {
+      reg.RX_FILTER_MEM_ADD.report.push({ severityLevel: sevC.warning, msg: 'RX_FILTER_MEM_ADD: RX Filter Base Address not word-aligned (LSBs [1:0] should be 0). LSBs [1:0] are ignored by X_CAN.'});
     }
   }
 
@@ -283,6 +285,17 @@ export function procRegsMhGlobal(reg) {
            `[AW_MAX_PEND] Max pending AXI writes = ${reg.AXI_PARAMS.fields.AW_MAX_PEND} (= ${pendMap(reg.AXI_PARAMS.fields.AW_MAX_PEND,'write')})\n` +
            `[AR_MAX_PEND] Max pending AXI reads  = ${reg.AXI_PARAMS.fields.AR_MAX_PEND} (= ${pendMap(reg.AXI_PARAMS.fields.AR_MAX_PEND,'read ')})`
     });
+
+    // 3. Check AW_MAX_PEND and AR_MAX_PEND values
+    if (reg.AXI_PARAMS.fields.AW_MAX_PEND === 0) {
+      reg.AXI_PARAMS.report.push({ severityLevel: sevC.error, msg: 'AXI_PARAMS: AW_MAX_PEND is 0: No AXI write transfers possible.'});
+    }
+
+    // Check AR_MAX_PEND and AR_MAX_PEND values
+    if (reg.AXI_PARAMS.fields.AR_MAX_PEND === 0) {
+      reg.AXI_PARAMS.report.push({ severityLevel: sevC.error, msg: 'AXI_PARAMS: AR_MAX_PEND is 0: No AXI read transfers possible.'});
+    }
+
   }
 
   // === MH_LOCK: Message Handler Lock register =========================
@@ -1031,12 +1044,12 @@ export function procRegsMhRXFQ(reg) {
       const dcSize = reg[sizeName].fields.DC_SIZE; // units of 32 bytes (normal: per desc; continuous: whole container)
       const descBytes = maxDesc > 0 ? (maxDesc * 16) >>> 0 : 0; // RX descriptors 16 bytes each
       let dcInfo = '';
-      if (dcSize > 0) dcInfo = ` (in Normal Mode = ${getBits(dcSize, 6, 0)* 32} bytes; in Continuous Mode = ${dcSize * 32} byte)`;
+      if (dcSize > 0) dcInfo = ` (in Normal Mode = ${getBits(dcSize, 6, 0)* 32} byte; in Continuous Mode = ${dcSize * 32} byte)`;
       reg[sizeName].report.push({
         severityLevel: sevC.info,
         msg: `${sizeName}: ${reg[sizeName].name_long} (0x${reg[sizeName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-             `[MAX_DESC] RXFQ${q} Size                = ${maxDesc}${maxDesc>0?` (allocates ${descBytes} bytes in S_MEM)`:''}\n` +
-             `[DC_SIZE ] RXFQ${q} Data Container Size = ${dcSize}${dcInfo}`
+             `[DC_SIZE ] RXFQ${q} Data Container Size = ${dcSize}${dcInfo}\n` +
+             `[MAX_DESC] RXFQ${q} Size                = ${maxDesc}${maxDesc>0?` (Descriptors allocate ${descBytes} byte in S_MEM)`:''}`
       });
     }
 
@@ -1173,9 +1186,9 @@ export function procRegsMhRXTXFilter(reg) {
       msg: `TX_FILTER_CTRL0: ${reg.TX_FILTER_CTRL0.name_long} (0x${reg.TX_FILTER_CTRL0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[IRQ_EN] Interrupt on Rejection Enabled = ${reg.TX_FILTER_CTRL0.fields.IRQ_EN}\n` +
            `[EN    ] TX Filter Global Enable        = ${reg.TX_FILTER_CTRL0.fields.EN}\n`+
-           `[CC_CAN] CAN CC frame Reject(1)         = ${reg.TX_FILTER_CTRL0.fields.CC_CAN} ${reg.TX_FILTER_CTRL0.fields.CC_CAN? '(Reject)':'(Accept)'}\n`+
-           `[CAN_FD] CAN FD frame Reject(1)         = ${reg.TX_FILTER_CTRL0.fields.CAN_FD} ${reg.TX_FILTER_CTRL0.fields.CAN_FD? '(Reject)':'(Accept)'}\n`+
-           `[MODE  ] Mode: Accept (1) or Reject (0) = ${reg.TX_FILTER_CTRL0.fields.MODE} ${reg.TX_FILTER_CTRL0.fields.MODE? '(Accept':'(Reject'} on match)\n`+
+           `[CC_CAN] CAN CC frame Reject(1)         = ${reg.TX_FILTER_CTRL0.fields.CC_CAN} ${reg.TX_FILTER_CTRL0.fields.CC_CAN? '(=Reject)':'(=Accept)'}\n`+
+           `[CAN_FD] CAN FD frame Reject(1)         = ${reg.TX_FILTER_CTRL0.fields.CAN_FD} ${reg.TX_FILTER_CTRL0.fields.CAN_FD? '(=Reject)':'(=Accept)'}\n`+
+           `[MODE  ] Mode: Accept (1) or Reject (0) = ${reg.TX_FILTER_CTRL0.fields.MODE} ${reg.TX_FILTER_CTRL0.fields.MODE? '(=Accept)':'(=Reject)'} on match)\n`+
            `[MASK  ] Use Value/Mask pairs           = 0x${reg.TX_FILTER_CTRL0.fields.MASK.toString(16).toUpperCase().padStart(2,'0')} => Mask/Value Pairs: ${maskIdxPairsString? maskIdxPairsString : 'none'}\n`+
            `[COMB  ] Use REF_VAL pairs (0+1, 2+3, ) = 0x${reg.TX_FILTER_CTRL0.fields.COMB.toString(16).toUpperCase().padStart(2,'0')} => Filter     Pairs: ${combIdxPairsString? combIdxPairsString : 'none'}`
     });
@@ -1197,7 +1210,7 @@ export function procRegsMhRXTXFilter(reg) {
       severityLevel: sevC.info,
       msg: `TX_FILTER_CTRL1: ${reg.TX_FILTER_CTRL1.name_long} (0x${reg.TX_FILTER_CTRL1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
            `[VALID] Active Ref Value Indexes: REF_VALx = 0x${reg.TX_FILTER_CTRL1.fields.VALID.toString(16).toUpperCase().padStart(4,'0')} => ${validIdx.length?validIdx.join(', '):'none'}\n`+
-           `[FIELD] Compared field: SDT(1) or VCID(0)  = 0x${reg.TX_FILTER_CTRL1.fields.FIELD.toString(16).toUpperCase().padStart(4,'0')} => binary (15:0) ${getBinaryLineData(reg.TX_FILTER_CTRL1.fields.FIELD, 16)}`
+           `[FIELD] Compared field: SDT(1) or VCID(0)  = 0x${reg.TX_FILTER_CTRL1.fields.FIELD.toString(16).toUpperCase().padStart(4,'0')} => binary (15:0)  ${getBinaryLineData(reg.TX_FILTER_CTRL1.fields.FIELD, 16)}`
     });
   }
 
@@ -1227,6 +1240,81 @@ export function procRegsMhRXTXFilter(reg) {
   decodeRefVal('TX_FILTER_REFVAL2', 2);
   decodeRefVal('TX_FILTER_REFVAL3', 3);
 
+  // === TX_FILTER Summary =====================================
+  if (reg.TX_FILTER_CTRL0 && reg.TX_FILTER_CTRL0.fields &&
+      reg.TX_FILTER_CTRL1 && reg.TX_FILTER_CTRL1.fields) {
+    const enGlobal = reg.TX_FILTER_CTRL0.fields.EN === 1;
+    const validMask = reg.TX_FILTER_CTRL1.fields.VALID; // 16 bits -> REF_VAL00..15
+    const fieldMask = reg.TX_FILTER_CTRL1.fields.FIELD; // 1 = SDT, 0 = VCID
+    const maskPairs = reg.TX_FILTER_CTRL0.fields.MASK;  // bit i => use REF_VAL(2*i+1)/(2*i)
+    const combPairs = reg.TX_FILTER_CTRL0.fields.COMB;  // bit i => combine pair (2*i,2*i+1)
+
+    // Helper to fetch a global REF_VALx (0..15) value
+    const getRefVal = (idx) => {
+      const regIdx = Math.floor(idx/4); // 0..3
+      const pos = idx % 4; // 0..3
+      const map = {
+        0: reg.TX_FILTER_REFVAL0,
+        1: reg.TX_FILTER_REFVAL1,
+        2: reg.TX_FILTER_REFVAL2,
+        3: reg.TX_FILTER_REFVAL3
+      };
+      const entry = map[regIdx];
+      if (!entry || !entry.fields) return undefined;
+      return entry.fields[`REF_VAL${pos}`];
+    };
+
+    const lines = [];
+  lines.push('TX Filtering Summary');
+  lines.push('REF_VAL                      VALID TYPE COMB VALUE');
+  lines.push('--------------------------------------------------');
+
+    for (let i = 0; i < 16; i++) {
+      const regIdxName = 'TX_FILTER_REFVAL' + Math.floor(i/4);
+      const refName = `${regIdxName}.REF_VAL${i.toString().padStart(2,'0')}`;
+      const valid = ((validMask >> i) & 1) === 1 ? 1 : 0;
+      let fieldStr = '-';
+      let combMarker = ' ';
+      let valStr = '-';
+
+      if (valid === 1 && enGlobal) {
+        const fieldSel = ((fieldMask >> i) & 1) === 1 ? 'SDT' : 'VCID';
+        fieldStr = fieldSel;
+        const byteVal = getRefVal(i);
+        if (byteVal !== undefined) {
+          valStr = '0x' + byteVal.toString(16).toUpperCase().padStart(2,'0');
+        }
+        // Check if part of mask/comb pair
+        const pairIdx = Math.floor(i/2); // 0..7
+        const isMaskPair = ((maskPairs >> pairIdx) & 1) === 1;
+        const isCombPair = ((combPairs >> pairIdx) & 1) === 1;
+        if (isMaskPair || isCombPair) {
+          // top element (odd index) gets "┐", lower (even) gets "┘" when showing a combination
+            combMarker = (i % 2 === 0) ? '┐' : '┘';
+          if (isMaskPair && !isCombPair) {
+            // Only mask/value pair -> indicate MASK on odd or even depending? Choose naming for odd partner
+            if (i % 2 === 1) fieldStr = 'MASK';
+          } else if (!isMaskPair && isCombPair) {
+            // Only combination pair -> keep fieldStr as is
+          } else if (isMaskPair && isCombPair) {
+            // Both set; prefer showing MASK on odd index
+            if (i % 2 === 1) fieldStr = 'MASK';
+          }
+        }
+      }
+
+      lines.push(`${refName.padEnd(26,' ')}  ${valid}     ${fieldStr.padEnd(5,' ')} ${combMarker}   ${valStr}`);
+    }
+
+    const txFilterSummary = lines.join('\n');
+    // Attach summary to CTRL1 (arbitrary choice) report list
+    reg.TX_FILTER_CTRL1.report.push({
+      severityLevel: sevC.infoHighlighted,
+      msg: txFilterSummary
+    });
+  }
+  
+  
   // === RX_FILTER_CTRL ==============================================
   if ('RX_FILTER_CTRL' in reg && reg.RX_FILTER_CTRL.int32 !== undefined) {
     const regValue = reg.RX_FILTER_CTRL.int32;
@@ -1512,8 +1600,8 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.TX_FILTER_ERR_INFO.report.push({
       severityLevel: sevC.info,
       msg: `TX_FILTER_ERR_INFO: ${reg.TX_FILTER_ERR_INFO.name_long} (0x${reg.TX_FILTER_ERR_INFO.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[FQ     ] TX Queue type FQ(1), PQ(0) = ${reg.TX_FILTER_ERR_INFO.fields.FQ}\n`+
-           `[FQN_PQS] FIFO Queue/Slot Number     = ${reg.TX_FILTER_ERR_INFO.fields.FQN_PQS}`
+           `[FQN_PQS] FIFO Queue/Slot Number     = ${reg.TX_FILTER_ERR_INFO.fields.FQN_PQS}\n` +
+           `[FQ     ] TX Queue type FQ(1), PQ(0) = ${reg.TX_FILTER_ERR_INFO.fields.FQ}`
     });
   }
 }

@@ -399,7 +399,6 @@ function procRegsPrtBitTiming(reg) {
              `[TDCF] TDC Filter Window Length = ${reg.TDCR.fields.TDCF}\n` +
              `[TDCO] TDC SSP Offset           = ${reg.TDCR.fields.TDCO}`
       });
-
     }
   } // end if TDCR
 
@@ -462,7 +461,7 @@ function procRegsPrtBitTiming(reg) {
 
       // 5. Generate Report about settings
       reg.DBTP.report.push({
-          severityLevel: sevC.calculation, // infoCalculated
+          severityLevel: sevC.calculation,
           msg: `CAN FD Data Phase Bitrate\n` +
                `Bitrate    = ${reg.general.bt_fddata.res.bitrate} Mbit/s\n` +
                `Bit Length = ${reg.general.bt_fddata.res.bit_length} ns\n` +
@@ -475,7 +474,7 @@ function procRegsPrtBitTiming(reg) {
       // Check: CAN Clock Frequency as recommended in CiA 601-3?
       if ((reg.general.clk_freq != 160) && (reg.general.clk_freq != 80) && (reg.general.clk_freq != 40) && (reg.general.clk_freq != 20)) {
         reg.DBTP.report.push({
-          severityLevel: sevC.warning, // warning
+          severityLevel: sevC.warning,
           msg: `CAN FD: Recommended CAN Clock Frequency is 20, 40, 80 MHz and multiples (see CiA 601-3). Current value is ${reg.general.clk_freq} MHz.`
         });
       }
@@ -483,7 +482,7 @@ function procRegsPrtBitTiming(reg) {
       // Check: check for SJW <= min(PhaseSeg1, PhaseSeg2)?
       if (reg.general.bt_fddata.set.sjw > reg.general.bt_fddata.set.phaseseg2) {
         reg.DBTP.report.push({
-          severityLevel: sevC.error, // error
+          severityLevel: sevC.error,
           msg: `DBTP: SJW (${reg.general.bt_fddata.set.sjw}) > PhaseSeg2 (${reg.general.bt_fddata.set.phaseseg2}). ISO 11898-1 requires SJW <= PhaseSeg2.`
         });
       }
@@ -491,7 +490,7 @@ function procRegsPrtBitTiming(reg) {
       // Check: check for PhaseSeg2 >= 2
       if (reg.general.bt_fddata.set.phaseseg2 < 2) {
         reg.DBTP.report.push({
-          severityLevel: sevC.error, // error
+          severityLevel: sevC.error,
           msg: `DBTP: PhaseSeg2 (${reg.general.bt_fddata.set.phaseseg2}) < 2. ISO 11898-1 requires a value >= 2.`
         });
       }
@@ -499,7 +498,7 @@ function procRegsPrtBitTiming(reg) {
       // Check: SJW choosen as large as possible?
       if (reg.general.bt_fddata.set.sjw < reg.general.bt_fddata.set.phaseseg2) {
         reg.DBTP.report.push({
-          severityLevel: sevC.warning, // warning
+          severityLevel: sevC.warning,
           msg: `DBTP: SJW (${reg.general.bt_fddata.set.sjw}) < PhaseSeg2 (${reg.general.bt_fddata.set.phaseseg2}). It is recommended to use SJW=PhaseSeg2.`
         });
       }
@@ -507,7 +506,7 @@ function procRegsPrtBitTiming(reg) {
       // Check: Number of TQ large enough?
       if (reg.general.bt_fddata.res.tq_per_bit < 8) {
         reg.DBTP.report.push({
-          severityLevel: sevC.warning, // warning
+          severityLevel: sevC.warning,
           msg: `DBTP: Number of TQ/Bit is small (<8). If possible, increase the TQ/Bit by reducing DBRP or increasing the CAN Clock Freq.`
         });
       }
@@ -515,11 +514,18 @@ function procRegsPrtBitTiming(reg) {
       // Check if BRP Data > 1
       if (reg.general.bt_fddata.set.brp > 1) {
         reg.DBTP.report.push({
-          severityLevel: sevC.warning, // warning
-          msg: `DBTP: BRP (${reg.general.bt_fddata.set.brp}) > 1. A BRP > 1 may reduce robustness. Try using BRP=1.`
+          severityLevel: sevC.warning,
+          msg: `DBTP: BRP (${reg.general.bt_fddata.set.brp}) > 1. A BRP > 1 may reduce robustness. Try using BRP=1 (encoded BRP=0).`
         });
       }
 
+      // Check if BRP > 1, when TDC is enabled
+      if (reg.general.bt_global.set.tdc === true && reg.general.bt_fddata.set.brp > 1) {
+        reg.DBTP.report.push({
+          severityLevel: sevC.error,
+          msg: `DBTP: If TDC=1 then BRP must be <=2 (encoded value <=1). Here BRP=${reg.general.bt_fddata.set.brp} (raw BRP=${reg.general.bt_fddata.set.brp - 1}). See M_CAN User Manual.`
+        });
+      }
     } // end if FDOE=1
   } // end if DBTP
 
