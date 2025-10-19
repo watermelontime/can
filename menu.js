@@ -1,7 +1,7 @@
 // Reusable menu loader
 // Usage: Place <div id="site-menu"></div> before </body> and include this script (type=module).
 
-function insertMenu(containerId = 'site-menu', menuPath = '/menu.html') {
+function insertMenu(containerId = 'site-menu', menuPath = '/can/menu.html') {
   const container = document.getElementById(containerId);
   if (!container) return;
   fetch(menuPath, { cache: 'no-cache' })
