@@ -1,7 +1,7 @@
 // Reusable footer loader
 // Usage: Place <div id="site-footer"></div> before </body> and include this script (type=module).
 
-function insertFooter(containerId = 'site-footer', footerPath = '/footer.html') {
+function insertFooter(containerId = 'site-footer', footerPath = '/can/footer.html') {
   const container = document.getElementById(containerId);
   if (!container) {
     console.warn('[Footer] Container #' + containerId + ' not found');
