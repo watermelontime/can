@@ -17,7 +17,7 @@
 // TODO: better structure reg-object: problem/ugly: non-register fields are mixed with registers (flat) => non-reg stuff should be separted
 // TODO: donate button
 
-// TODO: Valiation report severity level rename highlighted to bold
+// TODO: Valiation report should be shown, even if all filters are off (header/footer)
 
 // import drawing functions
 import * as draw_svg from './draw_bits_svg.js';
@@ -398,12 +398,41 @@ function displayValidationReport(reg, reportVerbosity) {
   // Clear previous content
   reportTextArea.innerHTML = '';
   
-  // Collect ALL reports unfiltered first (decision to print is done later)
+  // Generate allRegReports from reg object with per-entry filtering
   const allReports = [];
   if (reg && typeof reg === 'object') {
     Object.values(reg).forEach(regSection => {
       if (!regSection || !Array.isArray(regSection.report)) return;
+      // Filter reports based on verbosity settings
       for (const reportInstance of regSection.report) {
+        // Severity filters
+        switch (reportInstance.severityLevel) {
+          case sevC.info:
+            if (reportVerbosity.info !== true) continue;
+            break;
+          case sevC.infoVerbose:
+            if (reportVerbosity.infoVerbose !== true) continue;
+            break;
+          case sevC.infoHighlighted:
+            if (reportVerbosity.infoHighlighted !== true) continue;
+            break;
+          case sevC.warning:
+            if (reportVerbosity.warning !== true) continue;
+            break;
+          case sevC.error:
+            if (reportVerbosity.error !== true) continue;
+            break;
+          case sevC.calculation:
+            if (reportVerbosity.calculation !== true) continue;
+            break;
+          case sevC.recommendation:
+            if (reportVerbosity.recommendation !== true) continue;
+            break;
+          default:
+            // Unknown types: require verbose to show
+            console.warn(`[Warning] displayValidationReport(): Unknown report severity level: ${reportInstance.severityLevel}`);
+        }
+        // If we reach here, the report passes the filter and is added to allReports
         allReports.push(reportInstance);
       }
     });
@@ -451,7 +480,7 @@ function displayValidationReport(reg, reportVerbosity) {
     }
   }
   
-  // Count reports by severity (always based on allReports, not filtered)
+  // Count reports by severity
   const counts = { info: 0, infoV: 0, infoH: 0, calc: 0, recom: 0, warn: 0, errors: 0};
   allReports.forEach(report => {
     switch (report.severityLevel) {
@@ -464,20 +493,6 @@ function displayValidationReport(reg, reportVerbosity) {
       case sevC.warning: counts.warn++; break;
     }
   });
-
-  // Helper to know if a severity is selected for printing
-  function isSelected(level) {
-    switch (level) {
-      case sevC.info: return !!reportVerbosity.info;
-      case sevC.infoVerbose: return !!reportVerbosity.infoVerbose;
-      case sevC.infoHighlighted: return !!reportVerbosity.infoHighlighted;
-      case sevC.calculation: return !!reportVerbosity.calculation;
-      case sevC.recommendation: return !!reportVerbosity.recommendation;
-      case sevC.warning: return !!reportVerbosity.warning;
-      case sevC.error: return !!reportVerbosity.error;
-      default: return false;
-    }
-  }
   
   // Generate header with summary
   const timestamp = new Date().toLocaleString('de-DE', {
@@ -490,20 +505,13 @@ function displayValidationReport(reg, reportVerbosity) {
   });
   let reportText = `<span class="report-header">=== VALIDATION REPORT ${timestamp} ========</span>\n`;
   reportText += '<span class="report-header">' + '--- Summary ---------------------------------------' + '</span>\n';
-  // Always show counts for each type; append (not printed) if disabled by user
-  const lines = [
-    { level: sevC.info,           label: 'Info        ',     count: counts.info },
-    { level: sevC.infoVerbose,    label: 'Info Verbose',     count: counts.infoV },
-    { level: sevC.infoHighlighted,label: 'Info Bold   ',     count: counts.infoH },
-    { level: sevC.calculation,    label: 'Calculated  ',     count: counts.calc },
-    //{ level: sevC.recommendation,label: 'Recommendations',  count: counts.recom },
-    { level: sevC.warning,        label: 'Warnings    ',     count: counts.warn },
-    { level: sevC.error,          label: 'Errors      ',     count: counts.errors },
-  ];
-  lines.forEach(({level, label, count}) => {
-    const suffix = isSelected(level) ? '' : ' (not printed)';
-    reportText += `<span class="${getSeverityClass(level)}">${getSeveritySymbol(level)} ${label}: ${count.toString().padStart(3, ' ')}${suffix}</span>\n`;
-  });
+  if (counts.info > 0) reportText += `<span class="${getSeverityClass(sevC.info)}">${getSeveritySymbol(sevC.info)} Info: ${counts.info}</span>\n`;
+  if (counts.infoV > 0) reportText += `<span class="${getSeverityClass(sevC.infoVerbose)}">${getSeveritySymbol(sevC.infoVerbose)} Info Verbose: ${counts.infoV}</span>\n`;
+  if (counts.infoH > 0) reportText += `<span class="${getSeverityClass(sevC.infoHighlighted)}">${getSeveritySymbol(sevC.infoHighlighted)} Info Highlighted: ${counts.infoH}</span>\n`;
+  if (counts.calc > 0) reportText += `<span class="${getSeverityClass(sevC.calculation)}">${getSeveritySymbol(sevC.calculation)} Info Calculated: ${counts.calc}</span>\n`;
+  if (counts.recom > 0) reportText += `<span class="${getSeverityClass(sevC.recommendation)}">${getSeveritySymbol(sevC.recommendation)} Recommendations: ${counts.recom}</span>\n`;
+  if (counts.warn > 0) reportText += `<span class="${getSeverityClass(sevC.warning)}">${getSeveritySymbol(sevC.warning)} Warnings: ${counts.warn}</span>\n`;
+  if (counts.errors > 0) reportText += `<span class="${getSeverityClass(sevC.error)}">${getSeveritySymbol(sevC.error)} Errors: ${counts.errors}</span>\n`;
   reportText += `Registers in memory dump: ${reg.parse_output.mappedRegCount} found, ` +
                            `${reg.parse_output.reservedRegCount} reserved, ` + 
                            `${reg.parse_output.unmappedRegCount} unknown, ` +
@@ -512,11 +520,8 @@ function displayValidationReport(reg, reportVerbosity) {
                            `(Total addr. lines: ${reg.parse_output.mappedRegCount + reg.parse_output.reservedRegCount + reg.parse_output.unmappedRegCount})\n`;
   reportText += '<span class="report-header">' + '--- Reports ---------------------------------------' + '</span>\n';
 
-  // Generate detailed reports; decide here whether to print or skip
+  // Generate detailed reports
   allReports.forEach((report, index) => {
-    if (!isSelected(report.severityLevel)) {
-      return; // skip printing this report
-    }
     const severityText = getSeverityText(report.severityLevel);
     const severitySymbol = getSeveritySymbol(report.severityLevel);
     const severityClass = getSeverityClass(report.severityLevel);

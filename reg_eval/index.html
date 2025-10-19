@@ -3,16 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CAN Konfigurator</title>
+  <title>CAN Register Evaluator</title>
   <!-- <link rel="manifest" href="manifest.json" /> -->
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <script data-goatcounter="https://watermelon.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
+  
+<div id="site-menu"></div>
+<script type="module" src="/menu.js"></script>
+
 <main>
 
-<h1>CAN Register Settings Evaluator</h1>
+<h1>CAN Register Evaluator</h1>
 
 <!-- Responsive container for 3-column layout -->
 <div class="responsive-container">
@@ -279,9 +283,9 @@ Reserved Addresses: Memory dump can contain also reserved addresses. They will b
       <div class="inline-control" role="group" aria-label="Report filters">
         <input type="checkbox" id="par_report_info" checked/> info
         <input type="checkbox" id="par_report_infoVerbose"/> info verbose
-        <input type="checkbox" id="par_report_infoHighlighted" checked/> info highlighted
-        <input type="checkbox" id="par_report_calculation" checked/> calculation
-        <input type="checkbox" id="par_report_recommendation" checked/> recommendation
+        <input type="checkbox" id="par_report_infoHighlighted" checked/> info bold&amp;calc
+        <!--<input type="checkbox" id="par_report_calculation" checked/> calculation-->
+        <!--<input type="checkbox" id="par_report_recommendation" checked/> recommendation-->
         <input type="checkbox" id="par_report_warning" checked/> warning
         <input type="checkbox" id="par_report_error" checked/> error
 
@@ -310,7 +314,9 @@ Step 3:  Press button "process register values" to generate the evaluation repor
 -->
 
 </main>
+
 <div id="site-footer"></div>
-<script type="module" src="footer.js"></script>
+<script type="module" src="/footer.js"></script>
+
 </body>
 </html>

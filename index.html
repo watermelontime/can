@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arthur's CAN Page</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
 </head>
 
 <body>
-	<script src="menue.js"></script>
+    <div id="site-menu"></div>
+    <script type="module" src="/menu.js"></script>
+
+    <script src="helper_function.js"></script>
 
     <h1>Arthur's CAN Page</h1>
     
@@ -20,6 +24,9 @@
 		<button onclick="goToPage('reg_eval/index.html')">CAN Module register EVALUATOR</button>
 		<button onclick="goToPage('xl_bt/index.html')">CAN XL Bit Timing CONFIGURATOR</button>
 	</div>
+
+    <div id="site-footer"></div>
+    <script type="module" src="/footer.js"></script>
 
 </body>
 </html>
