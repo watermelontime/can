@@ -421,6 +421,7 @@ export function procRegsPrtBitTiming(reg) {
     reg.general.bt_xldata.set.pwm_short = reg.PCFG.fields.PWMS;
 
     // different output based on XLOE & TMS
+    // PWM SETTINGS NOT USED
     if (!reg.MODE || !reg.MODE.fields || (reg.MODE.fields.XLOE !== undefined && reg.MODE.fields.XLOE == 0) || (reg.MODE.fields.XLTR !== undefined && reg.MODE.fields.XLTR == 0) || !reg.XBTP) {
       // 3. Generate human-readable register report
       reg.PCFG.report.push({
@@ -429,7 +430,7 @@ export function procRegsPrtBitTiming(reg) {
              `XL Operation (MODE.XLOE=0) OR Transceiver Mode Switch (MODE.XLTR=0) is disabled OR MODE register not present`
       });
 
-    } else { // MODE.XLTR == 1 && MODE.XLOE == 1
+    } else { // PWM SETTINGS USED (MODE.XLTR == 1 && MODE.XLOE == 1)
       // 3. Generate human-readable register report
       reg.PCFG.report.push({
         severityLevel: sevC.info, // info
@@ -450,7 +451,7 @@ export function procRegsPrtBitTiming(reg) {
           msg: `PWM Configuration\nPWM Symbol Length = ${reg.general.bt_xldata.res.pwm_symbol_len_ns} ns = ${reg.general.bt_xldata.res.pwm_symbol_len_clk_cycles} clock cycles\nPWM Symbols per XL Data Bit Time = ${reg.general.bt_xldata.res.pwm_symbols_per_bit_time.toFixed(2)}`
       });
 
-      // Ratio of XL Data Bit Time to PWM Symbol Length
+      // Check: Ratio of XL Data Bit Time to PWM Symbol Length
       if (!Number.isInteger(reg.general.bt_xldata.res.pwm_symbols_per_bit_time)) {
         reg.PCFG.report.push({
           severityLevel: sevC.error, // error
@@ -458,12 +459,36 @@ export function procRegsPrtBitTiming(reg) {
         });
       }
 
-      // PWM Offset correctness
+      // Check: PWM Offset correctness
       const pwmo_calculated = (reg.general.bt_arb.res.tq_per_bit * reg.general.bt_arb.set.brp) % reg.general.bt_xldata.res.pwm_symbol_len_clk_cycles;
       if (pwmo_calculated !== reg.general.bt_xldata.set.pwm_offset) {
         reg.PCFG.report.push({
           severityLevel: sevC.error, // error
           msg: `PWM Offset (PCFG.PWMO = ${reg.general.bt_xldata.set.pwm_offset}) is wrong. Correct value is PCFG.PWMO = ${pwmo_calculated}`
+        });
+      }
+
+      // Check: PWML > PWMS 
+      if (reg.PCFG.fields.PWML <= reg.PCFG.fields.PWMS) {
+        reg.PCFG.report.push({
+          severityLevel: sevC.error, // error
+          msg: `PWM Phase Long (PCFG.PWML = ${reg.PCFG.fields.PWML}) must be greater than PWM Phase Short (PCFG.PWMS = ${reg.PCFG.fields.PWMS})`
+        });
+      } else {
+        // Check: PWML >= 2*PWMS
+        if (reg.PCFG.fields.PWML < (2 * reg.PCFG.fields.PWMS)) {
+          reg.PCFG.report.push({
+            severityLevel: sevC.warning, // warning
+            msg: `PWM Phase Long (PCFG.PWML = ${reg.PCFG.fields.PWML}) is only slightly larger than PWM Phase Short (PCFG.PWMS = ${reg.PCFG.fields.PWMS}). Recommended are PWML = 75%, PWMS= 25% of PWM length.`
+          });
+        }
+      }
+
+      // Check: PWML > PWMS 
+      if (reg.PCFG.fields.PWML <= reg.PCFG.fields.PWMS) {
+        reg.PCFG.report.push({
+          severityLevel: sevC.error, // error
+          msg: `PWM Phase Long (PCFG.PWML = ${reg.PCFG.fields.PWML}) must be greater than PWM Phase Short (PCFG.PWMS = ${reg.PCFG.fields.PWMS})`
         });
       }
 

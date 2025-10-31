@@ -614,9 +614,9 @@ function displaySVGs(reg) {
       reg.general.bt_arb.set.sjw !== undefined) {
     // Draw Bit Timing: Arbitration Phase
     draw_svg.drawBitTiming(
-      0,
-      reg.general.bt_arb.set.prop_and_phaseseg1,
-      reg.general.bt_arb.set.phaseseg2,
+      reg.general.bt_arb.set.prop_and_phaseseg1 - reg.general.bt_arb.set.phaseseg2, // calculated PROP_SEG
+      reg.general.bt_arb.set.phaseseg2, // calculated PHASE_SEG1 = sames size as PHASE_SEG2
+      reg.general.bt_arb.set.phaseseg2, // PHASE_SEG2
       reg.general.bt_arb.res.sp, // Sample Point in % of Bit Time
       reg.general.bt_arb.set.sjw, // SJW Length in TQ
       0, // SSP in % of Bit Time => not used because TDC = false
@@ -648,8 +648,8 @@ function displaySVGs(reg) {
       reg.general.bt_global.set.tdc !== undefined) {
     // Draw Bit Timing: FD Data Phase
     draw_svg.drawBitTiming(
-      0,
-      reg.general.bt_fddata.set.prop_and_phaseseg1,
+      reg.general.bt_fddata.set.prop_and_phaseseg1 - reg.general.bt_fddata.set.phaseseg2, // calculated PROP_SEG
+      reg.general.bt_fddata.set.phaseseg2, // calculated PHASE_SEG1 = sames size as PHASE_SEG2
       reg.general.bt_fddata.set.phaseseg2,
       reg.general.bt_fddata.res.sp, // Sample Point in % of Bit Time
       reg.general.bt_fddata.set.sjw, // SJW Length in TQ
@@ -682,8 +682,8 @@ function displaySVGs(reg) {
       reg.general.bt_global.set.tdc !== undefined) {
     // Draw Bit Timing: XL Data Phase
     draw_svg.drawBitTiming(
-      0,
-      reg.general.bt_xldata.set.prop_and_phaseseg1,
+      reg.general.bt_xldata.set.prop_and_phaseseg1 - reg.general.bt_xldata.set.phaseseg2, // calculated PROP_SEG
+      reg.general.bt_xldata.set.phaseseg2, // calculated PHASE_SEG1 = sames size as PHASE_SEG2
       reg.general.bt_xldata.set.phaseseg2,
       reg.general.bt_xldata.res.sp, // Sample Point in % of Bit Time
       reg.general.bt_xldata.set.sjw, // SJW Length in TQ

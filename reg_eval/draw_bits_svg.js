@@ -31,9 +31,9 @@ export function drawBitTiming(PropSeg, PhaseSeg1, PhaseSeg2, spPercent, sjwLen, 
   const sspColor = '#800080'; // Farbe der SSP Linie (TDC)
   const textColor = 'black'; // Farbe der Beschriftung
   const syncSegColor = '#555555'; // Farbe des SyncSeg Balkens
-  const PropSegColor = '#4CAF50'; // Farbe des PropSeg Balkens
-  const PhaseSeg1Color = '#2196F3'; // Farbe des PhaseSeg1 Balkens
-  const PhaseSeg2Color = '#FF9800'; // Farbe des PhaseSeg2 Balkens
+  const PropSegColor = '#FFD000'; // Farbe des PropSeg Balkens
+  const PhaseSeg1Color = '#4CAF50'; // Farbe des PhaseSeg1 Balkens
+  const PhaseSeg2Color = '#2196F3'; // Farbe des PhaseSeg2 Balkens #FF9800
 
   // Positions in SVG
   const fontSize = 14; // Schriftgröße
