@@ -1,28 +1,51 @@
 // TODO
-// support for X_CANB
-// use the same function for PRT register decoding of X_CAN, XS_CAN, and X_CANB (decode individual registers via separate function)
-// make mapRawRegistersToNames(reg, regAddrMap, resAddrArray); a help in this file, Use function from M_CAN
-//      write list of things an Implementation needs to comply to: 
-//      - provide external data structures regAddrMap and resAddrArray
-//      - parsing and address-to-Regiser mapping done in main function
-//      - provide external register-decoding function to be called by main function
-//        * reports must be in reg.REGNAME.report[]
-//        * must provide data in reg.general.bt_arb / bt_datxl / bt_datfd / bt_global => add detailed format
-//            (these are used for HTML visualisation)
-// add version number and version history that is shown on HTML
-// add menue
-// add howToUse
-// keep results as global variable & add filters for warning & error & calculated => change of checkbox performs HTML update but no re-evaluation of register values
-// X_CAN: LMEM Memory Map
+// TODO: use the same function for PRT register decoding of X_CAN, XS_CAN, and X_CANB (decode individual registers via separate function)
+// TODO: add version number and version history that is shown on HTML
+// TODO: add howToUse
+// TODO: X_CAN: LMEM Memory Map
 // TODO: better structure reg-object: problem/ugly: non-register fields are mixed with registers (flat) => non-reg stuff should be separted
 // TODO: donate button
-
 // TODO: Valiation report severity level rename highlighted to bold
+
+
+// ===================================================================
+// === HOW TO ADD NEW CAN IP MODULE? =================================
+// This is how to add a new CAN IP Module to the register evaluation tool.
+// STEP A ###### Create <module_name>_main.js file reg_eval/ folder.
+// 1. Export these data structures:
+//    - regAddrMap: Object that maps <local register addresses> to <register names> and <long register names>
+//    - resAddrArray: Array of reserved address ranges {lowerResAddr, upperResAddr}
+//    - regLocalAddrMask: Mask to extract local register address from full address in user memory dump (e.g., 0x000001FF)
+// 2. Export these functions to decode the registers:
+//    - processRegs(reg): Function that takes the reg object with named registers and decodes the registers
+//    - loadExampleRegisterValues(): Function that returns example register values and CAN clock frequency
+// 3. reg object (Result)
+//    - HINT: all the results (decoded values, reports) are stored in the object called reg
+//    - MANDATORY data structures in reg-object
+//      (Reason: These are human readable values to visualize content in HTML/SVG)
+//      * reg.<REGNAME>.report[] must contain report entries for register <REGNAME>
+//      * reg.general.bt_arb    ==> information about arbitration phase ()
+//      * reg.general.bt_datxl  ==> information about FD data phase
+//      * reg.general.bt_datfd  ==> information about XL data phase
+//      * reg.general.bt_global ==> information about global settings
+//      => see X_CAN as example for detailed names and formats of these data structures
+//    - RULE: ~ only assign reg.general.* values if they are meaningful
+//            ~ leave values undefined, if a) according registers are not present
+//                                         b) configuration disables a feature (e.g. TMS=OFF => then do not provide PWM settings & results)
+// STEP B ###### Modify this file script_main.js:
+// 1. Import the new module file *.js
+// 2. Extend the processUserRegisterValues() function to call the new module's functions if user selects <NEWMODULE>
+// 3. Extend the loadRegisterValuesExample() function to call the new module's example register values function if user selects <NEWMODULE>
+// STEP C ###### Update the HTML file index.html:
+// 1. Update the CAN Module select field to include the new module name <NEWMODULE>
+// ===================================================================
+
 
 // import drawing functions
 import * as draw_svg from './draw_bits_svg.js';
 import * as m_can from './m_can.js';
 import * as x_can from './x_can_main.js';
+import * as x_canb from './x_canb_main.js';
 import * as xs_can from './xs_can_main.js';
 import { sevC, clearObject } from './help_functions.js';
 
@@ -197,59 +220,78 @@ function parseUserRegisterValues(userRegText, reg) {
   // Initialize raw register array
   reg.raw = [];
   
+  // counter variable
+  let dumpLinesCountBlank = 0;
+  let dumpLinesCountComment = 0;
+  let dumpLinesCountValuesValid = 0;
+  let dumpLinesCountInvalid = 0;
+
   const lines = userRegText.split('\n');
-  
+  const dumpLinesCountTotal = lines.length;
+
   for (const line of lines) {
     const trimmedLine = line.trim();
 
-    if (trimmedLine.length > 0) { // ignore empty lines
+    // Check for blank lines => ignore them
+    if (trimmedLine.length === 0) {
+      // statistics
+      dumpLinesCountBlank++;
+      continue;
+    }
 
-      // Check if line is a comment (starts with '#')
-      if (trimmedLine.startsWith('#')) {
-        // Ignore comment lines - add info report for visibility
+    // Check if line is a comment (starts with '#')
+    if (trimmedLine.startsWith('#')) {
+      // Ignore comment lines - add info report for visibility
+      reg.parse_output.report.push({
+        severityLevel: sevC.infoVerbose,
+        msg: `Ignored comment "${trimmedLine}"`
+      });
+      // statistics
+      dumpLinesCountComment++;
+      continue; // Skip to next line
+    }
+    
+    // Decode line
+    // Expected format: <address><space><register value>, e.g.: "0x000 0x87654321" or "000 87654321"
+    const match = trimmedLine.match(/^(0x)?([0-9a-fA-F]+)\s+(0x)?([0-9a-fA-F]+)$/);
+    if (match) {
+      const addrHex = match[2];
+      const valueHex = match[4];
+      
+      const addrValue = parseInt(addrHex, 16);
+      const intValue = parseInt(valueHex, 16);
+      
+      if (!isNaN(addrValue) && !isNaN(intValue)) {
+        // Valid Input: Store in raw register array
+        reg.raw.push({
+          addr: addrValue,
+          value_int32: intValue
+        });
+        
         reg.parse_output.report.push({
           severityLevel: sevC.infoVerbose,
-          msg: `Ignored comment line: "${trimmedLine}"`
+          msg: `Found line:     0x${addrHex.toUpperCase()}: 0x${valueHex.toUpperCase()}`
         });
-        continue; // Skip to next line
-      }
-      
-      // Expected format: <address><space><register value>, e.g.: "0x000 0x87654321" or "000 87654321"
-      const match = trimmedLine.match(/^(0x)?([0-9a-fA-F]+)\s+(0x)?([0-9a-fA-F]+)$/);
-      if (match) {
-        const addrHex = match[2];
-        const valueHex = match[4];
-        
-        const addrValue = parseInt(addrHex, 16);
-        const intValue = parseInt(valueHex, 16);
-        
-        if (!isNaN(addrValue) && !isNaN(intValue)) {
-          // Valid Input: Store in raw register array
-          reg.raw.push({
-            addr: addrValue,
-            value_int32: intValue
-          });
-          
-          reg.parse_output.report.push({
-            severityLevel: sevC.infoVerbose,
-            msg: `Parsed register at address 0x${addrHex.toUpperCase()}: 0x${valueHex.toUpperCase()}`
-          });
-        } else {
-          // Invalid Input
-          reg.parse_output.report.push({
-            severityLevel: sevC.error,
-            msg: `Invalid hex values in line: "${trimmedLine}"`
-          });
-        }
+        // statistics
+        dumpLinesCountValuesValid++;
       } else {
+        // Invalid Input
         reg.parse_output.report.push({
           severityLevel: sevC.error,
-          msg: `Invalid line format: "${trimmedLine}". Expected format: "<address><space><value>, e.g. 0x0123 0x87654321"`
+          msg: `Invalid hex values in line: "${trimmedLine}"`
         });
+        // statistics
+        dumpLinesCountInvalid++;
       }
+    } else {
+      reg.parse_output.report.push({
+        severityLevel: sevC.error,
+        msg: `Invalid line format: "${trimmedLine}". Expected format: "<address><space><value>, e.g. 0x0123 0x87654321"`
+      });
+      // statistics
+      dumpLinesCountInvalid++;
     }
-  }
-  
+  } 
   // Add summary message
   const registerCount = reg.raw.length;
   if (registerCount > 0) {
@@ -259,7 +301,15 @@ function parseUserRegisterValues(userRegText, reg) {
     });
   }
 
-  return reg.parse_output;
+  // add statistics to parse_output
+  reg.parse_output.statistic = {};
+  reg.parse_output.statistic.parse = {
+    linesTotalCount: dumpLinesCountTotal,
+    linesBlankCount: dumpLinesCountBlank,
+    linesCommentCount: dumpLinesCountComment,
+    linesValuesValidCount: dumpLinesCountValuesValid,
+    linesInvalidFormatCount: dumpLinesCountInvalid
+  };
 }
 
 // ===================================================================================
@@ -282,7 +332,7 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
   
   // calculate number of nibbles of myRegLocalAddrMask (neeeded for porper hex-address printing)
   const localAddNibCnt = myRegLocalAddrMask.toString(16).length;
-  console.log(`Local address nibble count: ${localAddNibCnt}`);
+  console.log(`[mapRawRegAddrToNames] Local address nibble count: ${localAddNibCnt}`);
 
   // Mapping: Process each raw register entry
   for (const rawReg of reg.raw) {
@@ -296,7 +346,7 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
         // duplicate found, ignore it and warn user
         reg.parse_output.report.push({
           severityLevel: sevC.error,
-          msg: `Duplicate register address found: 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} (=> local address 0x${rawRegLocalAddr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')}). The duplicate will be ignored.`
+          msg: `Duplicate addr.: 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} (=> local address 0x${rawRegLocalAddr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')}). The duplicate will be ignored.`
         });
         continue;
       } else {
@@ -312,7 +362,7 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
         mappedRegCount++;
         reg.parse_output.report.push({
           severityLevel: sevC.infoVerbose,
-          msg: `Mapped reg. address 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} to ${regName} (${mapping.longName})`
+          msg: `Mapped   addr.: 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} to ${regName} (${mapping.longName})`
         });
       }
 
@@ -322,14 +372,14 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
       reservedRegCount++;
       reg.parse_output.report.push({
         severityLevel: sevC.infoVerbose,
-        msg: `Reserved register address: 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} - register will be ignored`
+        msg: `Reserved addr.: 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} - register will be ignored`
       });
     } else {
       // Unknown address
       unmappedRegCount++;
       reg.parse_output.report.push({
         severityLevel: sevC.warning,
-        msg: `Unknown register address: 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} - register will be ignored`
+        msg: `Unknown  addr.: 0x${rawReg.addr.toString(16).toUpperCase().padStart(localAddNibCnt, '0')} - register will be ignored`
       });
     }
   }
@@ -337,18 +387,25 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
   // Add summary message
   reg.parse_output.report.push({
     severityLevel: sevC.info,
-    msg: `Address mapping completed: ${mappedRegCount} mapped, ${reservedRegCount} reserved, ${unmappedRegCount} unknown`
+    msg: `Address mapping completed: ${mappedRegCount} reg. found, ${reservedRegCount} addr. reserved, ${unmappedRegCount} addr. unknown`
   });
   
+  // Find the longest register name (shortName) to format missing register report nicely
+  let longestRegNameLength = 0;
+  for (const addr in myRegAddrMap) {
+    const regName = myRegAddrMap[addr].shortName;
+    longestRegNameLength = Math.max(longestRegNameLength, regName.length);
+  }
+
   // report missing registers in register dump
   //    compare reg-object with registers in addressMap
-  let missingRegText = 'Missing registers in dump:';
+  let missingRegText = 'Missing registers in memory dump:';
   for (const addr in myRegAddrMap) {
     const regName = myRegAddrMap[addr].shortName;
     if (!(regName in reg)) {
-      // Register is NO present in reg object
+      // Register is NOT present in reg object
       const addrNum = Number(addr); // convert key to number for hex formatting
-      missingRegText += `\n0x${addrNum.toString(16).toUpperCase().padStart(localAddNibCnt, '0')}: ${regName.padEnd(5, ' ')} (${myRegAddrMap[addr].longName})`;
+      missingRegText += `\n0x${addrNum.toString(16).toUpperCase().padStart(localAddNibCnt, '0')}: ${regName.padEnd(longestRegNameLength, ' ')} (${myRegAddrMap[addr].longName})`;
       missingRegCount++;
     }
   }
@@ -361,12 +418,13 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
   }
 
   // store counters in reg.parse_output
-  reg.parse_output.mappedRegCount = mappedRegCount;
-  reg.parse_output.reservedRegCount = reservedRegCount;
-  reg.parse_output.unmappedRegCount = unmappedRegCount;
-  reg.parse_output.missingRegCount = missingRegCount;
+  reg.parse_output.statistic.map = {
+    mappedRegCount:   mappedRegCount,
+    reservedRegCount: reservedRegCount,
+    unmappedRegCount: unmappedRegCount,
+    missingRegCount:  missingRegCount
+  };
 
-  return reg;
 } // end mapRawRegistersToNames
 
 // ===================================================================================
@@ -504,12 +562,21 @@ function displayValidationReport(reg, reportVerbosity) {
     const suffix = isSelected(level) ? '' : ' (not printed)';
     reportText += `<span class="${getSeverityClass(level)}">${getSeveritySymbol(level)} ${label}: ${count.toString().padStart(3, ' ')}${suffix}</span>\n`;
   });
-  reportText += `Registers in memory dump: ${reg.parse_output.mappedRegCount} found, ` +
-                           `${reg.parse_output.reservedRegCount} reserved, ` + 
-                           `${reg.parse_output.unmappedRegCount} unknown, ` +
-                           `${reg.parse_output.decodedRegCount} decoded, ` +
-                           `${reg.parse_output.missingRegCount} missing, ` +
-                           `(Total addr. lines: ${reg.parse_output.mappedRegCount + reg.parse_output.reservedRegCount + reg.parse_output.unmappedRegCount})\n`;
+  reportText += `Registers in memory dump: ` +
+                           `${reg.parse_output.statistic.map.mappedRegCount + reg.parse_output.statistic.map.reservedRegCount + reg.parse_output.statistic.map.unmappedRegCount} total, ` + 
+                           `${reg.parse_output.statistic.map.mappedRegCount} mapped (` +
+                           `${reg.parse_output.statistic.map.decodedRegCount} decoded & ` +
+                           `${reg.parse_output.statistic.map.mappedRegCount - reg.parse_output.statistic.map.decodedRegCount} undecoded), ` +
+                           `${reg.parse_output.statistic.map.reservedRegCount} addr. reserved, ` + 
+                           `${reg.parse_output.statistic.map.unmappedRegCount} unknown, (` +
+                           `${reg.parse_output.statistic.map.missingRegCount} missing)\n`;
+  reportText += `Lines     in memory dump: ` +
+                           `${reg.parse_output.statistic.parse.linesTotalCount} total, ` +
+                           `${reg.parse_output.statistic.parse.linesCommentCount} comment, ` +
+                           `${reg.parse_output.statistic.parse.linesBlankCount} blank, ` +
+                           `${reg.parse_output.statistic.parse.linesValuesValidCount} valid, ` +
+                           `${reg.parse_output.statistic.parse.linesInvalidFormatCount} invalid\n`; 
+
   reportText += '<span class="report-header">' + '--- Reports ---------------------------------------' + '</span>\n';
 
   // Generate detailed reports; decide here whether to print or skip
@@ -942,6 +1009,15 @@ function loadRegisterValuesExample() {
       }
       break;
 
+    case 'X_CANB':
+      if (x_canb.loadExampleRegisterValues) {
+        exampleObj = x_canb.loadExampleRegisterValues();
+      } else {
+        console.warn(`[Warning] loadExampleRegisterValues not implemented in module: ${canIpModule}`);
+        exampleObj = loadDefaultExample();
+      }
+      break;
+
     default:
       console.warn(`[Warning] Example register values for ${canIpModule} not yet implemented`);
       exampleObj = loadDefaultExample();
@@ -1069,8 +1145,7 @@ function CountDecodedRegs(reg) {
   });
 
   // store values in reg.parse_output
-  reg.parse_output.decodedRegCount = decodedRegCount;
-
+  reg.parse_output.statistic.map.decodedRegCount = decodedRegCount;
 }
 
 // ===================================================================================
@@ -1085,6 +1160,7 @@ function processUserRegisterValues() {
   // 5. Generate HTML Data to be displayed from reg object
   //    and Display data from params, results, reg in HTML fields and SVGs
 
+  // Step 0: Clear reg and create objects ==================================================
   clearObject(reg); // Clear global register object (keep the reference)
   reg.general = {}; // Initialize general section
   reg.general.report = []; // Initialize report array
@@ -1100,6 +1176,7 @@ function processUserRegisterValues() {
     console.log(`[Error] CAN IP Module select field not found in HTML.`);
     return;
   }
+  // Add first report entry
   reg.general.report.push({
     severityLevel: sevC.infoHighlighted,
     msg: `CAN Module "${canIpModule}" assumed for register processing`
@@ -1120,13 +1197,13 @@ function processUserRegisterValues() {
   // get the text area content from HTML ----------------------
   const userRegText = document.getElementById('userInputRegisterValues').value;
 
-  // === Step 2: Parse the text and generate raw register array =============================
+  // === Step 2: PARSE the text and generate raw register array =============================
   parseUserRegisterValues(userRegText, reg);
   console.log('[Info] Step 1 - Parsed raw register values (reg.raw):', reg.raw);
 
-  // === Step 3: Map parsed Register addresses to Register Names ============================
+  // === Step 3: MAP parsed Register addresses to Register Names ============================
   // and
-  // === Step 4: Process reg object with CAN IP Module specific function ====================
+  // === Step 4: PROCESS reg object with CAN IP Module specific function ====================
     switch (canIpModule) {
     case 'M_CAN':
       // Step 3
@@ -1143,6 +1220,15 @@ function processUserRegisterValues() {
       // Step 4:
       x_can.processRegs(reg);
       break;
+
+    case 'X_CANB':
+      // Step 3
+      mapRawRegAddrToNames(reg, x_canb.regAddrMap, x_canb.resAddrArray, x_canb.regLocalAddrMask);
+      console.log('[Info] Step 2 - Mapped register values (reg object):', reg);
+      // Step 4:
+      x_canb.processRegs(reg);
+      break;
+
     default:
       reg.general.report.push({
         severityLevel: sevC.error, // error

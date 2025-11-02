@@ -1,4 +1,8 @@
-// M_CAN: Main script for processing CAN XL registers and calculating bit timing parameters
+// ===================================================================================
+// M_CAN
+// Main script for processing registers.
+// ===================================================================================
+
 import { getBits } from './help_functions.js';
 import { sevC } from './help_functions.js';
 import { getBinaryLineData } from './help_functions.js';
@@ -31,7 +35,7 @@ export function loadExampleRegisterValues() {
   const clock = 80;
   const registerString = `# M_CAN example register values
 # Format to use: 0xADDR 0xVALUE
-# 0xADDR is internal M_CAN address
+# 0xADDR is internal module address
 #        or global address (e.g. 32bit)
 0x000 0x32150323
 0x004 0x87654321

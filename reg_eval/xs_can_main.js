@@ -1,4 +1,8 @@
-// X_CAN: Main script for processing CAN XL registers and calculating bit timing parameters
+// ===================================================================================
+// XS_CAN
+// Main script for processing registers.
+// ===================================================================================
+
 import * as x_can_prt from './x_can_prt.js';
 import * as xs_can_prt from './x_can_prt.js';
 //import * as x_can_mh  from './x_can_mh.js';
@@ -51,7 +55,7 @@ export function loadExampleRegisterValues() {
   const clock = 160;
   const registerString = `# XS_CAN V1.0.0 example
 # Format to use: 0xADDR 0xVALUE
-# 0xADDR is internal X_CAN address
+# 0xADDR is internal module address
 #        or global address (e.g. 32bit)
 # Example contains intentional errors
 # MH ####################

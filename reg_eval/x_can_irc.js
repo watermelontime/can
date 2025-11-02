@@ -448,7 +448,7 @@ export function procRegsIRC(reg) {
     reg.SAFETY_ENA.fields = {};
     reg.SAFETY_ENA.report = [];
     // 1. Decode (MSB->LSB) bits
-    reg.SAFETY_ENA.fields.TOP_MUX_TO_ERR = getBits(v,28,28);
+    reg.SAFETY_ENA.fields.TOP_MUX_TO_ERR   = getBits(v,28,28);
     reg.SAFETY_ENA.fields.PRT_BUS_OFF      = getBits(v,23,23);
     reg.SAFETY_ENA.fields.PRT_E_PASSIVE    = getBits(v,22,22);
     reg.SAFETY_ENA.fields.PRT_BUS_ERR      = getBits(v,21,21);

@@ -1,4 +1,8 @@
-// X_CAN: Main script for processing CAN XL registers and calculating bit timing parameters
+// ===================================================================================
+// X_CAN
+// Main script for processing registers.
+// ===================================================================================
+
 import * as x_can_prt from './x_can_prt.js';
 import * as x_can_mh  from './x_can_mh.js';
 import * as x_can_irc from './x_can_irc.js';
@@ -16,25 +20,25 @@ export function processRegs(reg) {
   // c3) Process MH Global registers (VERSION, MH_CTRL, MH_CFG)
   x_can_mh.procRegsMhGlobal(reg);
 
-  // c3) Process MH TX FIFO Queue registers
+  // c4) Process MH TX FIFO Queue registers
   x_can_mh.procRegsMhTXFQ(reg);
 
-  // c4) Process MH TX Priority Queue registers
+  // c5) Process MH TX Priority Queue registers
   x_can_mh.procRegsMhTXPQ(reg);
 
-  // c5) Process MH RX FIFO Queue registers
+  // c6) Process MH RX FIFO Queue registers
   x_can_mh.procRegsMhRXFQ(reg);
 
-  // c6) Process TX and RX Filter registers
+  // c7) Process TX and RX Filter registers
   x_can_mh.procRegsMhRXTXFilter(reg);
 
-  // c7) Process IR CTRL and Status registers
+  // c8) Process IR CTRL and Status registers
   x_can_mh.procRegsMhIRCtrlStat(reg); 
 
-  // c8) Process Debug CTRL and Status registers
+  // c9) Process Debug CTRL and Status registers
   x_can_mh.procRegsMhDebugCtrlStat(reg);
 
-  // c9) Process IRC registers
+  // c10) Process IRC registers
   x_can_irc.procRegsIRC(reg);
 }
 
@@ -44,7 +48,7 @@ export function loadExampleRegisterValues() {
   const clock = 160;
   const registerString = `# X_CAN V0.5.6 example
 # Format to use: 0xADDR 0xVALUE
-# 0xADDR is internal X_CAN address
+# 0xADDR is internal module address
 #        or global address (e.g. 32bit)
 # Example contains intentional errors
 # MH ####################
@@ -366,7 +370,7 @@ export const regAddrMap = {
   0x960: { shortName: 'MODE', longName: 'Operating Mode Register' },
   0x964: { shortName: 'NBTP', longName: 'Arbitration Phase Nominal Bit Timing Register' },
   0x968: { shortName: 'DBTP', longName: 'CAN FD Data Phase Bit Timing Register' },
-  0x96C: { shortName: 'XBTP', longName: 'XAN XL Data Phase Bit Timing Register' },
+  0x96C: { shortName: 'XBTP', longName: 'CAN XL Data Phase Bit Timing Register' },
   0x970: { shortName: 'PCFG', longName: 'PWME Configuration Register' },
   // ====== IRC ======
   0xA00: { shortName: 'FUNC_RAW', longName: 'Functional raw event status register' },

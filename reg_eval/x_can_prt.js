@@ -25,7 +25,7 @@ export function procRegsPrtBitTiming(reg) {
     reg.general.bt_xldata = { set: {}, res: {} };
   }
 
-  // Rule: only assign reg.general.* values if they get meaningful values
+  // Rule: only assign reg.general.* values if they are meaningful
   //       leave values undefined, if a) according registers are not present
   //                                  b) configuration disables a feature (e.g. TMS=OFF => then do not provide PWM settings & results)
 
@@ -558,7 +558,7 @@ export function procRegsPrtOther(reg) {
     // Generate Version Report
     reg.PREL.report.push({
       severityLevel: sevC.infoHighlighted,
-      msg: `PREL: X_CAN PRT V${reg.PREL.fields.REL.toString(16).toUpperCase()}.${reg.PREL.fields.STEP.toString(16).toUpperCase()}.${reg.PREL.fields.SUBSTEP.toString(16).toUpperCase()}, Date ${reg.PREL.fields.DAY.toString(16).toUpperCase().padStart(2, '0')}.${reg.PREL.fields.MON.toString(16).toUpperCase().padStart(2, '0')}.202${reg.PREL.fields.YEAR.toString(16).toUpperCase()}`
+      msg: `PREL: PRT V${reg.PREL.fields.REL.toString(16).toUpperCase()}.${reg.PREL.fields.STEP.toString(16).toUpperCase()}.${reg.PREL.fields.SUBSTEP.toString(16).toUpperCase()}, Date ${reg.PREL.fields.DAY.toString(16).toUpperCase().padStart(2, '0')}.${reg.PREL.fields.MON.toString(16).toUpperCase().padStart(2, '0')}.202${reg.PREL.fields.YEAR.toString(16).toUpperCase()}`
     });
   }
 
