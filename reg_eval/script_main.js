@@ -6,7 +6,9 @@
 // TODO: better structure reg-object: problem/ugly: non-register fields are mixed with registers (flat) => non-reg stuff should be separted
 // TODO: donate button
 // TODO: Valiation report severity level rename highlighted to bold
-
+// TODO: X_CANB: extend PRT Decoding
+// TODO: X_CANB: add MRAM CTRL decoding
+// TODO: XS_CAN: add decoding & everything
 
 // ===================================================================
 // === HOW TO ADD NEW CAN IP MODULE? =================================
@@ -321,7 +323,7 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
 
   // Check if parse_output exists (in reg object)
   if (!reg.parse_output) {
-    console.warn('[X_CAN] [Warning, mapRawRegistersToNames()] reg.parse_output not found in reg object. Skipping mapping of <raw registers> to <names>. parseUserRegisterValues(userRegText, reg) must be called before this function.');
+    console.warn('[Warning, mapRawRegistersToNames()] reg.parse_output not found in reg object. Skipping mapping of <raw registers> to <names>. parseUserRegisterValues(userRegText, reg) must be called before this function.');
     return;
   }
   
@@ -1204,7 +1206,7 @@ function processUserRegisterValues() {
   // === Step 3: MAP parsed Register addresses to Register Names ============================
   // and
   // === Step 4: PROCESS reg object with CAN IP Module specific function ====================
-    switch (canIpModule) {
+  switch (canIpModule) {
     case 'M_CAN':
       // Step 3
       mapRawRegAddrToNames(reg, m_can.regAddrMap, m_can.resAddrArray, m_can.regLocalAddrMask);
@@ -1234,6 +1236,7 @@ function processUserRegisterValues() {
         severityLevel: sevC.error, // error
         msg: `Decoding of "${canIpModule}" is not yet implemented.`
       });
+      // remember that no registers were processed
       break;
   }
   console.log('[Info] Registers with data and reports (reg object):', reg);
