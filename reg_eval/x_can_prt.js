@@ -472,7 +472,7 @@ export function procRegsPrtBitTiming(reg) {
       if (reg.PCFG.fields.PWML <= reg.PCFG.fields.PWMS) {
         reg.PCFG.report.push({
           severityLevel: sevC.error, // error
-          msg: `PWM Phase Long (PCFG.PWML = ${reg.PCFG.fields.PWML}) must be greater than PWM Phase Short (PCFG.PWMS = ${reg.PCFG.fields.PWMS})`
+          msg: `PWM Phase Long (PCFG.PWML = ${reg.PCFG.fields.PWML}) must be larger than PWM Phase Short (PCFG.PWMS = ${reg.PCFG.fields.PWMS})`
         });
       } else {
         // Check: PWML >= 2*PWMS
@@ -482,14 +482,6 @@ export function procRegsPrtBitTiming(reg) {
             msg: `PWM Phase Long (PCFG.PWML = ${reg.PCFG.fields.PWML}) is only slightly larger than PWM Phase Short (PCFG.PWMS = ${reg.PCFG.fields.PWMS}). Recommended are PWML = 75%, PWMS= 25% of PWM length.`
           });
         }
-      }
-
-      // Check: PWML > PWMS 
-      if (reg.PCFG.fields.PWML <= reg.PCFG.fields.PWMS) {
-        reg.PCFG.report.push({
-          severityLevel: sevC.error, // error
-          msg: `PWM Phase Long (PCFG.PWML = ${reg.PCFG.fields.PWML}) must be greater than PWM Phase Short (PCFG.PWMS = ${reg.PCFG.fields.PWMS})`
-        });
       }
 
     } // end if XLOE || XLTR

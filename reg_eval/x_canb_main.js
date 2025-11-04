@@ -41,59 +41,94 @@ export function processRegs(reg) {
 // Example Register Values for X_CAN PRT
 export function loadExampleRegisterValues() {
   const clock = 160;
-  const registerString = `# X_CANB V0.5.4 example
+  const registerString = `# X_CANB V0.8.0 example
 # Format to use: 0xADDR 0xVALUE
 # 0xADDR is internal module address
 #        or global address (e.g. 32bit)
 # MRAM CTRL ##########
-0xA0020900 0x00000000
-0xA0020904 0x00000000
-0xA0020908 0x00000000
-0xA002090C 0x00000000
-0xA0020910 0x00000000
-0xA0020914 0x00000000
-0xA0020918 0x00000000
-0xA002091C 0x00000000
-0xA0020920 0x00000000
+0xA0000900 0x0501FC04
+0xA0000904 0x00000000
+0xA0000908 0x00000000
+0xA000090C 0x00000000
+0xA0000910 0x00000000
+0xA0000914 0x00000000
+0xA0000918 0x00000000
+0xA000091C 0x00000000
+0xA0001920 0x0501FC04
+0xA0000924 0x00000000
+0xA0000928 0x00000000
+0xA000092C 0x00000000
+0xA0000930 0x00000000
+0xA0000934 0x00000000
+0xA0000938 0x00000000
+0xA000093C 0x00000000
+0xA0000940 0x00000000
+0xA0000944 0x00000000
+0xA0000948 0x00000000
+0xA000094C 0x00000000
+0xA0000950 0x00000000
+0xA0000954 0x00000000
+0xA0000958 0x00000000
+0xA000095C 0x00000000
+0xA0000960 0x00000000
+0xA0000964 0x00000000
+0xA0000968 0x00000000
+0xA000096C 0x00000000
+0xA0000970 0x00000000
+0xA0000974 0x00000000
+0xA0000978 0x00000000
+0xA000097C 0x00000000
+0xA0000980 0x00000000
+0xA0000984 0x00000000
+0xA0000988 0x00000000
+0xA000098C 0x00000000
+0xA0000990 0x00000000
+0xA0000994 0x00000000
+0xA0000998 0x00000000
+0xA000099C 0x00000000
+0xA00009A0 0x00000000
+0xA00009A4 0x00000000
+0xA00009A8 0x00000000
+0xA00009AC 0x00000000
+0xA00009B0 0x00000000
+0xA00009B4 0x00000000
+0xA00009B8 0x00000000
+0xA00009BC 0x00000000
+0xA00009C0 0x00000000
+0xA00009C4 0x00000000
+0xA00009C8 0x00000000
+0xA00009CC 0x00000000
+0xA00009D0 0x00000000
+0xA00009D4 0x00000000
+0xA00009D8 0x00000000
+0xA00009DC 0x00000000
+0xA00009E0 0x00000000
+0xA00009E4 0x00000000
+0xA00009E8 0x00000000
+0xA00009EC 0x00000000
+0xA00009F0 0x00000000
+0xA00009F4 0x00000000
+0xA00009F8 0x00000000
+0xA00009FC 0x00000000
 # MH & IRC ###########
-0xA0020A00 0x87654321
-0xA0020A04 0x00000000
-0xA0020A08 0x00000000
-0xA0020A0C 0x00000000
-0xA0020A10 0x00000000
-0xA0020A80 0x00000206
-0xA0020A84 0x00000000
-0xA0020A88 0x00000777
+0xA0000A00 0x87654321
+0xA0000A04 0x00000000
+0xA0000A08 0x00000000
+0xA0000A10 0x00000001
+0xA0000A80 0x00001000
+0xA0000A88 0x0000031F
 # PRT ################
-0xA0020C00 0x87654321
-0xA0020C04 0x05410817
-0xA0020C08 0x00000C11
-# reserved from here
-0xA0020C0C 0x00000000
-0xA0020C10 0x00000000
-0xA0020C14 0x00000000
-0xA0020C18 0x00000000
-0xA0020C1C 0x00000000
-# reserved up to here
-0xA0020C20 0x00000100
-# reserved from here
-0xA0020C24 0x00000000
-0xA0020C28 0x00000000
-0xA0020C2C 0x00000000
-0xA0020C30 0x00000000
-0xA0020C34 0x00000000
-0xA0020C38 0x00000000
-0xA0020C3C 0x00000000
-# reserved up to here
-0xA0020C40 0x00000000
-0xA0020C44 0x00000000
-0xA0020C48 0x00000000
-0xA0020C4c 0x00000008
-0xA0020C60 0x00000007
-0xA0020C64 0x00FE3F3F
-0xA0020C68 0x28272626
-0xA0020C6c 0x0A090808
-0xA0020C70 0x00000C04`;
+0xA0000C00 0x87654321
+0xA0000C04 0x08050917
+0xA0000C08 0x00000C11
+0xA0000C20 0x00000100
+0xA0000C48 0x00000000
+0xA0000C4C 0x00000008
+0xA0000C60 0x00000007
+0xA0000C64 0x00FE3F3F
+0xA0000C68 0x100F0E0E
+0xA0000C6C 0x0A090808
+0xA0000C70 0x00031700`;
 
 return {exampleRegisterValues: registerString, clockFrequency: clock};
 }
@@ -142,7 +177,7 @@ export const regAddrMap = {
 export const resAddrArray = [
   { lowerResAddr: 0x000, upperResAddr: 0x8FC }, // Virtual Buffers (feels like reserved)  (0x000...) 
 
-  { lowerResAddr: 0x924, upperResAddr: 0x97C }, // MRAM CTRL    (0x900...)
+  { lowerResAddr: 0x924, upperResAddr: 0x9FC }, // MRAM CTRL    (0x900...)
 
   { lowerResAddr: 0xA14, upperResAddr: 0xA7C }, // MH           (0xA00...)
   { lowerResAddr: 0xA8C, upperResAddr: 0xAFC }, // IRC          (0xA80...)
@@ -163,7 +198,170 @@ export const resAddrArray = [
 // ===================================================================================
 // MRAM CTRL (MRAM Area for FIFO configuration)
 function procMramCtrl(reg) {
-  // TODO
+  // Decode TX FIFO control words TF0..TF7
+  // Decode RX FIFO control word  RF0
+
+  // create fifo summary collection
+  // Prepare summary collection for TX/RX FIFO queues
+  let fifoSummaryRows = [];
+
+  // FIFO decoder function
+  function decodeFifo(fifoName) {
+    if (!(fifoName in reg) || reg[fifoName].int32 === undefined) return;
+    const v = reg[fifoName].int32 >>> 0;
+
+    // 0. Extend structure
+    reg[fifoName].fields = {};
+    reg[fifoName].report = [];
+
+    // 1. Extract fields (based on assumptions above)
+    const RSV = getBits(v, 31, 31); // Reserved
+    const EPI = getBits(v, 30, 26); // Element Put Index
+    const FS  = getBits(v, 25, 21); // FIFO Size
+    const EGI = getBits(v, 20, 16); // Element Get Index
+    const DS  = getBits(v, 15, 10); // Data Size (encoded, value+1) in 8-word units
+    const SA  = getBits(v,  9,  0); // Start Address (granularity: 16 words)
+
+    reg[fifoName].fields = { SA, DS, EGI, EPI, RSV, FS };
+
+    // 2. Derived metrics
+    const byteAddr = SA * 16 * 4; // byte address in MRAM
+    const isRx = fifoName.startsWith('RF');
+
+    const payloadBytesPerElem = (DS + 1) * 8 * 4;   // DS is in 8-word granularity
+    // TX: (2xHeader + 1xAcceptance + Data) -> words = 3 + (DS+1)*8
+    // RX: (2xHeader + 2xTimeStamp + 1xAcceptance + Data) -> words = 5 + (DS+1)*8
+    const elemSizeByte = (isRx ? (5*4) : (3*4)) + payloadBytesPerElem;
+
+    const enabled = FS > 0;
+    const fifoElements = enabled ? (FS + 1) : 0; // special case: FS=0 => disabled, 0 reserved
+    const reservedBytes = fifoElements * elemSizeByte;
+
+    // Fill level (runtime view), protect FS=0
+    let fillLevel = 0;
+    let statusTxt = enabled ? 'enabled' : 'disabled (FS=0)';
+    let isEmpty = false;
+    let isFull = false;
+
+    if (enabled) {
+      if (EPI === EGI) {
+        fillLevel = 0; isEmpty = true;
+      } else if (EPI > EGI) {
+        fillLevel = EPI - EGI;
+      } else /* EPI < EGI */ {
+        fillLevel = ((FS + 1) - EGI) + EPI;
+      }
+      // Full when EPI == (EGI - 1) modulo (FS+1)
+      const modulo = fifoElements;
+      isFull = ((EPI + 1) % modulo) === EGI; // same as "EPI = EGI - 1" from manual
+      if (isEmpty) statusTxt += ', empty';
+      if (isFull) statusTxt += ', full';
+    }
+
+    // 3. Generate human-readable register report
+    const nm = reg[fifoName].name_long;
+    const header = `${fifoName}: ${nm} (0x${reg[fifoName].addr !== undefined ? reg[fifoName].addr.toString(16).toUpperCase().padStart(3,'0') : '---'}: 0x${v.toString(16).toUpperCase().padStart(8,'0')})`;
+    const body = [
+      `[SA ] Start Address        = ${SA.toString(10).padEnd(5,' ')} (MRAM byte addr     = SA*16*4 byte)   = 0x${byteAddr.toString(16).toUpperCase().padStart(8,'0')}`,
+      `[DS ] Data Size            = ${DS.toString(10).padEnd(5,' ')} (Elem. Payload size = (DS+1)*8*4 byte = ${payloadBytesPerElem} byte)`,
+      `[EGI] Element Get Index    = ${EGI.toString(10).padEnd(5,' ')}`,
+      `[EPI] Element Put Index    = ${EPI.toString(10).padEnd(5,' ')}`,
+      `[FS ] FIFO Size            = ${FS.toString(10).padEnd(5,' ')} (${enabled ? `${fifoElements} elements used, max fill = ${FS})` : 'FIFO disabled, no elements reserved)'}`,
+      `- FIFO Element Size [byte] = ${elemSizeByte.toString(10).padEnd(5,' ')} (= (3+(DS+1)*8)*4 byte)`,
+      `- FIFO Size [byte]         = ${reservedBytes.toString(10).padEnd(5,' ')}`,
+      `- Fill Level               = ${fillLevel}`,
+      `- Status [ena/full/empty]  = ${statusTxt}`,
+    ].join('\n');
+
+    reg[fifoName].report.push({ severityLevel: sevC.info, msg: `${header}\n${body}` });
+
+    // Basic validations
+    const notes = [];
+    if (enabled) {
+      if (SA < 4) notes.push(`${fifoName} Start Address uses 0..3 which conflict with Control Partition — not allowed`);
+      if (EPI > FS) notes.push(`${fifoName} EPI (${EPI}) exceeds FS (${FS})`);
+      if (EGI > FS) notes.push(`${fifoName} EGI (${EGI}) exceeds FS (${FS})`);
+    }
+
+    for (const n of notes) {
+      reg[fifoName].report.push({ severityLevel: sevC.error, msg: `${fifoName}: ${n}` });
+    }
+
+    // 4. Collect summary row
+    fifoSummaryRows.push({
+      name: fifoName,
+      saByte: byteAddr,
+      enabled: enabled ? 1 : 0,
+      sizeElem: enabled ? fifoElements : null,
+      maxFill: enabled ? FS : null,
+      totalBytes: enabled ? reservedBytes : null,
+      elemSizeBytes: enabled ? elemSizeByte : null,
+      dsVal: enabled ? DS : null,
+      dsBytes: enabled ? payloadBytesPerElem : null,
+      epi: enabled ? EPI : null,
+      egi: enabled ? EGI : null,
+      full: enabled ? (isFull ? 1 : 0) : null,
+      empty: enabled ? (isEmpty ? 1 : 0) : null,
+      isRx
+    });
+  };
+
+  // decode TX FIFOs
+  for (let i = 0; i < 8; i++) {
+    decodeFifo(`TF${i}`);
+  }
+  // decode RX FIFO
+  decodeFifo(`RF0`);
+
+  // Add FIFO summary report (TX and RX combined)
+  {
+    // helper to format numbers or '-' and hex addresses
+    const fmtDash = (v, padBy) => (v === null || v === undefined ? '-'.padStart(padBy,' ') : String(v).padStart(padBy,' '));
+    const fmtNum = (v, w) => (v === null || v === undefined ? '-'.padStart(w,' ') : String(v).padStart(w,' '));
+    const fmtHex = (v, padBy) => `0x${(v >>> 0).toString(16).toUpperCase().padStart(padBy,'0')}`;
+
+  // Use natural decoding order (no sorting)
+  const rows = Array.isArray(fifoSummaryRows) ? fifoSummaryRows : [];
+
+    // Build summary text
+    const indent = '      ';
+    const header = [
+      `TX/RX FIFO Queues Summary`,
+      `${indent}FIFO  SA      Ena  Size    Max Fill  Size    Elem Size  DS  DS      EPI  EGI  full  empty`,
+      `${indent}      [byte]       [Elem]  [Elem]    [byte]  [byte]         [byte]   `,
+      `${indent}----------------------------------------------------------------------------------------------`
+    ].join('\n');
+
+    const lines = rows.map(r => {
+      const sa = fmtHex(r.saByte, 4);
+      const ena = r.enabled ? 1 : 0;
+      const sizeElem = fmtDash(r.sizeElem, 2);
+      const maxFill = fmtDash(r.maxFill, 2);
+      const totalB = fmtDash(r.totalBytes, 5);
+      const elemB = fmtDash(r.elemSizeBytes, 4);
+      const dsVal = fmtDash(r.dsVal, 2);
+      const dsB = fmtDash(r.dsBytes, 4);
+      const epi = fmtDash(r.epi, 2);
+      const egi = fmtDash(r.egi, 2);
+  const full = fmtDash(r.full, 1);
+  const empty = fmtDash(r.empty, 1);
+
+      // spacing tuned to resemble provided example
+      return `${indent}${r.name.padEnd(4,' ')}  ${sa}  ${String(ena)}    ${String(sizeElem)}       ${String(maxFill)}       ${String(totalB)}   ${String(elemB)}       ${String(dsVal)}  ${String(dsB)}    ${String(epi)}   ${String(egi)}   ${String(full)}     ${String(empty)}`;
+    }).join('\n');
+
+    const summaryMsg = `${header}\n${lines}`;
+
+    // Attach summary to the last available FIFO (prefer later entries)
+    let attachTo = null;
+    for (let i = rows.length - 1; i >= 0; i--) {
+      const name = rows[i].name;
+      if (reg[name] && Array.isArray(reg[name].report)) { attachTo = name; break; }
+    }
+    if (attachTo) {
+      reg[attachTo].report.push({ severityLevel: sevC.infoHighlighted, msg: summaryMsg });
+    }
+  }
 }
 
 // ===================================================================================
