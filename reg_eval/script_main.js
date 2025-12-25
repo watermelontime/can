@@ -1,5 +1,5 @@
 // TODO
-// TODO: use the same function for PRT register decoding of X_CAN, XS_CAN, and X_CANB (decode individual registers via separate function)
+// TODO: use the same function for PRT register decoding of X_CAN, XS_CAN, and X_CANB (decode individual registers via separate functions)
 // TODO: add version number and version history that is shown on HTML
 // TODO: add howToUse
 // TODO: X_CAN: LMEM Memory Map
@@ -7,13 +7,12 @@
 // TODO: donate button
 // TODO: Valiation report severity level rename highlighted to bold
 // TODO: X_CANB: extend PRT Decoding
-// TODO: X_CANB: add MRAM CTRL decoding
 // TODO: XS_CAN: add decoding & everything
 
 // ===================================================================
 // === HOW TO ADD NEW CAN IP MODULE? =================================
 // This is how to add a new CAN IP Module to the register evaluation tool.
-// STEP A ###### Create <module_name>_main.js file reg_eval/ folder.
+// STEP A ###### Create <module_name>_main.js file in reg_eval/ folder.
 // 1. Export these data structures:
 //    - regAddrMap: Object that maps <local register addresses> to <register names> and <long register names>
 //    - resAddrArray: Array of reserved address ranges {lowerResAddr, upperResAddr}
@@ -32,14 +31,15 @@
 //      * reg.general.bt_global ==> information about global settings
 //      => see X_CAN as example for detailed names and formats of these data structures
 //    - RULE: ~ only assign reg.general.* values if they are meaningful
-//            ~ leave values undefined, if a) according registers are not present
-//                                         b) configuration disables a feature (e.g. TMS=OFF => then do not provide PWM settings & results)
+//            ~ do not create values, if a) according registers are not present
+//                                       b) configuration disables a feature (e.g. TMS=OFF => then do not provide PWM settings & results)
 // STEP B ###### Modify this file script_main.js:
-// 1. Import the new module file *.js
-// 2. Extend the processUserRegisterValues() function to call the new module's functions if user selects <NEWMODULE>
-// 3. Extend the loadRegisterValuesExample() function to call the new module's example register values function if user selects <NEWMODULE>
+//   1. Import the new module file *.js
+//   2. Extend the processUserRegisterValues() function to call the new module's functions if user selects <NEWMODULE>
+//   3. Extend the loadRegisterValuesExample() function to call the new module's example register values function if user selects <NEWMODULE>
+//
 // STEP C ###### Update the HTML file index.html:
-// 1. Update the CAN Module select field to include the new module name <NEWMODULE>
+//   1. Update the CAN Module select field to include the new module name <NEWMODULE>
 // ===================================================================
 
 

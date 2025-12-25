@@ -5,7 +5,7 @@ import { sevC } from './help_functions.js';
 // TODO: check bit timing check rules, some things might be missing
 
 // ==================================================================================
-// Process Nominal Bit Timing Register: Extract parameters, validate ranges, calculate results, generate report
+// Process Bit Timing Register: Extract parameters, validate ranges, calculate results, generate report
 export function procRegsPrtBitTiming(reg) {
 
   // Initialize bit timing structure in reg.general
@@ -719,7 +719,7 @@ export function procRegsPrtOther(reg) {
     // 2. Generate human-readable register report (MSB -> LSB)
     reg.CTRL.report.push({
       severityLevel: sevC.info,
-      msg: `CTRL: ${reg.CTRL.name_long} (0x${reg.CTRL.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
+      msg: `CTRL: ${reg.CTRL.name_long} (0x${reg.CTRL.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')}) a write-only register\n` +
            `[TEST] Enable Test Mode Command = ${reg.CTRL.fields.TEST}\n` +
            `[SRES] Software Reset Command   = ${reg.CTRL.fields.SRES}\n` +
            `[STRT] Start Command            = ${reg.CTRL.fields.STRT}\n` +

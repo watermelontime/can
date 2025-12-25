@@ -8,7 +8,8 @@ import { getBits } from './help_functions.js';
 import { sevC } from './help_functions.js';
 import { getBinaryLineData } from './help_functions.js';
 
-// TODO: add PREL version dependent PRT register decoding
+// Strategy: No PREL version dependent PRT register decoding
+//           => solved by simple approach: always decode all registers, even if bits not present in older versions
 
 // ===================================================================================
 // X_CAN: Process User Register Values: parse, validate, calculate results, generate report
@@ -24,10 +25,9 @@ export function processRegs(reg) {
   x_can_prt.procRegsPrtOther(reg);
 
   // c3) Process PRT: additional fields in X_CANB PRT registers
-  // TODO: process additional PRT Register Fields for X_CANB
+  procRegsPrtBitTimingXCanBExtra(reg);
 
   // c4) Process MRAM Control
-  // TODO
   procMramCtrl(reg);
 
   // c5) Process MH Global registers (VERSION, MH_CTRL, MH_CFG)
@@ -122,6 +122,7 @@ export function loadExampleRegisterValues() {
 0xA0000C04 0x08050917
 0xA0000C08 0x00000C11
 0xA0000C20 0x00000100
+0xA0000C44 0x00000000
 0xA0000C48 0x00000000
 0xA0000C4C 0x00000008
 0xA0000C60 0x00000007
@@ -194,6 +195,141 @@ export const resAddrArray = [
 
 // ==== Exported Funktions/Structures up to here =====================================
 // ===================================================================================
+
+// ==================================================================================
+// Process Extra Registers of Bit Fields of X_CANB
+function procRegsPrtBitTimingXCanBExtra(reg) {
+
+  // Rule: only assign reg.general.* values if they are meaningful
+  //       leave values undefined, if a) according registers are not present
+  //                                  b) configuration disables a feature (e.g. TMS=OFF => then do not provide PWM settings & results)
+
+  // === MODE: Extract the additional parameters from this register ==========================
+  if ('MODE' in reg && reg.MODE.int32 !== undefined && reg.MODE.fields !== undefined) {
+    // Entry Condition: Checks if main PRT Decoding was already processed
+
+    const regValue = reg.MODE.int32;
+
+    // 0. Extend existing register structure
+    if (reg.MODE.fields === undefined) {
+      reg.MODE.report = {}; 
+    }
+    if (reg.MODE.report === undefined) {
+      reg.MODE.report = []; // Initialize report array
+    }
+  
+    // 1. Decode all individual bits of MODE register
+    reg.MODE.fields.TXSC = getBits(regValue, 31, 24);  // Transmit Traffic Shaping: Configuration
+    reg.MODE.fields.TXSM = getBits(regValue, 23, 22);  // Transmit Traffic Shaping: Operating Mode
+    reg.MODE.fields.EVAE = getBits(regValue, 21, 21);  // Transmit Traffic Shaping: Event Enable for Idle Bit
+    reg.MODE.fields.EVBE = getBits(regValue, 20, 20);  // Transmit Traffic Shaping: Event Enable for Rx Started
+    reg.MODE.fields.EVCE = getBits(regValue, 19, 19);  // Transmit Traffic Shaping: Event Enable for Rx Successful
+    reg.MODE.fields.EV1E = getBits(regValue, 18, 18);  // Transmit Traffic Shaping: Event Enable for Tx Started
+    reg.MODE.fields.EV2E = getBits(regValue, 17, 17);  // Transmit Traffic Shaping: Event Enable for Tx Error
+    reg.MODE.fields.EV3E = getBits(regValue, 16, 16);  // Transmit Traffic Shaping: Event Enable for Tx Successful
+
+    reg.MODE.fields.EAFF = getBits(regValue, 14, 14);  // Enable All Frame Formats
+    reg.MODE.fields.TSSE = getBits(regValue, 13, 13);  // Transceiver Sharing Switch Mode Enable
+    reg.MODE.fields.LCHB = getBits(regValue, 12, 12);  // CAN FD Light Commander High Bit Rate Mode
+
+    // 2. Store MODE-related bit timing settings in general structure
+    //   (no extra settings yet for X_CANB)
+
+    // 3. Generate human-readable register report
+    reg.MODE.report.push({
+      severityLevel: sevC.info, // info
+          msg: `MODE part 2: ${reg.MODE.name_long} (0x${reg.MODE.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')}) - X_CANB V0.8.0 and later\n` +
+               `[TXSC] Tx Traffic Shaping Config (TX opportunities pause) = 0x${reg.MODE.fields.TXSC.toString(16).toUpperCase().padStart(2,'0')} (decimal: ${reg.MODE.fields.TXSC})\n` +
+               `[TXSM] Tx Traffic Shaping Mode                            = ${reg.MODE.fields.TXSM} (` +
+               `${reg.MODE.fields.TXSM === 0 ? 'Beacon Mode not active' :
+                  reg.MODE.fields.TXSM === 1 ? 'Beacon is CBFF' :
+                  reg.MODE.fields.TXSM === 2 ? 'Beacon is FBFF' :
+                  reg.MODE.fields.TXSM === 3 ? 'Beacon is XLFF' : 'reserved'})\n` +
+               `[EVAE] Tx Traffic Shaping: Event Enable for Idle Bit      = ${reg.MODE.fields.EVAE}\n` +
+               `[EVBE] Tx Traffic Shaping: Event Enable for Rx Started    = ${reg.MODE.fields.EVBE}\n` +
+               `[EVCE] Tx Traffic Shaping: Event Enable for Rx Successful = ${reg.MODE.fields.EVCE}\n` +
+               `[EV1E] Tx Traffic Shaping: Event Enable for Tx Started    = ${reg.MODE.fields.EV1E}\n` +
+               `[EV2E] Tx Traffic Shaping: Event Enable for Tx Error      = ${reg.MODE.fields.EV2E}\n` +
+               `[EV3E] Tx Traffic Shaping: Event Enable for Tx Successful = ${reg.MODE.fields.EV3E}\n` +
+               `[EAFF] Enable All Frame Formats                           = ${reg.MODE.fields.EAFF}\n` +
+               `[TSSE] Transceiver Sharing Switch Enable                  = ${reg.MODE.fields.TSSE}\n` +
+               `[LCHB] FD light Commander High Bit Rate mode              = ${reg.MODE.fields.LCHB}`
+      });
+
+      // Check: Traffic Shaping meaningful configuration?
+      //   In "No Beacon" mode the following events for count-down should be configured
+      //   EVAE = 1 (Idle Bit)
+      //   EVBE = 1 (Rx Started)
+      //   EV2E = 1 (Tx Error)
+      //   EV3E = 1 (Tx Successful)
+      if (reg.PCFG.fields.TXSC > 0 && // TX Shaping active
+          reg.MODE.fields.TXSM === 0  // No Beacon mode
+          ) {
+        if (reg.MODE.fields.EVAE === 1 && // ON  Idle Bit
+            reg.MODE.fields.EVBE === 1 && // ON  Rx Started
+            reg.MODE.fields.EVCE === 0 && // OFF Rx Successful
+            reg.MODE.fields.EV1E === 0 && // OFF Tx Started
+            reg.MODE.fields.EV2E === 1 && // ON  Tx Error
+            reg.MODE.fields.EV3E === 1    // ON  Tx Successful
+        ) {
+            // meaningful configuration
+        } else {
+          // not meaningful configuration
+          reg.PCFG.report.push({
+            severityLevel: sevC.warning, // warning
+            msg: `TX Traffic Shaping: Configuration might not be optimal.\n` +
+                  `  In "No Beacon" mode the following events are recommended to be enabled:\n` +
+                  `    EVAE = 1 (Idle Bit)      [currently it is ${reg.MODE.fields.EVAE}]\n` +
+                  `    EVBE = 1 (Rx Started)    [currently it is ${reg.MODE.fields.EVBE}]\n` +
+                  `    EVCE = 0 (Rx Successful) [currently it is ${reg.MODE.fields.EVCE}]\n` +
+                  `    EV1E = 0 (Tx Started)    [currently it is ${reg.MODE.fields.EV1E}]\n` +
+                  `    EV2E = 1 (Tx Error)      [currently it is ${reg.MODE.fields.EV2E}]\n` +
+                  `    EV3E = 1 (Tx Successful) [currently it is ${reg.MODE.fields.EV3E}]`
+          });
+        }
+      }
+  } // end if MODE
+
+  // === PCFG: Extract the additional parameters from this register ==============
+  if ('PCFG' in reg && reg.PCFG.int32 !== undefined && reg.PCFG.fields !== undefined) {
+    const regValue = reg.PCFG.int32;
+
+    // 0. Extend existing register structure
+    if (reg.PCFG.fields === undefined) {
+      reg.PCFG.report = {}; 
+    }
+    if (reg.PCFG.report === undefined) {
+      reg.PCFG.report = []; // Initialize report array
+    }
+
+    // 1. Decode all individual bits of PCFG register
+    reg.PCFG.fields.BCID_28_19 = getBits(regValue, 31, 22); // BCID[28:19]
+    reg.PCFG.fields.BCID_18    = getBits(regValue, 15, 15); // BCID[18] (LSB in PCFG)
+    reg.PCFG.fields.BRRS       = getBits(regValue, 14, 14); // Beacon RRS bit
+    reg.PCFG.fields.BCIE       = getBits(regValue, 7, 7);   // Enable BCID incl. RRS-bit
+    reg.PCFG.fields.BCRE       = getBits(regValue, 6, 6);   // Any message with RRS=1 is Beacon
+
+    // Helper: top 11 bits of BCID covered in PCFG (bits [28:19] and [18])
+    reg.PCFG.fields.BCID_full = (reg.PCFG.fields.BCID_28_19 << 1) | reg.PCFG.fields.BCID_18;
+
+    // 2. Store PWM settings in XL data structure
+    reg.general.bt_xldata.set.pwm_offset = reg.PCFG.fields.PWMO;
+    reg.general.bt_xldata.set.pwm_long = reg.PCFG.fields.PWML;
+    reg.general.bt_xldata.set.pwm_short = reg.PCFG.fields.PWMS;
+
+    // 3. Generate human-readable register report
+    reg.PCFG.report.push({
+      severityLevel: sevC.info, // info
+        msg: `PCFG part 2: ${reg.PCFG.name_long} (0x${reg.PCFG.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')}) - X_CANB V0.8.0 and later\n` +
+             `[BCID] Beacon ID [28:18] (11 bit)              = 0x${reg.PCFG.fields.BCID_full.toString(16).toUpperCase().padStart(3,'0')}\n` +
+             `[BRRS] Beacon RRS bit                          = ${reg.PCFG.fields.BRRS}\n` +
+             `[BCIE] Enable BCID with RRS bit match          = ${reg.PCFG.fields.BCIE} (${reg.PCFG.fields.BCIE ? 'BCID and BRRS must match' : 'only BCID must match CAN ID'})\n` +
+             `[BCRE] Enable any message with RRS=1 as Beacon = ${reg.PCFG.fields.BCRE}`
+    });
+
+  } // end if PCFG
+
+}
 
 // ===================================================================================
 // MRAM CTRL (MRAM Area for FIFO configuration)
