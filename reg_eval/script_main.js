@@ -402,13 +402,13 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
 
   // report missing registers in register dump
   //    compare reg-object with registers in addressMap
-  let missingRegText = 'Missing registers in memory dump:';
+  let missingRegTextArray = [];
   for (const addr in myRegAddrMap) {
     const regName = myRegAddrMap[addr].shortName;
     if (!(regName in reg)) {
       // Register is NOT present in reg object
       const addrNum = Number(addr); // convert key to number for hex formatting
-      missingRegText += `\n0x${addrNum.toString(16).toUpperCase().padStart(localAddNibCnt, '0')}: ${regName.padEnd(longestRegNameLength, ' ')} (${myRegAddrMap[addr].longName})`;
+      missingRegTextArray.push(`0x${addrNum.toString(16).toUpperCase().padStart(localAddNibCnt, '0')}: ${regName.padEnd(longestRegNameLength, ' ')} (${myRegAddrMap[addr].longName})`);
       missingRegCount++;
     }
   }
@@ -416,7 +416,8 @@ function mapRawRegAddrToNames(reg, myRegAddrMap, myResAddrArray, myRegLocalAddrM
   if (missingRegCount > 0) {
     reg.parse_output.report.push({
       severityLevel: sevC.warning,
-      msg: missingRegText
+      msg: `Missing registers in memory dump (amount: ${missingRegCount}):\n` + 
+           missingRegTextArray.join('\n')
     });
   }
 

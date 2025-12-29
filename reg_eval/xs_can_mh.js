@@ -1283,17 +1283,17 @@ export function buildQueuesSummary(reg) {
   // Build LMEM/SMEM Memory Maps depending on CTM (MH_CFG.CTME) =======================
   // ==================================================================================
 
-  const lmemRows = []; // LMEM entries
-  const smemRows = []; // SMEM entries (only in CTM)
+  let lmemRows = []; // LMEM Memory Map entries
+  let smemRows = []; // SMEM Memory Map entries (only in CTM)
 
   // Helpers for memory map building
   const mapCols = { name: 10, sa: 12, ea: 10, size: 11};
   const memMapHeader = (title) => [
-    title + ((ctme === 1) ? ' (CTM active)' : ' (FMM active)'),
+    title + ((ctme === 1) ? ' (CTM active)' : ' (FMM active)') + '\n' +
     'Name'.padEnd(mapCols.name) +
     'START byte'.padEnd(mapCols.sa) +
     'END byte'.padEnd(mapCols.ea) +
-    'SIZE'.padEnd(mapCols.size),
+    'SIZE'.padEnd(mapCols.size) + '\n' +
     ''.padEnd(mapCols.name + mapCols.sa + mapCols.ea + mapCols.size, '-')
   ];
   const entryLineLmem = (n, s, e, sz) => (
@@ -1384,28 +1384,27 @@ export function buildQueuesSummary(reg) {
 
   // Build LMEM map text with GAPs
   if (lmemEntries.length) {
-    const lines = memMapHeader('LMEM Memory Map');
+    lmemRows.push(memMapHeader('LMEM Memory Map'));
     // Show LMEM_PROT as first row
     const lmemSize = (lmemSA !== undefined && lmemEA !== undefined) ? (lmemEA - lmemSA + 1) : undefined;
-    lines.push(entryLineLmem('LMEM_PROT', lmemSA, lmemEA, lmemSize));
+    lmemRows.push(entryLineLmem('LMEM_PROT', lmemSA, lmemEA, lmemSize));
     if (lmemProt === undefined) {
-      lines[lines.length - 1] += ' (register undefined: max. LMEM size assumed (256 kbyte))';
+      lmemRows[lmemRows.length - 1] += ' (register undefined: max. LMEM size assumed (256 kbyte))';
     }
     let prevEnd = lmemSA; // start gaps from LMEM start if available
     for (const it of lmemEntries) {
       if (prevEnd !== undefined && it.sa !== undefined && it.sa > (prevEnd + 1)) {
-        lines.push(entryLineLmem('- GAP -', prevEnd + 1, it.sa, (it.sa - (prevEnd + 1)))); // gap
+        lmemRows.push(entryLineLmem('- GAP -', prevEnd + 1, it.sa, (it.sa - (prevEnd + 1)))); // gap
       }
-      lines.push(entryLineLmem(it.name, it.sa, it.ea, it.size));
+      lmemRows.push(entryLineLmem(it.name, it.sa, it.ea, it.size));
       if (it.name === 'Filters' && it._filtersMaxEa !== undefined) {
-        lines[lines.length - 1] += ` (max. End byte ${hex5(it._filtersMaxEa)} if 2 Comparisons/Filter)`;
+        lmemRows[lmemRows.length - 1] += ` (max. End byte ${hex5(it._filtersMaxEa)} if 2 Comparisons/Filter)`;
       }
       prevEnd = (it.ea !== undefined ? it.ea : prevEnd);
     }
     if (prevEnd !== undefined && lmemEA !== undefined && lmemEA > (prevEnd + 1)) {
-      lines.push(entryLineLmem('- GAP -', prevEnd + 1, lmemEA, (lmemEA - (prevEnd + 1)))); // final gap
+      lmemRows.push(entryLineLmem('- GAP -', prevEnd + 1, lmemEA, (lmemEA - (prevEnd + 1)))); // final gap
     }
-    lmemRows.push(lines.join('\n'));
   }
 
   // SMEM map in CTM consists only of RXFQ0/1
@@ -1439,22 +1438,21 @@ export function buildQueuesSummary(reg) {
 
     // Build SMEM map text with GAPs
     if (smemEntries.length) {
-      const lines = memMapHeader('SMEM Memory Map');
+      smemRows.push(memMapHeader('SMEM Memory Map'));
       let prevEndSM;
       for (const it of smemEntries) {
         if (prevEndSM !== undefined && it.sa !== undefined && it.sa > (prevEndSM + 1)) {
-          lines.push(entryLineSmem('- GAP -', prevEndSM + 1, it.sa, (it.sa - (prevEndSM + 1)))); // gap
+          smemRows.push(entryLineSmem('- GAP -', prevEndSM + 1, it.sa, (it.sa - (prevEndSM + 1)))); // gap
         }
-        lines.push(entryLineSmem(it.name, it.sa, it.ea, it.size));
+        smemRows.push(entryLineSmem(it.name, it.sa, it.ea, it.size));
         prevEndSM = (it.ea !== undefined ? it.ea : prevEndSM);
       }
-      smemRows.push(lines.join('\n'));
-    }
+  }
   }
 
   // Append memory maps to the summary message
-  const msg_lmemMap = lmemRows.join('\n\n');
-  const msg_smemMap = smemRows.join('\n\n');
+  const msg_lmemMap = lmemRows.join('\n');
+  const msg_smemMap = smemRows.join('\n');
   
   // ==================================================================================
   // Push report to the first available queue-related register report array,
