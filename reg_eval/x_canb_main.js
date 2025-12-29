@@ -25,7 +25,7 @@ export function processRegs(reg) {
   x_can_prt.procRegsPrtOther(reg);
 
   // c3) Process PRT: additional fields in X_CANB PRT registers
-  procRegsPrtBitTimingXCanBExtra(reg);
+  procRegsPrtBitTimingExtraXCanB(reg);
 
   // c4) Process MRAM Control
   procMramCtrl(reg);
@@ -198,7 +198,7 @@ export const resAddrArray = [
 
 // ==================================================================================
 // Process Extra Registers of Bit Fields of X_CANB
-function procRegsPrtBitTimingXCanBExtra(reg) {
+function procRegsPrtBitTimingExtraXCanB(reg) {
 
   // Rule: only assign reg.general.* values if they are meaningful
   //       leave values undefined, if a) according registers are not present
@@ -212,7 +212,7 @@ function procRegsPrtBitTimingXCanBExtra(reg) {
 
     // 0. Extend existing register structure
     if (reg.MODE.fields === undefined) {
-      reg.MODE.report = {}; 
+      reg.MODE.fields = {}; 
     }
     if (reg.MODE.report === undefined) {
       reg.MODE.report = []; // Initialize report array
@@ -262,7 +262,7 @@ function procRegsPrtBitTimingXCanBExtra(reg) {
       //   EVBE = 1 (Rx Started)
       //   EV2E = 1 (Tx Error)
       //   EV3E = 1 (Tx Successful)
-      if (reg.PCFG.fields.TXSC > 0 && // TX Shaping active
+      if (reg.MODE.fields.TXSC > 0 && // TX Shaping active
           reg.MODE.fields.TXSM === 0  // No Beacon mode
           ) {
         if (reg.MODE.fields.EVAE === 1 && // ON  Idle Bit
@@ -275,7 +275,7 @@ function procRegsPrtBitTimingXCanBExtra(reg) {
             // meaningful configuration
         } else {
           // not meaningful configuration
-          reg.PCFG.report.push({
+          reg.MODE.report.push({
             severityLevel: sevC.warning, // warning
             msg: `TX Traffic Shaping: Configuration might not be optimal.\n` +
                   `  In "No Beacon" mode the following events are recommended to be enabled:\n` +
@@ -296,7 +296,7 @@ function procRegsPrtBitTimingXCanBExtra(reg) {
 
     // 0. Extend existing register structure
     if (reg.PCFG.fields === undefined) {
-      reg.PCFG.report = {}; 
+      reg.PCFG.fields = {}; 
     }
     if (reg.PCFG.report === undefined) {
       reg.PCFG.report = []; // Initialize report array

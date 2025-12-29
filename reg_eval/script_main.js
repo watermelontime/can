@@ -1,5 +1,6 @@
 // TODO
-// TODO: use the same function for PRT register decoding of X_CAN, XS_CAN, and X_CANB (decode individual registers via separate functions)
+// TODO: use the same function for PRT register decoding of X_CAN, XS_CAN, and X_CANB (decode individual registers via separate functions) => use shared library file reg_eval/x_can_prt.js
+//       THIS file nows all three modules?
 // TODO: add version number and version history that is shown on HTML
 // TODO: add howToUse
 // TODO: X_CAN: LMEM Memory Map
@@ -1011,7 +1012,16 @@ function loadRegisterValuesExample() {
       }
       break;
 
-    case 'X_CANB':
+    case 'XS_CAN':
+      if (xs_can.loadExampleRegisterValues) {
+        exampleObj = xs_can.loadExampleRegisterValues();
+      } else {
+        console.warn(`[Warning] loadExampleRegisterValues not implemented in module: ${canIpModule}`);
+        exampleObj = loadDefaultExample();
+      }
+      break;
+
+      case 'X_CANB':
       if (x_canb.loadExampleRegisterValues) {
         exampleObj = x_canb.loadExampleRegisterValues();
       } else {
@@ -1223,7 +1233,15 @@ function processUserRegisterValues() {
       x_can.processRegs(reg);
       break;
 
-    case 'X_CANB':
+    case 'XS_CAN':
+      // Step 3
+      mapRawRegAddrToNames(reg, xs_can.regAddrMap, xs_can.resAddrArray, xs_can.regLocalAddrMask);
+      console.log('[Info] Step 2 - Mapped register values (reg object):', reg);
+      // Step 4:
+      xs_can.processRegs(reg);
+      break;
+
+      case 'X_CANB':
       // Step 3
       mapRawRegAddrToNames(reg, x_canb.regAddrMap, x_canb.resAddrArray, x_canb.regLocalAddrMask);
       console.log('[Info] Step 2 - Mapped register values (reg object):', reg);
