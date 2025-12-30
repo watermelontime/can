@@ -7,9 +7,6 @@ import * as x_can_prt from './x_can_prt.js';
 import * as xs_can_prt from './xs_can_prt.js';
 import * as xs_can_mh  from './xs_can_mh.js';
 import * as xs_can_irc from './xs_can_irc.js';
-//import * as x_can_irc from './x_can_irc.js';
-
-// TODO: IRC Decoding
 
 // ===================================================================================
 // X_CAN: Process User Register Values: parse, validate, calculate results, generate report

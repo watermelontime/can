@@ -1,14 +1,11 @@
-// TODO
+// TODOs
 // TODO: use the same function for PRT register decoding of X_CAN, XS_CAN, and X_CANB (decode individual registers via separate functions) => use shared library file reg_eval/x_can_prt.js
 //       THIS file nows all three modules?
 // TODO: add version number and version history that is shown on HTML
-// TODO: add howToUse
 // TODO: X_CAN: LMEM Memory Map
 // TODO: better structure reg-object: problem/ugly: non-register fields are mixed with registers (flat) => non-reg stuff should be separted
 // TODO: donate button
 // TODO: Valiation report severity level rename highlighted to bold
-// TODO: X_CANB: extend PRT Decoding
-// TODO: XS_CAN: add decoding & everything
 
 // ===================================================================
 // === HOW TO ADD NEW CAN IP MODULE? =================================
