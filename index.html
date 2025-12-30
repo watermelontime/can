@@ -1,32 +1,87 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arthur's CAN Page</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAN Register Evaluator</title>
+  <!-- <link rel="manifest" href="manifest.json" /> -->
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <script data-goatcounter="https://watermelon.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 
 <body>
-    <div id="site-menu"></div>
-    <script type="module" src="/can/menu.js"></script>
 
-    <script src="helper_function.js"></script>
+  <div id="site-menu"></div>
+  <script type="module" src="/can/menu.js"></script>
 
-    <h1>Arthur's CAN Page</h1>
-    
-    <div>
-	Select subpage:
-	</div>
+  <main>
+    <h1>My CAN page</h1>
 
-    <div class="menue-group">
-		<button onclick="goToPage('reg_eval/index.html')">CAN Module register EVALUATOR</button>
-		<button onclick="goToPage('xl_bt/index.html')">CAN XL Bit Timing CONFIGURATOR</button>
-	</div>
+    <h3>What can I find on this website?</h3>
+    <p>This website focuses on CAN (Controller Area Network) and provides helpful tools and material.</p>
+    <ul>
+      <li><strong><a href="reg_eval/index.html">CAN Register Evaluator</a>:</strong> A tool that evaluates and finds
+        errors in the configuration of the CAN module you use with.
+        <figure>
+          <a href="reg_eval/index.html">
+            <img src="/can/images/can_reg_eval1.png" alt="Screenshot of the CAN Register Evaluator tool"
+              height="170px" />
+          </a>
+        </figure>
+      </li>
+      <li><strong><a href="xl_bt/index.html">CAN XL Bit Timing Calculator</a>:</strong> A tool that visually guides you
+        when configuring CAN XL Bit Timing.
+        <figure>
+          <a href="xl_bt/index.html">
+            <img src="/can/images/canxl_bt1.png" alt="Screenshot of the CAN XL Bit Timing Configurator tool"
+              height="170px" />
+          </a>
+        </figure>
+      </li>
+    </ul>
 
-    <div id="site-footer"></div>
-    <script type="module" src="/can/footer.js"></script>
+    <h3>Who is the target of this website?</h3>
+    <p>This website is built for people that are facing CAN in a real project and struggle with its configuration. Such
+      persons are</p>
+    <ul>
+      <li><strong>Embedded software developers</strong> that directly interact with a CAN module (the piece of hardware
+        on a microcontroller that implements the CAN communication). other people are system designers that need to
+        decide which bit timing configuration to be used in their CAN networks</li>
+      <li><strong>System designers</strong> that need to decide which bit timing configuration to be used in their CAN
+        networks</li>
+      <li><strong>Anyone</strong>, who just wants to see some functional example configurations</li>
+    </ul>
+
+    <h3>Why does this website exist?</h3>
+    <p>I wanted to realize some complex project with help of AI (that I would have never started before AI was
+      available). Further I wanted the result to be usefull for others.</p>
+
+    <h3>Who is Arthur?</h3>
+    <p>I'm an electrical engineer working at Bosch (Germany) and beeing in touch with CAN technology in my daily work
+      since 15 years. I'm happy to share my knowledge with you.</p>
+
+
+    <!-- Responsive container for 3-column layout -->
+    <div class="responsive-container">
+
+    </div>
+
+    <!-- load JavaScript file(s); type=module means loading is possible in .js files itself -->
+    <script type="module" src="script_main.js"></script>
+    <!--  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+-->
+
+  </main>
+
+  <div id="site-footer"></div>
+  <script type="module" src="/can/footer.js"></script>
 
 </body>
+
 </html>

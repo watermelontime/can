@@ -41,8 +41,8 @@
 // ===================================================================
 
 
-// import drawing functions
-import * as draw_svg from './draw_bits_svg.js';
+// import functions
+import * as draw_svg from '../draw_bits_svg.js'; // SVG drawing functions for bit timing
 import * as m_can from './m_can.js';
 import * as x_can from './x_can_main.js';
 import * as x_canb from './x_canb_main.js';
@@ -547,7 +547,7 @@ function displayValidationReport(reg, reportVerbosity) {
     minute: '2-digit',
     second: '2-digit'
   });
-  let reportText = `<span class="report-header">=== VALIDATION REPORT ${timestamp} ========</span>\n`;
+  let reportText = `<span class="report-header">=== EVALUATION REPORT ${timestamp} ========</span>\n`;
   reportText += '<span class="report-header">' + '--- Summary ---------------------------------------' + '</span>\n';
   // Always show counts for each type; append (not printed) if disabled by user
   const lines = [
@@ -601,7 +601,7 @@ function displayValidationReport(reg, reportVerbosity) {
   });
   
   // Add footer
-  reportText += '<span class="report-header">=== End of validation report ======================</span>';
+  reportText += '<span class="report-header">=== End of evaluation report ======================</span>';
   
   // Display in element using innerHTML
   reportTextArea.innerHTML = reportText;

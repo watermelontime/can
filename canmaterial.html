@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAN Material</title>
+  <!-- <link rel="manifest" href="manifest.json" /> -->
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <script data-goatcounter="https://watermelon.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+  
+<div id="site-menu"></div>
+<script type="module" src="/can/menu.js"></script>
+
+<main>
+
+<h1>CAN Material</h1>
+
+I just started to build this "CAN Material" page, so more information is to come later here.
+
+<h3>Quick CAN history</h3>
+<ul>
+  <li><strong>CAN CC (CAN classic)</a></strong>: Was invented by Bosch 1989 and since then widely used in automotive and industrial applications. Limited to 8 byte payload and 1 Mbit/s.</li>
+  <li><strong>CAN FD (Flexible Data-Rate)</a></strong>: Introduced 2012 by Bosch. Supports up to 64 byte payload and bit rates up to 8 Mbit/s in the data phase (payload).</li>
+  <li><strong>CAN XL (eXtended Length)</a></strong>: Specified in ISO 11898-1:2024. Supports up to 2048 byte payload and bit rates up to 20 Mbit/s in the data phase (payload). Beside this it has many further features: as example Ethernet tunneling. So CAN XL is the better physcial layer for Ethernet (up to 20 Mbit/s)</li>
+</ul>
+
+<h3>CAN FD related</h3>
+<ul>
+  <li><strong>CiA 601-1</a></strong>: A recommendation guide for Physical Layer: Detailed Timing information (for those who really like to deep dive)</li>
+  <li><strong>CiA 601-3</a></strong>: A recommendation guide for CAN FD: Bit Timing Configuration rules, best practices.</li>
+  <li><strong><a href="https://www.can-cia.org/fileadmin/cia/documents/proceedings/2013_mutter.pdf">About Oscillator Tolerance and Edge Deviations</a>: A view behind the scenes - How to assess if a CAN network will operate robustly or not?</strong></li>
+</ul>
+
+<h3>CAN XL related</h3>
+<ul>
+  <li><strong>CiA 612-1</a></strong>: A recommendation guide for CAN XL: Bit Timing Configuration rules, best practices, new modes of CAN XL, etc.</li>
+  <li><strong>CiA 612-2</a></strong>: A recommendation guide for Physical Layer Pins and PWM encoding configuration</li>
+  <li><strong><a href="https://www.can-cia.org/fileadmin/cia/documents/proceedings/2024_mutter.pdf">CAN XL System Design - About Clock Tolerances and Edge Deviations</a>: A view behind the scenes - How to assess if a CAN network will operate robustly or not?</strong></li>
+</ul>
+
+
+<!-- Responsive container for 3-column layout -->
+<div class="responsive-container">
+
+</div>
+
+<!-- load JavaScript file(s); type=module means loading is possible in .js files itself -->
+<script type="module" src="script_main.js"></script>
+<!--  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+-->
+
+</main>
+
+<div id="site-footer"></div>
+<script type="module" src="/can/footer.js"></script>
+
+</body>
+</html>
