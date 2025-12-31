@@ -570,12 +570,13 @@ function processChanges() {
       // Draw PWM symbols
       draw_svg.drawPWMsymbols(results.res_pwms, results.res_pwml, results.res_pwm_symbols_per_bit_time, 'DrawingBTXLdataPWM', 'XL Data Phase PWM symbols');
     } else { // no PWM symbols exist
-      // Draw PWM symbols with error message
-      draw_svg.drawPWMsymbols(0, 0, 0, 'DrawingBTXLdataPWM', 'XL Data Phase: no PWM config exists');  
+      // Draw error message
+      draw_svg.drawErrorMessage('DrawingBTXLdataPWM', 'XL Data Phase PWM symbols', 'no PWM config exists for this bit rate');
     }
   } else {
-    // Draw PWM symbols with error message
-    draw_svg.drawPWMsymbols(0, 0, 0, 'DrawingBTXLdataPWM', 'XL Data Phase: TMS = off');
+    // Draw error message
+    //draw_svg.drawPWMsymbols(0, 0, 0, 'DrawingBTXLdataPWM', 'XL Data Phase: TMS = off');
+    draw_svg.drawErrorMessage('DrawingBTXLdataPWM', 'XL Data Phase PWM symbols', 'TMS = off, means no PWM used');
   }
 
   // Legend for Bit Timing Drawings: adapt width to table width

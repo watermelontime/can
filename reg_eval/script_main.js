@@ -2,10 +2,9 @@
 // TODO: use the same function for PRT register decoding of X_CAN, XS_CAN, and X_CANB (decode individual registers via separate functions) => use shared library file reg_eval/x_can_prt.js
 //       THIS file nows all three modules?
 // TODO: add version number and version history that is shown on HTML
-// TODO: X_CAN: LMEM Memory Map
 // TODO: better structure reg-object: problem/ugly: non-register fields are mixed with registers (flat) => non-reg stuff should be separted
 // TODO: donate button
-// TODO: Valiation report severity level rename highlighted to bold
+// TODO: Valiation report severity level: rename highlighted to bold
 
 // ===================================================================
 // === HOW TO ADD NEW CAN IP MODULE? =================================
@@ -73,7 +72,7 @@ const floatParams = [
   'par_clk_freq'
 ];
 
-// Report Verbosity  report filter checkboxes (must match IDs in index.html)
+// Report Verbosity: filter checkboxes (must match IDs in index.html)
 const checkboxReportVerbosityParams = [
   'par_report_infoVerbose',
   'par_report_info',
@@ -707,7 +706,7 @@ function displaySVGs(reg) {
     draw_svg.drawErrorMessage(
       'DrawingBTArb',
       'Arbitration Phase',
-      'No register'
+      'No data'
     );
   }
 
@@ -741,7 +740,7 @@ function displaySVGs(reg) {
     draw_svg.drawErrorMessage(
       'DrawingBTFDdata',
       'FD Data Phase',
-      'No register or ES=OFF or TMS=ON'
+      'No data or ES=OFF or TMS=ON'
     );
   }
 
@@ -775,7 +774,7 @@ function displaySVGs(reg) {
     draw_svg.drawErrorMessage(
       'DrawingBTXLdata',
       'XL Data Phase',
-      'No register'
+      'No data'
     );
   }
 
@@ -798,7 +797,7 @@ function displaySVGs(reg) {
     draw_svg.drawErrorMessage(
       'DrawingBTXLdataPWM',
       'XL Data Phase PWM symbols',
-      'No register or TMS = off'
+      'No data or TMS = off'
     );
   }
 
