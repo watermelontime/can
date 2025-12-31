@@ -55,6 +55,9 @@ let par_clk_freq_g = 160; // Global variable for CAN clock frequency in MHz
 // Initialize GLOBAL register result object
 let reg = {};
 
+// Application version shown next to the page title
+const APP_VERSION = 'V1.0.0';
+
 // initialize report verbosity object
 const reportVerbosity = {
   info: false,
@@ -113,6 +116,14 @@ function init() {
 
   // Initialize the clock frequency input field with default value
   initializeClockFrequencyHtmlField();
+
+  // Show application version next to title
+  const versionEl = document.getElementById('appVersion');
+  if (versionEl) {
+    versionEl.textContent = APP_VERSION;
+  } else {
+    console.warn('[Warning] Version element with id "appVersion" not found in HTML');
+  }
 
   // draw empty SVGs, so it looks better
   let dummyReg = {};

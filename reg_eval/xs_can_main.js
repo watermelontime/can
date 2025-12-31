@@ -44,7 +44,7 @@ export function processRegs(reg) {
   xs_can_mh.procRegsMhDebug(reg);
 
   // Build MH Queue Overview Table
-  xs_can_mh.buildQueuesSummary(reg);
+  xs_can_mh.buildQueuesSummaryAndMemoryMap(reg);
 
   // Process IR CTRL and Status registers
   xs_can_irc.procRegsIRC(reg); 

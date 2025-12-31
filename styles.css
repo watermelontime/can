@@ -406,6 +406,11 @@ svg {
   text-decoration: underline;
 }
 
+.version-label {
+  color: #bbbbbb;
+}
+
+
 /* Modal overlay */
 .modal-overlay {
   position: fixed;

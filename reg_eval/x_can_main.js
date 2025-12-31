@@ -40,6 +40,9 @@ export function processRegs(reg) {
 
   // c10) Process IRC registers
   x_can_irc.procRegsIRC(reg);
+
+  // c11) Build LMEM Memory Map (X_CAN)
+  x_can_mh.buildLMEMMemoryMap(reg);
 }
 
 // ==================================================================================
@@ -98,7 +101,7 @@ export function loadExampleRegisterValues() {
 0xA0020304 0x00000000
 0xA002030C 0x00000000
 0xA0020310 0x00000000
-0xA0020314 0x00000000
+0xA0020314 0x0000FFFF
 0xA0020318 0x00000000
 0xA0020400 0x00000000
 0xA0020404 0x00000000
@@ -154,7 +157,7 @@ export function loadExampleRegisterValues() {
 0xA002060C 0xF0108080
 0xA0020610 0x00000000
 0xA0020614 0x00000000
-0xA0020680 0x00100000
+0xA0020680 0x00100020
 0xA0020700 0x00000000
 0xA0020704 0x00000000
 0xA0020708 0x00000000

@@ -1091,7 +1091,7 @@ export function procRegsMhDebug(reg) {
 // ===================================================================================
 // Task 1: Queues Summary: Build a formatted overview of TX/RX/Event queues
 // Task 2: LMEM and SMEM memory map including overlaps detection
-export function buildQueuesSummary(reg) {
+export function buildQueuesSummaryAndMemoryMap(reg) {
   // assumes that all registers are deccoded before this summary is built
 
   const hex8 = (v) => `0x${((v >>> 0) & 0xFFFFFFFF).toString(16).toUpperCase().padStart(8,'0')}`;
@@ -1476,6 +1476,7 @@ export function buildQueuesSummary(reg) {
     'MH_CFG'
   ];
 
+  let appended = false;
   for (const name of targets) {
     if (name in reg && reg[name] && Array.isArray(reg[name].report)) {
       reg[name].report.push({ severityLevel: sevC.infoHighlighted, msg: msg_qsum });
@@ -1506,10 +1507,13 @@ export function buildQueuesSummary(reg) {
           }
         }
       }
+      appended = true;
       break;
-    } else {
-      console.log('Queues Summary: no queue-related register report available; summary not printed.');
     }
   }
 
-} // Queues Summary
+  if (!appended) {
+    console.log('Queues Summary & LMEM/SMEM Memory Map: no appropriate register found to append report; not printed.');
+  }
+
+} // Queues Summary & Memory Map

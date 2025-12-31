@@ -1837,3 +1837,164 @@ export function procRegsMhDebugCtrlStat(reg) {
     });
   }
 }
+
+// ==================================================================================
+// LMEM Memory Map (X_CAN): TXPQ Descriptors, TXFQ Descriptors, Filters
+// - Only LMEM map is meaningful for X_CAN here
+// - All three areas have configurable start addresses
+// - If a resource is not enabled, its LMEM area is not needed
+export function buildLMEMMemoryMap(reg) {
+  const dash = '-';
+  const hex8 = (v) => `0x${((v >>> 0) & 0xFFFFFFFF).toString(16).toUpperCase().padStart(8,'0')}`;
+  const hex5 = (v) => `0x${(((v >>> 0) & 0xFFFFF)).toString(16).toUpperCase().padStart(5,'0')}`;
+  const fmt = (v) => (v === undefined || v === null ? dash : v);
+
+  // Columns and row builders (LMEM uses 20-bit address space formatting similar to XS_CAN)
+  const mapCols = { name: 12, sa: 12, ea: 12, size: 12 };
+  const memMapHeader = () => [
+    'LMEM Memory Map\n' +
+    'Name'.padEnd(mapCols.name) +
+    'START byte'.padEnd(mapCols.sa) +
+    'END byte'.padEnd(mapCols.ea) +
+    'SIZE'.padEnd(mapCols.size) + '\n' +
+    ''.padEnd(mapCols.name + mapCols.sa + mapCols.ea + mapCols.size, '-')
+  ];
+  const entryLineLmem = (n, s, e, sz) => (
+    n.padEnd(mapCols.name) +
+    (s !== undefined ? hex5(s) : dash).padEnd(mapCols.sa) +
+    (e !== undefined ? hex5(e) : dash).padEnd(mapCols.ea) +
+    (sz !== undefined ? `${sz.toString(10).padStart(6)} byte` : dash).padEnd(mapCols.size)
+  );
+
+  const rows = [];
+  const entries = [];
+
+  // Helpers to read register raw values and decoded fields
+  const rb = (name) => (name in reg && reg[name].int32 !== undefined) ? reg[name].int32 >>> 0 : undefined;
+  const hasFields = (name) => (name in reg && reg[name].fields !== undefined);
+  const bits = (val, msb, lsb) => (val === undefined ? undefined : getBits(val, msb, lsb));
+
+  // 1) Filters (RX Filter Memory in LMEM)
+  // Start address: RX_FILTER_MEM_ADD.BASE_ADDR (16-bit byte address)
+  const rxFiltAdd = rb('RX_FILTER_MEM_ADD');
+  const rxFiltBase = bits(rxFiltAdd, 15, 0);
+  const rxFiltSA = rxFiltBase !== undefined ? (rxFiltBase) : undefined; // byte address
+  // Elements enabled: RX_FILTER_CTRL.NB_FE > 0
+  const rxFiltCtrl = rb('RX_FILTER_CTRL');
+  const rxFiltNum = bits(rxFiltCtrl, 7, 0); // NB_FE
+  if (rxFiltSA !== undefined && rxFiltNum !== undefined && rxFiltNum > 0) {
+    // Size estimate (similar to XS_CAN): header/alignment + per-element bytes
+    const bytesFilterElement = rxFiltNum * 4; // alignment/administration (bytes)
+    const bytesMin = bytesFilterElement + (rxFiltNum * 8);   // min with 1 comparison/filter
+    const bytesMax = bytesFilterElement + (rxFiltNum * 16);  // max with 2 comparisons/filter
+    const rxFiltEA_min = rxFiltSA + bytesMin - 1; // last byte (min)
+    const rxFiltEA_max = rxFiltSA + bytesMax - 1; // last byte (max)
+    const rxFiltSizeMin = rxFiltEA_min - rxFiltSA + 1;
+    entries.push({ name: 'Filters', sa: rxFiltSA, ea: rxFiltEA_min, size: rxFiltSizeMin, _filtersMaxEa: rxFiltEA_max });
+  }
+
+  // 2) TXFQ Descriptors in LMEM
+  // Base: TX_DESC_MEM_ADD.FQ_BASE_ADDR (16-bit byte address)
+  const txDescAdd = rb('TX_DESC_MEM_ADD');
+  const txFqBase = bits(txDescAdd, 15, 0);
+  const txFqSA = txFqBase !== undefined ? (txFqBase) : undefined;
+  // Enabled mask: TX_FQ_CTRL2.ENABLE (any bit set means TXFQ used)
+  const txFqCtrl2 = rb('TX_FQ_CTRL2');
+  const txFqEnableMask = bits(txFqCtrl2, 7, 0);
+  // Number of FIFOs considered: highest enabled index + 1; one FIFO requires 2 descriptors
+  const highestBitIndex8 = (mask) => {
+    if (mask === undefined) return -1;
+    let m = (mask & 0xFF) >>> 0;
+    if (m === 0) return -1;
+    let idx = 7;
+    while (idx >= 0 && ((m & (1 << idx)) === 0)) idx--;
+    return idx;
+  };
+  const txFqCount = (txFqEnableMask >= 0) ? (highestBitIndex8(txFqEnableMask) + 1) : 0;
+  const txFqBytes = txFqCount > 0 ? (txFqCount * 2 * 32) >>> 0 : 0; // 2 descriptors/FIFO, 32 bytes/descriptor
+  if (txFqSA !== undefined && txFqBytes > 0 && txFqEnableMask !== undefined && txFqEnableMask !== 0) {
+    const txFqEA = txFqSA + txFqBytes - 1;
+    entries.push({ name: 'TXFQ', sa: txFqSA, ea: txFqEA, size: txFqBytes });
+  }
+
+  // 3) TXPQ Descriptors in LMEM
+  // Base: TX_DESC_MEM_ADD.PQ_BASE_ADDR (16-bit word address => bytes = <<2)
+  const txPqBase = bits(txDescAdd, 31, 16);
+  const txPqSA = txPqBase !== undefined ? (txPqBase) : undefined;
+  // Slots that place descriptors in LMEM: TX_PQ_CTRL2.ENABLE mask: The highest enabledbit index defines the neede memory space
+  const txPqCtrl2 = rb('TX_PQ_CTRL2');
+  const txPqEnableMask = bits(txPqCtrl2, 31, 0);
+  const highestBitIndex = (mask) => {
+    if (mask === undefined) return -1;
+    let m = mask >>> 0;
+    if (m === 0) return -1;
+    // Find most significant set bit (0-based index)
+    let idx = 31;
+    while (idx >= 0 && ((m & (1 << idx)) === 0)) idx--;
+    return idx;
+  };
+  const msbIdx = highestBitIndex(txPqEnableMask);
+  const txPqDescriptors = msbIdx >= 0 ? (msbIdx + 1) : 0; // highest bit number + 1 defines needed descriptors
+  const txPqBytes = ((txPqDescriptors > 0) && (txPqEnableMask !== undefined && txPqEnableMask !== 0)) ? (txPqDescriptors * 32) >>> 0 : 0; // assume 32 bytes/descriptor region
+  if (txPqSA !== undefined && txPqBytes > 0 && (txPqEnableMask !== undefined && txPqEnableMask !== 0)) {
+    const txPqEA = txPqSA + txPqBytes - 1;
+    entries.push({ name: 'TXPQ', sa: txPqSA, ea: txPqEA, size: txPqBytes });
+  }
+
+  // Sort entries by start address and detect overlaps
+  entries.sort((a, b) => (a.sa ?? 0) - (b.sa ?? 0));
+  const overlapErrors = [];
+  for (let i = 1; i < entries.length; i++) {
+    const prev = entries[i - 1];
+    const cur  = entries[i];
+    if (prev && cur && prev.ea !== undefined && cur.sa !== undefined && cur.ea !== undefined) {
+      if (cur.sa <= prev.ea) {
+        overlapErrors.push(
+          `LMEM overlap detected: ${prev.name} [${hex5(prev.sa)} - ${hex5(prev.ea)}] overlaps with ${cur.name} [${hex5(cur.sa)} - ${hex5(cur.ea)}]`
+        );
+      }
+    }
+  }
+
+  // Build map text with gaps
+  const header = memMapHeader();
+  const lines = [...header];
+  let prevEnd;
+  for (const it of entries) {
+    if (prevEnd !== undefined && it.sa !== undefined && it.sa > (prevEnd + 1)) {
+      lines.push(entryLineLmem('- GAP -', prevEnd + 1, it.sa, (it.sa - (prevEnd + 1))));
+    }
+    lines.push(entryLineLmem(it.name, it.sa, it.ea, it.size));
+    if (it.name === 'Filters' && it._filtersMaxEa !== undefined) {
+      lines[lines.length - 1] += ` (max. End byte ${hex5(it._filtersMaxEa)} if 2 Comparisons/Filter)`;
+    }
+    prevEnd = (it.ea !== undefined ? it.ea : prevEnd);
+  }
+
+  const msg_lmemMap = lines.join('\n');
+
+  // Append to a suitable register report list
+  const targets = [
+    'RX_FILTER_CTRL',
+    'TX_PQ_CTRL2',
+    'TX_FQ_CTRL2',
+    'TX_DESC_MEM_ADD',
+    'RX_FILTER_MEM_ADD'
+  ];
+  let appended = false;
+  for (const name of targets) {
+    if (name in reg && reg[name] && Array.isArray(reg[name].report)) {
+      reg[name].report.push({ severityLevel: sevC.infoHighlighted, msg: msg_lmemMap });
+      if (overlapErrors.length) {
+        for (const emsg of overlapErrors) reg[name].report.push({ severityLevel: sevC.error, msg: emsg });
+      } else {
+        reg[name].report.push({ severityLevel: sevC.calculation, msg: 'LMEM: no range overlap detected' });
+      }
+      appended = true;
+      break;
+    }
+  }
+  if (!appended) {
+    console.log('LMEM/SMEM Memory Map: no appropriate register found to append report; not printed.');
+  }
+}
