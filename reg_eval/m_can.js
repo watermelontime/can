@@ -569,7 +569,7 @@ function procRegsPrtOther(reg) {
 
     // Generate Version Report
     reg.CREL.report.push({
-      severityLevel: sevC.infoHighlighted,
+      severityLevel: sevC.infoBold,
       msg: `CREL: M_CAN V${reg.CREL.fields.REL.toString(16).toUpperCase()}.${reg.CREL.fields.STEP.toString(16).toUpperCase()}.${reg.CREL.fields.SUBSTEP.toString(16).toUpperCase()}, Date ${reg.CREL.fields.DAY.toString(16).toUpperCase().padStart(2, '0')}.${reg.CREL.fields.MON.toString(16).toUpperCase().padStart(2, '0')}.201${reg.CREL.fields.YEAR.toString(16).toUpperCase()}`
     });
   }
@@ -693,7 +693,7 @@ function procRegsPrtOther(reg) {
     // 3. Add warnings or info if Watchdog Value is close to Configuration
     if (reg.RWD.fields.WDC > 0) {
       reg.RWD.report.push({
-        severityLevel: sevC.infoHighlighted,
+        severityLevel: sevC.infoBold,
         msg: `RAM Watchdog is enabled. Configuration: WDC = ${reg.RWD.fields.WDC} Host Clock Cycles`
       });
     }
@@ -1171,7 +1171,7 @@ function procRegsPrtOther(reg) {
       }).join('\n');
     }
     reg.IE.report.push({
-      severityLevel: sevC.infoHighlighted,
+      severityLevel: sevC.infoBold,
       msg: `M_CAN Interrupt Summary (only enabled IE bits)\n`+
            `Bit  Name${' '.repeat(nameWidth-4)}  IR IE  (description)\n`+
            `${lines}`
@@ -1810,7 +1810,7 @@ function procRegsPrtOther(reg) {
         target = reg._M_CAN_TXBUF_SUMMARY;
       }
       target.report.push({
-        severityLevel: sevC.infoHighlighted,
+        severityLevel: sevC.infoBold,
         msg: 'M_CAN TX Buffer Summary\n' + lines.join('\n')
       });
     }

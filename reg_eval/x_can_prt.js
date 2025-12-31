@@ -549,7 +549,7 @@ export function procRegsPrtOther(reg) {
 
     // Generate Version Report
     reg.PREL.report.push({
-      severityLevel: sevC.infoHighlighted,
+      severityLevel: sevC.infoBold,
       msg: `PREL: PRT V${reg.PREL.fields.REL.toString(16).toUpperCase()}.${reg.PREL.fields.STEP.toString(16).toUpperCase()}.${reg.PREL.fields.SUBSTEP.toString(16).toUpperCase()}, Date ${reg.PREL.fields.DAY.toString(16).toUpperCase().padStart(2, '0')}.${reg.PREL.fields.MON.toString(16).toUpperCase().padStart(2, '0')}.202${reg.PREL.fields.YEAR.toString(16).toUpperCase()}`
     });
   }

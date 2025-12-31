@@ -1,10 +1,8 @@
 // TODOs
 // TODO: use the same function for PRT register decoding of X_CAN, XS_CAN, and X_CANB (decode individual registers via separate functions) => use shared library file reg_eval/x_can_prt.js
-//       THIS file nows all three modules?
-// TODO: add version number and version history that is shown on HTML
+//       THIS file knows all three modules?
 // TODO: better structure reg-object: problem/ugly: non-register fields are mixed with registers (flat) => non-reg stuff should be separted
 // TODO: donate button
-// TODO: Valiation report severity level: rename highlighted to bold
 
 // ===================================================================
 // === HOW TO ADD NEW CAN IP MODULE? =================================
@@ -39,7 +37,6 @@
 //   1. Update the CAN Module select field to include the new module name <NEWMODULE>
 // ===================================================================
 
-
 // import functions
 import * as draw_svg from '../draw_bits_svg.js'; // SVG drawing functions for bit timing
 import * as m_can from './m_can.js';
@@ -61,9 +58,8 @@ const APP_VERSION = 'V1.0.0';
 const reportVerbosity = {
   info: false,
   infoVerbose: false,
-  infoHighlighted: false,
+  infoBold: false,
   calculation: false,
-  recommendation: false,
   warning: false,
   error: false
 };
@@ -76,9 +72,8 @@ const floatParams = [
 const checkboxReportVerbosityParams = [
   'par_report_infoVerbose',
   'par_report_info',
-  'par_report_infoHighlighted',
-  //'par_report_calculation',    // switched together with infoHighlighted
-  //'par_report_recommendation', // switched together with infoHighlighted
+  'par_report_infoBold',
+  //'par_report_calculation',    // switched together with infoBold
   'par_report_warning',
   'par_report_error'
 ];
@@ -128,7 +123,7 @@ function init() {
   let dummyReg = {};
   displaySVGs(dummyReg);
 
-  // read verbosity checkboxes from HTML
+  // read report verbosity checkboxes from HTML
   getReportVerbositySettingFromHTML(reportVerbosity);
 }
 
@@ -483,9 +478,8 @@ function displayValidationReport(reg, reportVerbosity) {
     switch (level) {
       case sevC.info: return 'I';
       case sevC.infoVerbose: return 'V';
-      case sevC.infoHighlighted: return 'H';
+      case sevC.infoBold: return 'H';
       case sevC.calculation: return 'C';
-      case sevC.recommendation: return 'R';
       case sevC.warning: return 'W';
       case sevC.error: return 'E';
       default: return 'UNKNOWN';
@@ -497,9 +491,8 @@ function displayValidationReport(reg, reportVerbosity) {
     switch (level) {
       case sevC.info: return 'ℹ️';
       case sevC.infoVerbose: return 'ℹ️';
-      case sevC.infoHighlighted: return 'ℹ️';
+      case sevC.infoBold: return 'ℹ️';
       case sevC.calculation: return '🧮';
-      case sevC.recommendation: return '💡';
       case sevC.warning: return '⚠️';
       case sevC.error: return '❌';
       default: return '❓';
@@ -507,13 +500,12 @@ function displayValidationReport(reg, reportVerbosity) {
   }
 
   // Helper function to get CSS class for severity level
-  function getSeverityClass(level) {
+  function getSeverityCssClass(level) {
     switch (level) {
       case sevC.info: return 'report-info';
       case sevC.infoVerbose: return 'report-infoVerbose';
-      case sevC.infoHighlighted: return 'report-infoHighlighted';
+      case sevC.infoBold: return 'report-infoBold';
       case sevC.calculation: return 'report-infoCalculation';
-      case sevC.recommendation: return 'report-recommendation';
       case sevC.warning: return 'report-warning';
       case sevC.error: return 'report-error';
       default: return 'report-info';
@@ -521,14 +513,13 @@ function displayValidationReport(reg, reportVerbosity) {
   }
   
   // Count reports by severity (always based on allReports, not filtered)
-  const counts = { info: 0, infoV: 0, infoH: 0, calc: 0, recom: 0, warn: 0, errors: 0};
+  const counts = { info: 0, infoV: 0, infoB: 0, calc: 0, recom: 0, warn: 0, errors: 0};
   allReports.forEach(report => {
     switch (report.severityLevel) {
       case sevC.info: counts.info++; break;
       case sevC.infoVerbose: counts.infoV++; break;
-      case sevC.infoHighlighted: counts.infoH++; break;
+      case sevC.infoBold: counts.infoB++; break;
       case sevC.calculation: counts.calc++; break;
-      case sevC.recommendation: counts.recom++; break;
       case sevC.error: counts.errors++; break;
       case sevC.warning: counts.warn++; break;
     }
@@ -539,9 +530,8 @@ function displayValidationReport(reg, reportVerbosity) {
     switch (level) {
       case sevC.info: return !!reportVerbosity.info;
       case sevC.infoVerbose: return !!reportVerbosity.infoVerbose;
-      case sevC.infoHighlighted: return !!reportVerbosity.infoHighlighted;
+      case sevC.infoBold: return !!reportVerbosity.infoBold;
       case sevC.calculation: return !!reportVerbosity.calculation;
-      case sevC.recommendation: return !!reportVerbosity.recommendation;
       case sevC.warning: return !!reportVerbosity.warning;
       case sevC.error: return !!reportVerbosity.error;
       default: return false;
@@ -563,15 +553,14 @@ function displayValidationReport(reg, reportVerbosity) {
   const lines = [
     { level: sevC.info,           label: 'Info        ',     count: counts.info },
     { level: sevC.infoVerbose,    label: 'Info Verbose',     count: counts.infoV },
-    { level: sevC.infoHighlighted,label: 'Info Bold   ',     count: counts.infoH },
+    { level: sevC.infoBold,       label: 'Info Bold   ',     count: counts.infoB },
     { level: sevC.calculation,    label: 'Calculated  ',     count: counts.calc },
-    //{ level: sevC.recommendation,label: 'Recommendations',  count: counts.recom },
     { level: sevC.warning,        label: 'Warnings    ',     count: counts.warn },
     { level: sevC.error,          label: 'Errors      ',     count: counts.errors },
   ];
   lines.forEach(({level, label, count}) => {
     const suffix = isSelected(level) ? '' : ' (not printed)';
-    reportText += `<span class="${getSeverityClass(level)}">${getSeveritySymbol(level)} ${label}: ${count.toString().padStart(3, ' ')}${suffix}</span>\n`;
+    reportText += `<span class="${getSeverityCssClass(level)}">${getSeveritySymbol(level)} ${label}: ${count.toString().padStart(3, ' ')}${suffix}</span>\n`;
   });
   reportText += `Registers in memory dump: ` +
                            `${reg.parse_output.statistic.map.mappedRegCount + reg.parse_output.statistic.map.reservedRegCount + reg.parse_output.statistic.map.unmappedRegCount} total, ` + 
@@ -597,8 +586,7 @@ function displayValidationReport(reg, reportVerbosity) {
     }
     const severityText = getSeverityText(report.severityLevel);
     const severitySymbol = getSeveritySymbol(report.severityLevel);
-    const severityClass = getSeverityClass(report.severityLevel);
-    //const highlightClass = (report.highlight !== undefined && report.highlight === true) ? ' report-highlight' : '';
+    const severityCssClass = getSeverityCssClass(report.severityLevel);
 
     // Add spaces after line breaks for proper alignment and escape HTML
     const formattedMsg = report.msg
@@ -607,7 +595,7 @@ function displayValidationReport(reg, reportVerbosity) {
       .replace(/>/g, '&gt;')
       .replace(/\n/g, '\n      '); // indentation of lines 2 to N
     
-    reportText += `<span class="${severityClass}">${severitySymbol} ${formattedMsg}</span>\n`;
+    reportText += `<span class="${severityCssClass}">${severitySymbol} ${formattedMsg}</span>\n`;
   });
   
   // Add footer
@@ -1098,38 +1086,33 @@ function getCanIpModuleFromHTML() {
 }
 
 // ===================================================================================
-// Get selected CAN IP Module from HTML select field
+// Get User-Checkbox-Selection for the Report Verbosity from HTML
 function getReportVerbositySettingFromHTML(reportVerbosity) {
   // loop through all checkboxes with class 'report-verbosity-checkbox' and strore check-box status in object
   checkboxReportVerbosityParams.forEach(param => {
     const checkbox = document.getElementById(param);
     if (checkbox) {
-      const isChecked = checkbox.checked;
+      const checkBoxValue = checkbox.checked;
       switch (param) {
         case 'par_report_info': // info messages
-          reportVerbosity.info = isChecked;
+          reportVerbosity.info = checkBoxValue;
           break;
         case 'par_report_infoVerbose': // info verbose
-          reportVerbosity.infoVerbose = isChecked;
+          reportVerbosity.infoVerbose = checkBoxValue;
           break;
-        case 'par_report_infoHighlighted': // highlighted info messages
-          reportVerbosity.infoHighlighted = isChecked;
-          // show also recommendations if highlighted info is enabled (recommendations has no own checkbox, because there too many checkboxes)
-          reportVerbosity.recommendation = isChecked;
-          // show also recommendations if highlighted info is enabled (recommendations has no own checkbox, because there too many checkboxes)
-          reportVerbosity.calculation = isChecked;
+        case 'par_report_infoBold': // bold info messages
+          reportVerbosity.infoBold = checkBoxValue;
+          // show also Calculations if infoBold is enabled (Calculation has no own checkbox, because there are too many checkboxes)
+          reportVerbosity.calculation = checkBoxValue;
           break;
         case 'par_report_calculation': // calculated values
-          reportVerbosity.calculation = isChecked;
-          break;
-        case 'par_report_recommendation': // recommended values
-          reportVerbosity.recommendation = isChecked;
+          reportVerbosity.calculation = checkBoxValue;
           break;
         case 'par_report_warning': // warning messages
-          reportVerbosity.warning = isChecked;
+          reportVerbosity.warning = checkBoxValue;
           break;
         case 'par_report_error': // error messages
-          reportVerbosity.error = isChecked;
+          reportVerbosity.error = checkBoxValue;
           break;
         default:
           console.error(`[Error] Unknown verbosity checkbox "${param}" in HTML`);
@@ -1198,7 +1181,7 @@ function processUserRegisterValues() {
   }
   // Add first report entry
   reg.general.report.push({
-    severityLevel: sevC.infoHighlighted,
+    severityLevel: sevC.infoBold,
     msg: `CAN Module "${canIpModule}" assumed for register processing`
   });
 
@@ -1208,7 +1191,7 @@ function processUserRegisterValues() {
   reg.general.clk_period = 1000/par_clk_freq_g; // 1000 / MHz = ns
   // generate report for CAN Clock
   reg.general.report.push({
-      severityLevel: sevC.infoHighlighted,
+      severityLevel: sevC.infoBold,
       msg: `CAN Clock\n` + 
            `Frequency = ${par_clk_freq_g} MHz\n` +
            `Period    = ${reg.general.clk_period} ns`

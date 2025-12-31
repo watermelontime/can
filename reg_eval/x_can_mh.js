@@ -37,7 +37,7 @@ export function procRegsMhGlobal(reg) {
 
     // 2. Generate human-readable register report
     reg.VERSION.report.push({
-      severityLevel: sevC.infoHighlighted,
+      severityLevel: sevC.infoBold,
       msg: `VERSION: X_CAN MH V${reg.VERSION.fields.REL.toString(16).toUpperCase()}.${reg.VERSION.fields.STEP.toString(16).toUpperCase()}.${reg.VERSION.fields.SUBSTEP.toString(16).toUpperCase()}, Date ${reg.VERSION.fields.DAY.toString(16).toUpperCase().padStart(2,'0')}.${reg.VERSION.fields.MON.toString(16).toUpperCase().padStart(2,'0')}.202${reg.VERSION.fields.YEAR.toString(16).toUpperCase()}`
     });
   } // VERSION
@@ -600,7 +600,7 @@ export function procRegsMhTXFQ(reg) {
       target = reg.TX_FQ_SIZE0;
     }
     target.report.push({
-      severityLevel: sevC.infoHighlighted,
+      severityLevel: sevC.infoBold,
       msg: 'TX FIFO Queues Summary\n' + lines.join('\n')
     });
   } catch (e) {
@@ -805,7 +805,7 @@ export function procRegsMhTXPQ(reg) {
         target = reg._TX_PQ_SUMMARY;
       }
       target.report.push({
-        severityLevel: sevC.infoHighlighted,
+        severityLevel: sevC.infoBold,
         msg: 'TX Priority Queue Slot Summary\n' + lines.join('\n')
       });
     }
@@ -1145,7 +1145,7 @@ export function procRegsMhRXFQ(reg) {
       target = reg._RX_FQ_SUMMARY;
     }
     target.report.push({
-      severityLevel: sevC.infoHighlighted,
+      severityLevel: sevC.infoBold,
       msg: 'RX FIFO Queues Summary\n' + lines.join('\n')
     });
   } catch (e) {
@@ -1309,7 +1309,7 @@ export function procRegsMhRXTXFilter(reg) {
     const txFilterSummary = lines.join('\n');
     // Attach summary to CTRL1 (arbitrary choice) report list
     reg.TX_FILTER_CTRL1.report.push({
-      severityLevel: sevC.infoHighlighted,
+      severityLevel: sevC.infoBold,
       msg: txFilterSummary
     });
   }
@@ -1984,7 +1984,7 @@ export function buildLMEMMemoryMap(reg) {
   let appended = false;
   for (const name of targets) {
     if (name in reg && reg[name] && Array.isArray(reg[name].report)) {
-      reg[name].report.push({ severityLevel: sevC.infoHighlighted, msg: msg_lmemMap });
+      reg[name].report.push({ severityLevel: sevC.infoBold, msg: msg_lmemMap });
       if (overlapErrors.length) {
         for (const emsg of overlapErrors) reg[name].report.push({ severityLevel: sevC.error, msg: emsg });
       } else {

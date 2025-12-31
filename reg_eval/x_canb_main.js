@@ -495,7 +495,7 @@ function procMramCtrl(reg) {
       if (reg[name] && Array.isArray(reg[name].report)) { attachTo = name; break; }
     }
     if (attachTo) {
-      reg[attachTo].report.push({ severityLevel: sevC.infoHighlighted, msg: summaryMsg });
+      reg[attachTo].report.push({ severityLevel: sevC.infoBold, msg: summaryMsg });
     }
   }
 }
@@ -811,7 +811,7 @@ function procRegsIrc(reg) {
       }).join('\n');
     }
     reg.IRC_ENA.report.push({
-      severityLevel: sevC.infoHighlighted,
+      severityLevel: sevC.infoBold,
       msg: `IRC Interrupt Summary (only enabled IRs)\n` +
            `Bit  Name${' '.repeat(nameWidth-4)}  RAW ENA\n` +
            `${lines}`

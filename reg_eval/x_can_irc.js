@@ -556,7 +556,7 @@ export function procRegsIRC(reg) {
     }
     reg.FUNC_ENA = reg.FUNC_ENA || { report: [] };
     reg.FUNC_ENA.report.push({
-      severityLevel: sevC.infoHighlighted,
+      severityLevel: sevC.infoBold,
       msg: `FUNC Interrupt Summary (only enabled IRs)\n`+
            `Bit  Name${' '.repeat(nameWidth-4)}  RAW ENA\n`+
            `${lines}`
@@ -603,7 +603,7 @@ export function procRegsIRC(reg) {
       }).join('\n');
     }
     reg.ERR_ENA.report.push({
-      severityLevel: sevC.infoHighlighted,
+      severityLevel: sevC.infoBold,
       msg: `ERR Interrupt Summary (only enabled IRs)\n`+
            `Bit  Name${' '.repeat(nameWidthErr-4)}  RAW ENA\n`+
            `${linesErr}`
@@ -650,7 +650,7 @@ export function procRegsIRC(reg) {
       }).join('\n');
     }
     reg.SAFETY_ENA.report.push({
-      severityLevel: sevC.infoHighlighted,
+      severityLevel: sevC.infoBold,
       msg: `SAFETY Interrupt Summary (only enabled IRs)\n`+
            `Bit  Name${' '.repeat(nameWidthSaf-4)}  RAW ENA\n`+
            `${linesSaf}`

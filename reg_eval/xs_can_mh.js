@@ -29,7 +29,7 @@ export function procRegsMhGlobal(reg) {
 
     // 2. Generate human-readable register report
     reg.XSCAN_VERSION.report.push({
-      severityLevel: sevC.infoHighlighted,
+      severityLevel: sevC.infoBold,
       msg: `Version: XS_CAN ${reg.XSCAN_VERSION.fields.MAJOR.toString(16).toUpperCase()}.${reg.XSCAN_VERSION.fields.MINOR.toString(16).toUpperCase()}.${reg.XSCAN_VERSION.fields.PATCH.toString(16).toUpperCase()}`
     });
   } // XSCAN_VERSION
@@ -238,7 +238,7 @@ export function procRegsMhGlobal(reg) {
     // Check if Protected area is maximum size
     if (reg.LMEM_PROT.fields.SA === 0x0000 && reg.LMEM_PROT.fields.EA === 0xFFFF) {
       reg.LMEM_PROT.report.push({
-        severityLevel: sevC.infoHighlighted,
+        severityLevel: sevC.infoBold,
         msg: `LMEM_PROT: Entire LMEM address space (18 bit = 256 KB) is accessible by XS_CAN (no protection applied)!`
       });
     }
@@ -1479,8 +1479,8 @@ export function buildQueuesSummaryAndMemoryMap(reg) {
   let appended = false;
   for (const name of targets) {
     if (name in reg && reg[name] && Array.isArray(reg[name].report)) {
-      reg[name].report.push({ severityLevel: sevC.infoHighlighted, msg: msg_qsum });
-      reg[name].report.push({ severityLevel: sevC.infoHighlighted, msg: msg_lmemMap });
+      reg[name].report.push({ severityLevel: sevC.infoBold, msg: msg_qsum });
+      reg[name].report.push({ severityLevel: sevC.infoBold, msg: msg_lmemMap });
       // Push overlap errors as separate error report entries
       if (lmemOverlapErrors.length) {
         for (const emsg of lmemOverlapErrors) {
@@ -1494,7 +1494,7 @@ export function buildQueuesSummaryAndMemoryMap(reg) {
       }
       // SMEM map and errors only in CTM
       if (ctme === 1 && smemRows.length) {
-        reg[name].report.push({ severityLevel: sevC.infoHighlighted, msg: msg_smemMap });
+        reg[name].report.push({ severityLevel: sevC.infoBold, msg: msg_smemMap });
         // Push overlap errors as separate error report entries
         if (smemOverlapErrors.length) {
           for (const emsg of smemOverlapErrors) {

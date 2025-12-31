@@ -2,11 +2,10 @@
 export const sevC = {
   info: 0,
   infoVerbose: 1,
-  infoHighlighted: 2,
+  infoBold: 2,
   warning: 3,
   error: 4,
-  recommendation: 5,
-  calculation: 6,
+  calculation: 5,
 };
 
 // Helper function to extract bits from register value

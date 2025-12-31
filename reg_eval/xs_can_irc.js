@@ -541,7 +541,7 @@ export function procRegsIRC(reg) {
 			? 'No TX_FUNC interrupts enabled (all ENA bits = 0)'
 			: enabledTx.map(d => `${d.bit.toString().padStart(2,' ')}   ${d.key.padEnd(nameWidthTx,' ')}  ${String(reg.TX_FUNC_RAW.fields[d.key])}   ${String(reg.TX_FUNC_ENA.fields[d.key])}`).join('\n');
 		reg.TX_FUNC_ENA.report.push({
-			severityLevel: sevC.infoHighlighted,
+			severityLevel: sevC.infoBold,
 			msg: `TX_FUNC Interrupt Summary (only enabled IRs)\n`+
 					 `Bit  Name${' '.repeat(nameWidthTx-4)}  RAW ENA\n`+
 					 `${linesTx}`
@@ -565,7 +565,7 @@ export function procRegsIRC(reg) {
 			? 'No RX_FUNC interrupts enabled (all ENA bits = 0)'
 			: enabledRx.map(d => `${d.bit.toString().padStart(2,' ')}   ${d.key.padEnd(nameWidthRx,' ')}  ${String(reg.RX_FUNC_RAW.fields[d.key])}   ${String(reg.RX_FUNC_ENA.fields[d.key])}`).join('\n');
 		reg.RX_FUNC_ENA.report.push({
-			severityLevel: sevC.infoHighlighted,
+			severityLevel: sevC.infoBold,
 			msg: `RX_FUNC Interrupt Summary (only enabled IRs)\n`+
 					 `Bit  Name${' '.repeat(nameWidthRx-4)}  RAW ENA\n`+
 					 `${linesRx}`
@@ -597,7 +597,7 @@ export function procRegsIRC(reg) {
 			? 'No ERR_STS interrupts enabled (all ENA bits = 0)'
 			: enabledErr.map(d => `${d.bit.toString().padStart(2,' ')}   ${d.key.padEnd(nameWidthErr,' ')}  ${String(reg.ERR_STS_RAW.fields[d.key])}   ${String(reg.ERR_STS_ENA.fields[d.key])}`).join('\n');
 		reg.ERR_STS_ENA.report.push({
-			severityLevel: sevC.infoHighlighted,
+			severityLevel: sevC.infoBold,
 			msg: `ERR_STS Interrupt Summary (only enabled IRs)\n`+
 					 `Bit  Name${' '.repeat(nameWidthErr-4)}  RAW ENA\n`+
 					 `${linesErr}`
@@ -627,7 +627,7 @@ export function procRegsIRC(reg) {
 			? 'No SAFETY interrupts enabled (all ENA bits = 0)'
 			: enabledSaf.map(d => `${d.bit.toString().padStart(2,' ')}   ${d.key.padEnd(nameWidthSaf,' ')}  ${String(reg.SAFETY_RAW.fields[d.key])}   ${String(reg.SAFETY_ENA.fields[d.key])}`).join('\n');
 		reg.SAFETY_ENA.report.push({
-			severityLevel: sevC.infoHighlighted,
+			severityLevel: sevC.infoBold,
 			msg: `SAFETY Interrupt Summary (only enabled IRs)\n`+
 					 `Bit  Name${' '.repeat(nameWidthSaf-4)}  RAW ENA\n`+
 					 `${linesSaf}`
