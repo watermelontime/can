@@ -231,8 +231,8 @@ export function procRegsMhGlobal(reg) {
     reg.LMEM_PROT.report.push({
       severityLevel: sevC.info,
       msg: `LMEM_PROT: ${reg.LMEM_PROT.name_long} (0x${reg.LMEM_PROT.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[EA] LMEM End   Address (of accessible space) = 0x${(reg.LMEM_PROT.fields.EA << 2).toString(16).toUpperCase().padStart(5,'0')} (dec: ${(reg.LMEM_PROT.fields.EA << 2).toString(10).padStart(6,' ')}) as byte addr\n` +
-           `[SA] LMEM Start Address (of accessible space) = 0x${(reg.LMEM_PROT.fields.SA << 2).toString(16).toUpperCase().padStart(5,'0')} (dec: ${(reg.LMEM_PROT.fields.SA << 2).toString(10).padStart(6,' ')}) as byte addr`
+           `[EA] LMEM End   Address (of accessible space) = 0x${(reg.LMEM_PROT.fields.EA).toString(16).toUpperCase().padStart(4,'0')} word addr = 0x${(reg.LMEM_PROT.fields.EA << 2).toString(16).toUpperCase().padStart(5,'0')} (dec: ${(reg.LMEM_PROT.fields.EA << 2).toString(10).padStart(5,' ')}) byte addr\n` +
+           `[SA] LMEM Start Address (of accessible space) = 0x${(reg.LMEM_PROT.fields.SA).toString(16).toUpperCase().padStart(4,'0')} word addr = 0x${(reg.LMEM_PROT.fields.SA << 2).toString(16).toUpperCase().padStart(5,'0')} (dec: ${(reg.LMEM_PROT.fields.SA << 2).toString(10).padStart(5,' ')}) byte addr`
     });
 
     // Check if Protected area is maximum size
@@ -287,7 +287,7 @@ export function procRegsMhGlobal(reg) {
     reg.RX_FILTER_LMEM.report.push({
       severityLevel: sevC.info,
       msg: `RX_FILTER_LMEM: ${reg.RX_FILTER_LMEM.name_long} (0x${reg.RX_FILTER_LMEM.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[SA] Start address (LMEM, 64 byte aligned) = 0x${(startAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte}) as byte addr`
+           `[SA] Start address (LMEM, 64 byte aligned) = 0x${(startAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RX_FILTER_LMEM
 }
@@ -309,7 +309,7 @@ export function procRegsMhTXFQ(reg) {
     reg.TXFQ_LMEM_SA.report.push({
       severityLevel: sevC.info,
       msg: `TXFQ_LMEM_SA: ${reg.TXFQ_LMEM_SA.name_long} (0x${reg.TXFQ_LMEM_SA.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] TXFQ Start Address (LMEM, 64 byte aligned) = 0x${(startAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[ADD] TXFQ Start Address (LMEM, 64 byte aligned) = 0x${(startAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // TXFQ_LMEM_SA
 
@@ -329,7 +329,7 @@ export function procRegsMhTXFQ(reg) {
     reg.TXFQ_LMEM_EA.report.push({
       severityLevel: sevC.info,
       msg: `TXFQ_LMEM_EA: ${reg.TXFQ_LMEM_EA.name_long} (0x${reg.TXFQ_LMEM_EA.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] TXFQ End   Address (LMEM, 64 byte aligned) = 0x${(endAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${endAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[ADD] TXFQ End   Address (LMEM, 64 byte aligned) = 0x${(endAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${endAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   }
 
@@ -409,7 +409,7 @@ export function procRegsMhTXFQ(reg) {
     reg.TXFQ_WPTR.report.push({
       severityLevel: sevC.info,
       msg: `TXFQ_WPTR: ${reg.TXFQ_WPTR.name_long} (0x${reg.TXFQ_WPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[WPTR_ADD] TXFQ Write Pointer (LMEM) = 0x${(wptrAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[WPTR_ADD] TXFQ Write Pointer (LMEM) = 0x${(wptrAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // TXFQ_WPTR
 
@@ -429,7 +429,7 @@ export function procRegsMhTXFQ(reg) {
     reg.TXFQ_RPTR.report.push({
       severityLevel: sevC.info,
       msg: `TXFQ_RPTR: ${reg.TXFQ_RPTR.name_long} (0x${reg.TXFQ_RPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[RPTR_ADD] TXFQ Read Pointer (LMEM)  = 0x${(rptrAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${rptrAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[RPTR_ADD] TXFQ Read Pointer (LMEM)  = 0x${(rptrAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${rptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // TXFQ_RPTR
 }
@@ -542,7 +542,7 @@ export function procRegsMhTXPQ(reg) {
     reg.TXPQ_LMEM.report.push({
       severityLevel: sevC.info,
       msg: `TXPQ_LMEM: ${reg.TXPQ_LMEM.name_long}  (0x${reg.TXPQ_LMEM.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[SA] Start address (LMEM, 64 byte aligned) = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[SA] Start address (LMEM, 64 byte aligned) = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // TXPQ_LMEM
 
@@ -562,7 +562,7 @@ export function procRegsMhTXPQ(reg) {
     reg.TXPQ_WPTR.report.push({
       severityLevel: sevC.info,
       msg: `TXPQ_WPTR: ${reg.TXPQ_WPTR.name_long} (0x${reg.TXPQ_WPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[WPTR_ADD] TXPQ Write Pointer (LMEM)       = 0x${wptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[WPTR_ADD] TXPQ Write Pointer (LMEM)       = 0x${wptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // TXPQ_WPTR
 }
@@ -584,7 +584,7 @@ export function procRegsMhTEFQ(reg) {
     reg.TEFQ_LMEM.report.push({
       severityLevel: sevC.info,
       msg: `TEFQ_LMEM: ${reg.TEFQ_LMEM.name_long} (0x${reg.TEFQ_LMEM.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[SA] Start address (LMEM, 64 byte aligned) = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[SA] Start address (LMEM, 64 byte aligned) = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // TEFQ_LMEM
 
@@ -649,7 +649,7 @@ export function procRegsMhTEFQ(reg) {
     reg.TEFQ_WPTR.report.push({
       severityLevel: sevC.info,
       msg: `TEFQ_WPTR: ${reg.TEFQ_WPTR.name_long} (0x${reg.TEFQ_WPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[WPTR_ADD] TEFQ Write Pointer (LMEM) = 0x${wptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[WPTR_ADD] TEFQ Write Pointer (LMEM) = 0x${wptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // TEFQ_WPTR
 
@@ -669,7 +669,7 @@ export function procRegsMhTEFQ(reg) {
     reg.TEFQ_RPTR.report.push({
       severityLevel: sevC.info,
       msg: `TEFQ_RPTR: ${reg.TEFQ_RPTR.name_long} (0x${reg.TEFQ_RPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[RPTR_ADD] TEFQ Read Pointer (LMEM)  = 0x${rptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${rptrAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[RPTR_ADD] TEFQ Read Pointer (LMEM)  = 0x${rptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${rptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // TEFQ_RPTR
 }
@@ -691,7 +691,7 @@ export function procRegsMhCTM(reg) {
     reg.CTB_LMEM.report.push({
       severityLevel: sevC.info,
       msg: `CTB_LMEM: ${reg.CTB_LMEM.name_long} (0x${reg.CTB_LMEM.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[SA] Start address (LMEM, 64 byte aligned) = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(6,' ')}) as byte addr (only applicable in CTM)`
+           `[SA] Start address (LMEM, 64 byte aligned) = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr (only applicable in CTM)`
     });
   } // CTB_LMEM
 
@@ -772,7 +772,7 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ0_SA.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ0_SA: ${reg.RXFQ0_SA.name_long} (0x${reg.RXFQ0_SA.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] RXFQ0 Start Address (FMM: LMEM, CTM: SMEM, 64 byte aligned) = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[ADD] RXFQ0 Start Address (FMM: LMEM, CTM: SMEM, 64 byte aligned) = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RXFQ0_SA
 
@@ -792,7 +792,7 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ0_EA.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ0_EA: ${reg.RXFQ0_EA.name_long} (0x${reg.RXFQ0_EA.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] RXFQ0 End   Address (FMM: LMEM, CTM: SMEM, 64 byte aligned) = 0x${endAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${endAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[ADD] RXFQ0 End   Address (FMM: LMEM, CTM: SMEM, 64 byte aligned) = 0x${endAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${endAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RXFQ0_EA
 
@@ -812,7 +812,7 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ0_RPTR.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ0_RPTR: ${reg.RXFQ0_RPTR.name_long} (0x${reg.RXFQ0_RPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] RXFQ0 Read Pointer (FMM: LMEM, CTM: SMEM) = 0x${rptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${rptrAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[ADD] RXFQ0 Read Pointer (FMM: LMEM, CTM: SMEM) = 0x${rptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${rptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RXFQ0_RPTR
 
@@ -832,7 +832,7 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ0_WPTR.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ0_WPTR: ${reg.RXFQ0_WPTR.name_long} (0x${reg.RXFQ0_WPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] RXFQ0 Write Pointer (FMM: LMEM, CTM: SMEM) = 0x${wptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[ADD] RXFQ0 Write Pointer (FMM: LMEM, CTM: SMEM) = 0x${wptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RXFQ0_WPTR
 
@@ -852,7 +852,7 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ0_WRAP_PTR.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ0_WRAP_PTR: ${reg.RXFQ0_WRAP_PTR.name_long} (0x${reg.RXFQ0_WRAP_PTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[SMEM_ADD] RXFQ0 Wrap Pointer (SMEM) = 0x${smemAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${smemAddrByte.toString(10).padStart(6,' ')}) as byte addr (only applicable in CTM)`
+           `[SMEM_ADD] RXFQ0 Wrap Pointer (SMEM) = 0x${smemAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${smemAddrByte.toString(10).padStart(5,' ')}) byte addr (only applicable in CTM)`
     });
   } // RXFQ0_WRAP_PTR
 
@@ -872,7 +872,7 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ1_SA.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ1_SA: ${reg.RXFQ1_SA.name_long} (0x${reg.RXFQ1_SA.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] RXFQ1 Start Address (FMM: LMEM, CTM: SMEM, 64 byte aligned) = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[ADD] RXFQ1 Start Address (FMM: LMEM, CTM: SMEM, 64 byte aligned) = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RXFQ1_SA
 
@@ -892,7 +892,7 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ1_EA.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ1_EA: ${reg.RXFQ1_EA.name_long} (0x${reg.RXFQ1_EA.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] RXFQ1 End   Address (FMM: LMEM, CTM: SMEM, 64 byte aligned) = 0x${endAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${endAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[ADD] RXFQ1 End   Address (FMM: LMEM, CTM: SMEM, 64 byte aligned) = 0x${endAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${endAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RXFQ1_EA
 
@@ -912,7 +912,7 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ1_RPTR.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ1_RPTR: ${reg.RXFQ1_RPTR.name_long} (0x${reg.RXFQ1_RPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] RXFQ1 Read Pointer (FMM: LMEM, CTM: SMEM)  = 0x${rptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${rptrAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[ADD] RXFQ1 Read Pointer (FMM: LMEM, CTM: SMEM)  = 0x${rptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${rptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RXFQ1_RPTR
 
@@ -932,7 +932,7 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ1_WPTR.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ1_WPTR: ${reg.RXFQ1_WPTR.name_long} (0x${reg.RXFQ1_WPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] RXFQ1 Write Pointer (FMM: LMEM, CTM: SMEM) = 0x${wptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(6,' ')}) as byte addr`
+           `[ADD] RXFQ1 Write Pointer (FMM: LMEM, CTM: SMEM) = 0x${wptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RXFQ1_WPTR
 
@@ -952,7 +952,7 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ1_WRAP_PTR.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ1_WRAP_PTR: ${reg.RXFQ1_WRAP_PTR.name_long} (0x${reg.RXFQ1_WRAP_PTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[SMEM_ADD] RXFQ1 Wrap Pointer (SMEM) = 0x${smemAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${smemAddrByte.toString(10).padStart(6,' ')}) as byte addr (ony applicable in CTM)`
+           `[SMEM_ADD] RXFQ1 Wrap Pointer (SMEM) = 0x${smemAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${smemAddrByte.toString(10).padStart(5,' ')}) byte addr (only applicable in CTM)`
     });
   } // RXFQ1_WRAP_PTR
 
@@ -1021,7 +1021,7 @@ export function procRegsMhDebug(reg) {
     reg.TX_SCAN_WC.report.push({
       severityLevel: sevC.info,
       msg: `TX_SCAN_WC: ${reg.TX_SCAN_WC.name_long} (0x${reg.TX_SCAN_WC.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[FQ_PQ_ADD] LMEM address pointer (byte)       = 0x${addrByte.toString(16).toUpperCase().padStart(5,'0')} (dec: ${addrByte.toString(10).padStart(6,' ')})\n` +
+           `[FQ_PQ_ADD] LMEM address pointer (byte)       = 0x${addrByte.toString(16).toUpperCase().padStart(5,'0')} (dec: ${addrByte.toString(10).padStart(5,' ')})\n` +
            `[PQSN     ] PQ slot number (if from PQ)       = ${reg.TX_SCAN_WC.fields.PQSN}\n` +
            `[FQ_PQ    ] Candidate source (0:TXFQ, 1:TXPQ) = ${reg.TX_SCAN_WC.fields.FQ_PQ} (${candType})\n` +
            `[VALID    ] Register contents valid           = ${reg.TX_SCAN_WC.fields.VALID} (0: invalid, 1: valid)` 
@@ -1049,7 +1049,7 @@ export function procRegsMhDebug(reg) {
     reg.TX_SCAN_PC.report.push({
       severityLevel: sevC.info,
       msg: `TX_SCAN_PC: ${reg.TX_SCAN_PC.name_long} (0x${reg.TX_SCAN_PC.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[FQ_PQ_ADD] LMEM address pointer (byte)       = 0x${addrByte.toString(16).toUpperCase().padStart(5,'0')} (dec: ${addrByte.toString(10).padStart(6,' ')})\n` +
+           `[FQ_PQ_ADD] LMEM address pointer (byte)       = 0x${addrByte.toString(16).toUpperCase().padStart(5,'0')} (dec: ${addrByte.toString(10).padStart(5,' ')})\n` +
            `[PQSN     ] PQ slot number (if from PQ)       = ${reg.TX_SCAN_PC.fields.PQSN}\n` +
            `[FQ_PQ    ] Candidate source (0:TXFQ, 1:TXPQ) = ${reg.TX_SCAN_PC.fields.FQ_PQ} (${candType})\n` +
            `[VALID    ] Register contents valid           = ${reg.TX_SCAN_PC.fields.VALID} (0: invalid, 1: valid)`
@@ -1144,7 +1144,7 @@ export function buildQueuesSummaryAndMemoryMap(reg) {
   const txfq_maxWords64 = bits(txfq_cfg, 5, 0);
   const txfq_elemSizeB = txfq_maxWords64 !== undefined ? (txfq_maxWords64 << 6) : undefined; // bytes
   const txfq_elemSizeStr = txfq_elemSizeB !== undefined ? `${txfq_elemSizeB} byte max` : dash;
-  const txfq_totalB = (txfq_sa_b !== undefined && txfq_ea_b !== undefined && txfq_ea_b >= txfq_sa_b) ? (txfq_ea_b - txfq_sa_b + 64) : undefined;
+  const txfq_totalB = (txfq_sa_b !== undefined && txfq_ea_b !== undefined && txfq_ea_b >= txfq_sa_b) ? (txfq_ea_b - txfq_sa_b + 4) : undefined;
   const txfq_fill = bits(rb('TXFQ_STS'), 7, 0);
   const txfq_rptr = bits(rb('TXFQ_RPTR'), 17, 2);
   const txfq_wptr = bits(rb('TXFQ_WPTR'), 17, 2);
@@ -1225,7 +1225,7 @@ export function buildQueuesSummaryAndMemoryMap(reg) {
   const r0_ea = bits(rb('RXFQ0_EA'), 31, 6);
   const r0_sa_b = r0_sa !== undefined ? (r0_sa << 6) : undefined;
   const r0_ea_b = r0_ea !== undefined ? (r0_ea << 6) : undefined;
-  const r0_totalB = (r0_sa_b !== undefined && r0_ea_b !== undefined && r0_ea_b >= r0_sa_b) ? (r0_ea_b - r0_sa_b + 64) : undefined;
+  const r0_totalB = (r0_sa_b !== undefined && r0_ea_b !== undefined && r0_ea_b >= r0_sa_b) ? (r0_ea_b - r0_sa_b + 4) : undefined;
   const r0_fill = bits(rb('RXFQ_STS'), 7, 0);
   const r0_rptr = bits(rb('RXFQ0_RPTR'), 31, 2);
   const r0_wptr = bits(rb('RXFQ0_WPTR'), 31, 2);
@@ -1253,7 +1253,7 @@ export function buildQueuesSummaryAndMemoryMap(reg) {
   const r1_ea = bits(rb('RXFQ1_EA'), 31, 6);
   const r1_sa_b = r1_sa !== undefined ? (r1_sa << 6) : undefined;
   const r1_ea_b = r1_ea !== undefined ? (r1_ea << 6) : undefined;
-  const r1_totalB = (r1_sa_b !== undefined && r1_ea_b !== undefined && r1_ea_b >= r1_sa_b) ? (r1_ea_b - r1_sa_b + 64) : undefined;
+  const r1_totalB = (r1_sa_b !== undefined && r1_ea_b !== undefined && r1_ea_b >= r1_sa_b) ? (r1_ea_b - r1_sa_b + 4) : undefined;
   const r1_fill = bits(rb('RXFQ_STS'), 15, 8);
   const r1_rptr = bits(rb('RXFQ1_RPTR'), 31, 2);
   const r1_wptr = bits(rb('RXFQ1_WPTR'), 31, 2);
@@ -1333,12 +1333,12 @@ export function buildQueuesSummaryAndMemoryMap(reg) {
   }
   // TXFQ (enabled via MH_CFG)
   if (enTXFQ === 1 && txfq_sa_b !== undefined) {
-    const txfqEaLast = txfq_ea_b !== undefined ? (txfq_ea_b + 63) : undefined; // last byte of last 64-byte block
+    const txfqEaLast = txfq_ea_b !== undefined ? (txfq_ea_b + 3) : undefined; // last byte of EA-word
     lmemEntries.push({ name: 'TXFQ', sa: txfq_sa_b, ea: txfqEaLast, size: txfq_totalB });
   }
   // TXPQ (enabled via MH_CFG)
   if (enTXPQ === 1 && txpq_sa_b !== undefined) {
-    const txpqEaLast = txpq_ea_b !== undefined ? (txpq_ea_b - 1) : undefined; // computed end last byte
+    const txpqEaLast = txpq_ea_b !== undefined ? (txpq_ea_b - 1) : undefined; // computed end = last byte
     lmemEntries.push({ name: 'TXPQ', sa: txpq_sa_b, ea: txpqEaLast, size: txpq_totalB });
   }
   // TEFQ (enabled via MH_CFG)
@@ -1356,11 +1356,11 @@ export function buildQueuesSummaryAndMemoryMap(reg) {
   // RXFQ0/1 belong to LMEM only in FMM (and only if enabled)
   if (ctme === 0) {
     if (enRXFQ0 === 1 && r0_sa_b !== undefined) {
-      const r0EaLast = r0_ea_b !== undefined ? (r0_ea_b + 63) : undefined; // last byte of last 64-byte block
+      const r0EaLast = r0_ea_b !== undefined ? (r0_ea_b + 3) : undefined; // last byte EA-word
       lmemEntries.push({ name: 'RXFQ0', sa: r0_sa_b, ea: r0EaLast, size: r0_totalB });
     }
     if (enRXFQ1 === 1 && r1_sa_b !== undefined) {
-      const r1EaLast = r1_ea_b !== undefined ? (r1_ea_b + 63) : undefined;
+      const r1EaLast = r1_ea_b !== undefined ? (r1_ea_b + 3) : undefined; // last byte EA-word
       lmemEntries.push({ name: 'RXFQ1', sa: r1_sa_b, ea: r1EaLast, size: r1_totalB });
     }
   }
@@ -1386,15 +1386,16 @@ export function buildQueuesSummaryAndMemoryMap(reg) {
   if (lmemEntries.length) {
     lmemRows.push(memMapHeader('LMEM Memory Map'));
     // Show LMEM_PROT as first row
-    const lmemSize = (lmemSA !== undefined && lmemEA !== undefined) ? (lmemEA - lmemSA + 1) : undefined;
-    lmemRows.push(entryLineLmem('LMEM_PROT', lmemSA, lmemEA, lmemSize));
+    const lmemSize   = (lmemSA !== undefined && lmemEA !== undefined) ? (lmemEA - lmemSA + 4) : undefined; // EA itselft is part of the range: +4 bytes
+    const lmemEaLast = (lmemEA !== undefined) ? (lmemEA + 3) : undefined; // last byte of EA-word
+    lmemRows.push(entryLineLmem('LMEM_PROT', lmemSA, lmemEaLast, lmemSize));
     if (lmemProt === undefined) {
       lmemRows[lmemRows.length - 1] += ' (register undefined: max. LMEM size assumed (256 kbyte))';
     }
     let prevEnd = lmemSA; // start gaps from LMEM start if available
     for (const it of lmemEntries) {
       if (prevEnd !== undefined && it.sa !== undefined && it.sa > (prevEnd + 1)) {
-        lmemRows.push(entryLineLmem('- GAP -', prevEnd + 1, it.sa, (it.sa - (prevEnd + 1)))); // gap
+        lmemRows.push(entryLineLmem('- GAP -', prevEnd + 1, it.sa - 1, ((it.sa - 1)-(prevEnd + 1)+1))); // gap starts 1 byte after previoous, and ends 1 byte before current start
       }
       lmemRows.push(entryLineLmem(it.name, it.sa, it.ea, it.size));
       if (it.name === 'Filters' && it._filtersMaxEa !== undefined) {
@@ -1403,7 +1404,7 @@ export function buildQueuesSummaryAndMemoryMap(reg) {
       prevEnd = (it.ea !== undefined ? it.ea : prevEnd);
     }
     if (prevEnd !== undefined && lmemEA !== undefined && lmemEA > (prevEnd + 1)) {
-      lmemRows.push(entryLineLmem('- GAP -', prevEnd + 1, lmemEA, (lmemEA - (prevEnd + 1)))); // final gap
+      lmemRows.push(entryLineLmem('- GAP -', prevEnd + 1, lmemEA - 1, (lmemEA - (prevEnd + 1)))); // final gap
     }
   }
 
@@ -1412,12 +1413,12 @@ export function buildQueuesSummaryAndMemoryMap(reg) {
   if (ctme === 1) {
     const smemEntries = [];
     if (enRXFQ0 === 1 && r0_sa_b !== undefined) {
-      const r0EaLast = r0_ea_b !== undefined ? (r0_ea_b + 63) : undefined;
+      const r0EaLast = r0_ea_b !== undefined ? (r0_ea_b + 3) : undefined; // last byte of EA-word
       const r0Size = (r0_totalB !== undefined ? r0_totalB : (r0EaLast !== undefined && r0_sa_b !== undefined ? (r0EaLast - r0_sa_b + 1) : undefined));
       smemEntries.push({ name: 'RXFQ0', sa: r0_sa_b, ea: r0EaLast, size: r0Size });
     }
     if (enRXFQ1 === 1 && r1_sa_b !== undefined) {
-      const r1EaLast = r1_ea_b !== undefined ? (r1_ea_b + 63) : undefined;
+      const r1EaLast = r1_ea_b !== undefined ? (r1_ea_b + 3) : undefined; // last byte of EA-word
       const r1Size = (r1_totalB !== undefined ? r1_totalB : (r1EaLast !== undefined && r1_sa_b !== undefined ? (r1EaLast - r1_sa_b + 1) : undefined));
       smemEntries.push({ name: 'RXFQ1', sa: r1_sa_b, ea: r1EaLast, size: r1Size });
     }
