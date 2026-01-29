@@ -490,7 +490,7 @@ export function procRegsMhTXPQ(reg) {
     reg.TXPQ_STS0.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TXPQ_STS0.fields.SLOT_OCC = getBits(regValue, 31, 0);
+    reg.TXPQ_STS0.fields.SLOT_OCC = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
     const occ = reg.TXPQ_STS0.fields.SLOT_OCC >>> 0;
     // Count busy slots
     let busyCount = 0; {
@@ -704,7 +704,7 @@ export function procRegsMhCTM(reg) {
     reg.CTM_DESC_SRC.report = [];
 
     // 1. Decode all individual bits of register
-    reg.CTM_DESC_SRC.fields.ADD = getBits(regValue, 31, 0);
+    reg.CTM_DESC_SRC.fields.ADD = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
 
     // 2. Generate human-readable register report
     reg.CTM_DESC_SRC.report.push({
@@ -723,7 +723,7 @@ export function procRegsMhCTM(reg) {
     reg.CTM_DESC_DEST.report = [];
 
     // 1. Decode all individual bits of register
-    reg.CTM_DESC_DEST.fields.ADD = getBits(regValue, 31, 0);
+    reg.CTM_DESC_DEST.fields.ADD = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
 
     // 2. Generate human-readable register report
     reg.CTM_DESC_DEST.report.push({

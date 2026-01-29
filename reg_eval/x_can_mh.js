@@ -340,7 +340,7 @@ export function procRegsMhTXFQ(reg) {
     reg.TX_DESC_ADD_PT.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_DESC_ADD_PT.fields.VAL = getBits(regValue, 31, 0);
+    reg.TX_DESC_ADD_PT.fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
 
     // 2. Generate human-readable register report
     reg.TX_DESC_ADD_PT.report.push({
@@ -506,7 +506,7 @@ export function procRegsMhTXFQ(reg) {
       const regValue = reg[addPtName].int32;
       reg[addPtName].fields = {};
       reg[addPtName].report = [];
-      reg[addPtName].fields.VAL = getBits(regValue, 31, 0);
+      reg[addPtName].fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
       reg[addPtName].report.push({
         severityLevel: sevC.info,
         msg: `${addPtName}: ${reg[addPtName].name_long} (0x${reg[addPtName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
@@ -519,7 +519,7 @@ export function procRegsMhTXFQ(reg) {
       const regValue = reg[startAddName].int32;
       reg[startAddName].fields = {};
       reg[startAddName].report = [];
-      reg[startAddName].fields.VAL = getBits(regValue, 31, 0);
+      reg[startAddName].fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
       const alignOk = (regValue & 0x3) === 0;
       reg[startAddName].report.push({
         severityLevel: sevC.info,
@@ -634,7 +634,7 @@ export function procRegsMhTXPQ(reg) {
     reg.TX_PQ_STS0.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_PQ_STS0.fields.BUSY = getBits(regValue, 31, 0);
+    reg.TX_PQ_STS0.fields.BUSY = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
 
     // 2. Generate human-readable register report
     const busyIdx = listSetIdx32(reg.TX_PQ_STS0.fields.BUSY);
@@ -660,7 +660,7 @@ export function procRegsMhTXPQ(reg) {
     reg.TX_PQ_STS1.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_PQ_STS1.fields.SENT = getBits(regValue, 31, 0);
+    reg.TX_PQ_STS1.fields.SENT = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
 
     // 2. Generate human-readable register report
     const sentIdx = listSetIdx32(reg.TX_PQ_STS1.fields.SENT);
@@ -683,7 +683,7 @@ export function procRegsMhTXPQ(reg) {
     reg.TX_PQ_CTRL0.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_PQ_CTRL0.fields.START = getBits(regValue, 31, 0);
+    reg.TX_PQ_CTRL0.fields.START = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
 
     // 2. Generate human-readable register report
     const startIdx = listSetIdx32(reg.TX_PQ_CTRL0.fields.START);
@@ -707,7 +707,7 @@ export function procRegsMhTXPQ(reg) {
     reg.TX_PQ_CTRL1.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_PQ_CTRL1.fields.ABORT = getBits(regValue, 31, 0);
+    reg.TX_PQ_CTRL1.fields.ABORT = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
 
     // 2. Generate human-readable register report
     const abortIdx = listSetIdx32(reg.TX_PQ_CTRL1.fields.ABORT);
@@ -731,7 +731,7 @@ export function procRegsMhTXPQ(reg) {
     reg.TX_PQ_CTRL2.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_PQ_CTRL2.fields.ENABLE = getBits(regValue, 31, 0);
+    reg.TX_PQ_CTRL2.fields.ENABLE = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
 
     // 2. Generate human-readable register report
     const enaIdx = listSetIdx32(reg.TX_PQ_CTRL2.fields.ENABLE);
@@ -754,7 +754,7 @@ export function procRegsMhTXPQ(reg) {
     reg.TX_PQ_START_ADD.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_PQ_START_ADD.fields.VAL = getBits(regValue, 31, 0);
+    reg.TX_PQ_START_ADD.fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
     const alignOk = (regValue & 0x3) === 0;
 
     // 2. Generate human-readable register report
@@ -836,7 +836,7 @@ export function procRegsMhRXFQ(reg) {
     reg.RX_DESC_ADD_PT.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.RX_DESC_ADD_PT.fields.VAL = getBits(regValue, 31, 0);
+    reg.RX_DESC_ADD_PT.fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
 
     // 2. Generate human-readable register report
     reg.RX_DESC_ADD_PT.report.push({
@@ -1008,7 +1008,7 @@ export function procRegsMhRXFQ(reg) {
       const regValue = reg[addPtName].int32;
       reg[addPtName].fields = {};
       reg[addPtName].report = [];
-      reg[addPtName].fields.VAL = getBits(regValue, 31, 0);
+      reg[addPtName].fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
       reg[addPtName].report.push({
         severityLevel: sevC.info,
         msg: `${addPtName}: ${reg[addPtName].name_long} (0x${reg[addPtName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
@@ -1021,7 +1021,7 @@ export function procRegsMhRXFQ(reg) {
       const regValue = reg[startAddName].int32;
       reg[startAddName].fields = {};
       reg[startAddName].report = [];
-      reg[startAddName].fields.VAL = getBits(regValue, 31, 0);
+      reg[startAddName].fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
       const alignOk = (regValue & 0x3) === 0;
       reg[startAddName].report.push({
         severityLevel: sevC.info,
@@ -1058,7 +1058,7 @@ export function procRegsMhRXFQ(reg) {
       const regValue = reg[dcStartAddName].int32;
       reg[dcStartAddName].fields = {};
       reg[dcStartAddName].report = [];
-      reg[dcStartAddName].fields.VAL = getBits(regValue, 31, 0);
+      reg[dcStartAddName].fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
       const alignOk = (regValue & 0x3) === 0;
       reg[dcStartAddName].report.push({
         severityLevel: sevC.info,
@@ -1075,7 +1075,7 @@ export function procRegsMhRXFQ(reg) {
       const regValue = reg[rdAddPtName].int32;
       reg[rdAddPtName].fields = {};
       reg[rdAddPtName].report = [];
-      reg[rdAddPtName].fields.VAL = getBits(regValue, 31, 0);
+      reg[rdAddPtName].fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
       const initialSpecial = (regValue & 0x3) === 0x3; // initial required 0b11 for start according to manual
       const alignedLater   = (regValue & 0x3) === 0x0; // after initial should be aligned
       reg[rdAddPtName].report.push({
@@ -1923,7 +1923,7 @@ export function buildLMEMMemoryMap(reg) {
   const txPqSA = txPqBase !== undefined ? (txPqBase) : undefined;
   // Slots that place descriptors in LMEM: TX_PQ_CTRL2.ENABLE mask: The highest enabledbit index defines the neede memory space
   const txPqCtrl2 = rb('TX_PQ_CTRL2');
-  const txPqEnableMask = bits(txPqCtrl2, 31, 0);
+  const txPqEnableMask = bits(txPqCtrl2, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
   const highestBitIndex = (mask) => {
     if (mask === undefined) return -1;
     let m = mask >>> 0;

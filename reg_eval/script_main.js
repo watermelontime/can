@@ -52,7 +52,7 @@ let par_clk_freq_g = 160; // Global variable for CAN clock frequency in MHz
 let reg = {};
 
 // Application version shown next to the page title
-const APP_VERSION = 'V1.0.0';
+const APP_VERSION = 'V1.0.1';
 
 // initialize report verbosity object
 const reportVerbosity = {
