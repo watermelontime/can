@@ -1,0 +1,292 @@
+--- PROMPT 1 ---------------------------------------------
+I want to build a web-page that visualizes CAN frames on bit level.
+It shall be java-script based. The look and feel should be like the following web-page:
+reg_eval/index.html
+
+In a first step create a specification, by asking me things. Also specify the internal data structures for easy human understaning.
+
+Here are my first thoughts, so that we do not start at zero.
+
+The page shall be split into 3 logical parts:
+Part 1: Input
+Part 2: Frame output
+Part 3: Export area
+
+Details for Part 1
+b) user selects Frame type
+CAN CC: CBFF (11 bit ID)
+CAN CC: CBFF (11 bit ID, remote frame)
+CAN CC: CEFF (29 bit ID)
+CAN CC: CEFF (29 bit ID, remote frame)
+CAN FD: FBFF (11 bit ID)
+CAN FD: FEFF (29 bit ID)
+CAN XL: XBFF (11 bit ID)
+b) user adds input data
+- Frame fields, all fields shown, but those not usable are deactivated (and visually made grey)
+- The bit "ACKslot" shall also be an input parameter, default should be 1
+c) When the button "show frame" is pressed, the input data is processed and a frame is shown
+d) Figure properties can be selected with checkboxes: "show bit names", "use color", "show frame fields"
+
+Details for Part 2
+- the frame is visualized as a ditigal waveform
+- all bits have the same length and hight
+- the figure is of type SVG
+- the figure can be very wide, so there should be a way of scroling the figure left/rigth
+- "show bit names" will lead to the bit names beeing shown, like in Figure 2 in the ISO 11898-1. (Hint ISO showss the frame format, not a real waveform)
+- Text does not touch the waveform
+- "use color" colors bits with specific colors; e.g. stuff bits get colored orange
+- "show frame fields" add horizontally above the waveform the names of the fields as two lines, like in the ISO, All frame field names shall us just 1 line
+- the implementation of the drawing function shall have constants or variables for adapt figure easily: e.g. colors, bit width, bit hight, waveform line width, font size, ...
+
+Details for Part 3
+There should be links to "download frames as ...":
+- SVG file
+- PNG file
+- TXT file (0/1 values)
+
+Internal processing:
+- after user presses the button "show frame" internally the java-script generates a data structure called "myFrame"
+  a) myFrame shall be first filled with the user data and names
+  b) stuff bits are added
+  c) CRC is caluculated
+- the drawing function gets the data structure and walks through it to draw it
+
+--- PROMPT 2 ---------------------------------------------
+Answers
+Q1. Answer: No, there is no XEFF! So do not add it.
+Q2. Answer: Do not include IFS
+Q3. No
+Q4. Single hex field
+Q5. Both input formats supported for Data field
+Q6. DLC added. Agreed
+Q7. There is not FC and SLOT and XL! I do not want any of these.
+Q8. All CAN XL fields (XBFF) matter. Exactly as specified in ISO11898-1 in Figure 2.
+Q9. No, do not show the format bits to the user. Only provide input fields for user controllable fields. What I ment was: XL has an VCID field but CC not. So do not hide the VCID field, but disable it, when the user want to generate a CC frame.
+Q10. Some of the CRC (depends on frame type) also protect the stuff bits, first the stuff bits must be added, then the CRC has to be calculated
+Q11. We consider XL Fixed BitStuffing from the start. It is simple: add 1 stuff bit after 10 bits
+Q12. Always first calculate the dynamic stuff bits, then calculate the CRCs, then add the fixed stuff bits
+Q13. In FD the SBC is not needed for CRC calculation.
+Q14. Naming convention for bits: changes to you proposal: Stuff bits "stuff"; bits in data bytes Bit7, Bit6, ..., Bit0; CRC: Bit31, Bit30, ...
+Q15. No, better not. The data used by the drawing function should have some hierarchical structure
+Q16. Java Scrip Class makes more sense
+Q17. It should be a separte row below the SVG
+Q18. Update SVG only when button is pressed
+Q19. DLC should be a normal input field, so it is also usable for XL
+Q20. show bit names rotated 90 degree
+Q21. "use color" should add rectangles in the background of each bit
+Q22. add a new checkbox "use color stuff bit", when it is checked, stuff bits are colored (rectangle as beckground of the bit)
+Q23. Yes. 0=low, 1=high
+Q24. Fixed hight
+Q25. TXT export should be replaced by CSV export. 4 columns: 1=bit value, 2=bit name, 3=field name, 4=GroupName;
+Q26. No, the file name should be FRAMEFORMAT_DLCi.csv as example CBFF_DLC4.csv
+Q27. Yes, but The CRC in FD is calculated from SOF to end of Data field. So SBC is not covered by CRC.
+Q28. Plain scripts
+Q29. Yes, resuse same styles.css
+
+Other feedback:
+- in Frames with 11 bit it: the ID index range is 28:18
+- you XBFF specification is missing some bits. Check ISO11898-1 PDF I gave you.
+  * resXL (after XLF)
+  * ADH (after resXL)
+  * DH1 (after ADH)
+  * DH2 (after DH1)
+  * DL1 (after DH2)
+  * SBC (after DLC)
+  * PCRC (after SBC)
+  * DLC comes after SEC
+  * FCRC is the CRC
+  * FCP (after FCRC)
+- Data structure should also represent the frame field: arbitration field, ...
+- CAN XL Stuff rule for Data phase is wrong: In XLBFF a fixed stuff bit is added after 10 bits. The last possible stuff bit can be directly after end of the FCRC, so before FCP
+- CRC Calculation: consider, that in CAN XL XBFF has 2 CRCs: PCRC and FCRC
+- CRC Calculation: consider, that in CAN FD FBFF and FEFF the CRC is calculated also over the dynamic stuff bits
+- put the checkboxes for the drawing horizontally above the SVG. Like in the rev_eval/index.html the "info verbose" checkboxes.
+- "processing pipeline" needs to be updated: dynamic stuff bits must be calculated before the CRC
+
+
+CRC Generation rules
+- CC: The relevant bit stream for CRC calculation is the bit stream consisting of SOF, arbitration field, control field, and (if present) data field. In CC frames, stuff bits shall not be included in the relevant bit stream for CRC calculation.
+- FD: The relevant bit stream for the CRC calculation shall be the bit stream consisting of SOF, arbitration field, control field, and (if present) data field. The stuff count and the dynamic stuff bits, but not the fixed stuff bits, shall be included in the relevant bit stream for CRC calculation of FD frames.
+- XL-PCRC: The relevant bit stream for CRC calculation shall be the bit stream consisting of arbitration field, SDT, SEC bit, DLC and SBC. Dynamic stuff bits (of which up to three can occur before the FDF bit) shall be included in, while the static bits SOF, IDE, FDF, XLF, resXL and ADS as well as the fixed stuff bits shall be excluded from CRC calculation.
+- XL-FCRC: The relevant bit stream for the CRC calculation shall be the bit stream consisting of arbitration field, control field, and data field. It shall exclude the same static bits as the PCRC. Both dynamic and fixed stuff bits shall be excluded from the CRC calculation.
+
+
+The central data structure should be unique per Frame Type (CC_CBFF, ...).
+It should look the follwing:
+myFrame = {
+
+  // --- Meta information ---
+  frameType: "CC_CBFF",        // one of: CC_CBFF, CC_CBFF_RTR, CC_CEFF, CC_CEFF_RTR,
+                                //         FD_FBFF, FD_FEFF, XL_XBFF
+  
+  // --- User input values (raw) ---
+  input: {
+    id:        0x7FF,           // 11-bit or 29-bit identifier (integer)
+    dlc:       8,               // DLC code (0–15 for FD, 0–8 for CC, 1–2048 for XL)
+    data:      [0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02, 0x03, 0x04],  // payload bytes
+    ackSlot:   1,               // 1 = recessive (no ACK), 0 = dominant (ACK received)
+  },
+
+  // --- Computed values ---
+  computed: {
+    dataFieldByte:  8,          // actual byte count after DLC mapping
+    crcLength:      15,         // 15, 17, or 21 bits (or 32 for XL)
+    crcValue:       0x0000,     // computed CRC value (integer)
+    StuffBitCountDyn:  0,          // number of dynamic stuff bits inserted
+    StuffBitCountFixed: 0,      // number of fixed stuff bits
+    totalBits:      0,          // total bit count including stuff bits
+  },
+
+  // --- Fields: hierarchical structure for reference ---
+  // Each field knows its name, which group it belongs to, and its nominal bit count
+  fields: [
+    // Example for CC_CBFF:
+    { fieldName: "", nominalBits: 1, totalBits: 1,
+        elements: [ // field elements in order of transmission (MSB to LSB)
+          { name: "SOF", nominalBits: 1, bitNamePrefix: "", isUserInput: false, value: 0 },
+        ]
+    },
+    { fieldName: "Arbitration field", nominalBits: 12, totalBits: 12,
+      elements: [ // field elements in order of transmission (MSB to LSB)
+        { name: "Priority identifier", nominalBits: 11, bitNamePrefix: "ID", isUserInput: true,  value: 0x7FF },
+        { name: "RTR",                 nominalBits:  1, bitNamePrefix: "",   isUserInput: false, value: 0     },
+      ]
+    },
+    { fieldName: "Control field", nominalBits: 11, totalBits: 11,
+      elements: [ // field elements in order of transmission (MSB to LSB)
+        { name: "IDE", nominalBits: 1, totalBits: 1, bitNamePrefix: "",    isUserInput: false, value: 0 }, 
+        { name: "r0",  nominalBits: 1, totalBits: 1, bitNamePrefix: "",    isUserInput: false, value: 0 },
+        { name: "DLC", nominalBits: 4, totalBits: 4, bitNamePrefix: "Bit", isUserInput: true,  value: 8,
+            bits: [ // bits array of element in order of transmission (MSB to LSB) (added during stuff bit insertion)
+            {v:1, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},] },
+        ]},
+
+    { fieldName: "Data field", nominalBits: 16, totalBits: 18, bitNamePrefix: "Bit", isUserInput: true,
+      byteElements: [
+        { totalBits: 9, value: 0, // byte 0
+            bits: [ // bits array of element in order of transmission (MSB to LSB) (added during stuff bit insertion)
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:1, isStuffBit: true,  isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},]
+        },
+        { totalBits: 9, value: 0, // byte 1
+            bits: [ // bits array of element in order of transmission (MSB to LSB) (added during stuff bit insertion)
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:1, isStuffBit: true,  isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},
+            {v:0, isStuffBit: false, isStuffBitTypeFixed: false},]
+        },
+        ]
+    },
+    ]
+};
+
+Let me check the specification, before you start coding.
+
+--- PROMPT 3 ----------------------------------------------
+Answer to A: Yes include SBC to CRC for FD frames.
+Answer to B: Yes, lable is DLC. (value range: 0 to 2047)
+Answer to C: Yes, name the Bytes of the data field individually: Byte0, Byte1, Byte2, ...
+Answer to D: yes
+Answer to E: alsways 1 CRD delimiter
+Answer to F: Semicolon ";"
+
+When generating the bits arrays, then already add the names of the bits to the array element:
+{v:1, name: "Bit3", isStuffBit: false, isStuffBitTypeFixed: false}
+
+Omitt the CSV export for the moment. We will add it later, when the website exists.
+
+Summarize the Specification again and write it to a file.
+Do not start coding, before I tell you to do so.
+
+
+
+--- PROMPT 4 ----------------------------------------------
+I updated at a few places the specification file.
+
+I want the whole frame structure of myFrame to be set up initially. I mean the field names with the elements, but not the bits-array yet. The bits-array shall be generated in a second step.
+This means in your processing pipeline we need another step in between current steps 1 and 2. It could be named "Build Frame structure".
+
+Further I want the Prefixes for the bit names to be easily configurable and changable. Therefor I added the following to the elements already at the beginning: bitNamePrefix: "Bit". So when you derive the bit, use the bitNamePrefix.
+
+Names of stuff bits shall be configurable at a central place:
+stuffDynName = "stuff"
+stuffFixName = "stuff"
+
+Add CSV export as specified.
+
+The build() method should use separate pipelines and internal methods for CC, FD, and XL to improve readability.
+
+Update the Specification accordingly.
+
+--- PROMPT 5 ----------------------------------------------
+OK, the specification is good.
+Please implement the project.
+
+--- PROMPT 6 ----------------------------------------------
+I want some improvements regarding the SVG:
+- Scale the whole SVG by approx +30%, currently its too small.
+- put the bit names into the bits itself (if a bit name is too long, we will see and decide later)
+
+
+------
+Idea how to structure myFrame
+- frameType = CBFF_c
+- Computed
+  - totalBits = 1024
+  - dlcInByte = 8
+  - StuffBitsDyn = 3
+  - StuffBitsFix = 0
+
+Fields:
+- SOF
+	- type=bit_c
+	- name="SOF"
+	- namePrefix4Bit="not used"
+	- fieldwidthinbit
+
+- Arb
+  - fieldname="Arbitration field"
+  - ID
+	- type=field_c
+    - name="Base identifier"
+	- namePrefix4Bit="ID"
+	- fieldwidthinbit = 11
+	- value: from user input
+  - RTR
+- Control field
+  - IDE
+  - r0
+- Data field
+- CRC field
+- ACK field
+- EOF
+- Stuff bits
+  - dyn[array]
+	  - position (bit 0 = SOF)
+	  - value (0 or 1)
+  - fix[array]
+	  - position (bit 0 = SOF)
+	  - value (0 or 1)
+  
+
+TODO: Data structure
+=> grob so wie er es vorgeschlagen hat
+- eine große struktur mit Teilen
+- global
+- feld-definitionen
+- Bit-struktur mit leichter hierarchie

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAN Frame Visualizer</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <style>
+    /* ── Layout: two-column (input left, output right) ── */
+    .frame-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .input-column {
+      flex: 0 0 auto;
+      width: fit-content;
+      min-width: 280px;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background-color: #f0f8ff;
+      border: 1px solid #e0e8f0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .output-column {
+      flex: 1 1 500px;
+      min-width: 400px;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background-color: #fafafa;
+      border: 1px solid #e8e8e8;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Input form table ── */
+    .input-table {
+      border-collapse: collapse;
+      width: auto;
+    }
+    .input-table td {
+      padding: 0.3em 0.4em;
+      border: none;
+      background: transparent;
+      vertical-align: middle;
+    }
+    .input-table td:first-child {
+      font-weight: bold;
+      white-space: nowrap;
+      padding-right: 0.8em;
+    }
+    .input-table .range-hint {
+      font-size: 0.85em;
+      color: #888;
+      padding-left: 0.4em;
+    }
+
+    /* ── Checkbox row above SVG ── */
+    .checkbox-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.2em;
+      margin-bottom: 0.8em;
+      align-items: center;
+    }
+    .checkbox-row label {
+      display: flex;
+      align-items: center;
+      gap: 0.3em;
+      font-size: 0.95em;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* ── SVG container: fixed height, horizontal scroll ── */
+    .svg-wrapper {
+      overflow-x: auto;
+      overflow-y: hidden;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fff;
+      min-height: 120px;
+      margin-bottom: 1em;
+    }
+
+    /* ── Export row ── */
+    .export-row {
+      display: flex;
+      gap: 0.8em;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .export-row span {
+      font-weight: bold;
+      margin-right: 0.3em;
+    }
+
+    /* ── Info display ── */
+    .info-display {
+      font-size: 0.95em;
+      color: #333;
+      white-space: pre;
+      margin-top: 0.8em;
+      padding: 0.5em;
+      background: #f8f8f8;
+      border-radius: 4px;
+      border: 1px solid #eee;
+    }
+
+    /* ── Disabled input styling ── */
+    input:disabled,
+    select:disabled {
+      opacity: 0.5;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="site-menu"></div>
+  <script type="module" src="/can/menu.js"></script>
+
+  <main>
+
+    <div class="page-header">
+      <h1>CAN Frame Visualizer <span class="version-label">V1.0.0</span></h1>
+    </div>
+
+    <div class="frame-container">
+
+      <!-- ════════════════ Column 1: Input ════════════════ -->
+      <div class="input-column">
+        <h3>Frame Input</h3>
+
+        <table class="input-table">
+          <tr>
+            <td>Frame Type</td>
+            <td>
+              <select id="frameTypeSelect" class="styled-select">
+                <option value="CC_CBFF">CAN CC: CBFF (11-bit ID)</option>
+                <option value="CC_CBFF_RTR">CAN CC: CBFF (11-bit ID, remote)</option>
+                <option value="CC_CEFF">CAN CC: CEFF (29-bit ID)</option>
+                <option value="CC_CEFF_RTR">CAN CC: CEFF (29-bit ID, remote)</option>
+                <option value="FD_FBFF">CAN FD: FBFF (11-bit ID)</option>
+                <option value="FD_FEFF">CAN FD: FEFF (29-bit ID)</option>
+                <option value="XL_XBFF">CAN XL: XBFF (11-bit ID)</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>ID (hex)</td>
+            <td>
+              <input type="text" id="inputID" class="input-field" value="0x000" style="width:12ch;" />
+            </td>
+          </tr>
+          <tr>
+            <td>DLC</td>
+            <td>
+              <input type="number" id="inputDLC" class="input-field" value="0" min="0" max="15" style="width:8ch;" />
+              <span id="dlcRangeHint" class="range-hint">(0–15)</span>
+            </td>
+          </tr>
+          <tr>
+            <td>BRS</td>
+            <td><input type="checkbox" id="inputBRS" disabled /></td>
+          </tr>
+          <tr>
+            <td>ESI</td>
+            <td><input type="checkbox" id="inputESI" disabled /></td>
+          </tr>
+          <tr>
+            <td>RRS</td>
+            <td><input type="checkbox" id="inputRRS" disabled /></td>
+          </tr>
+          <tr>
+            <td>SEC</td>
+            <td><input type="checkbox" id="inputSEC" disabled /></td>
+          </tr>
+          <tr>
+            <td>SDT (hex)</td>
+            <td>
+              <input type="text" id="inputSDT" class="input-field" value="0x00" disabled style="width:8ch;" />
+            </td>
+          </tr>
+          <tr>
+            <td>VCID (hex)</td>
+            <td>
+              <input type="text" id="inputVCID" class="input-field" value="0x00" disabled style="width:8ch;" />
+            </td>
+          </tr>
+          <tr>
+            <td>AF (hex)</td>
+            <td>
+              <input type="text" id="inputAF" class="input-field" value="0x00000000" disabled style="width:12ch;" />
+            </td>
+          </tr>
+          <tr>
+            <td>Data (hex)</td>
+            <td>
+              <textarea id="inputData" class="input-field" placeholder="DE AD BE EF ..." rows="4" style="width:36ch; resize:vertical;"></textarea>
+            </td>
+          </tr>
+          <tr>
+            <td>ACK slot</td>
+            <td>
+              <select id="inputACK" class="styled-select" style="margin:0;height:auto;">
+                <option value="1" selected>1 (recessive / no ACK)</option>
+                <option value="0">0 (dominant / ACK received)</option>
+              </select>
+            </td>
+          </tr>
+        </table>
+
+        <br />
+        <button type="button" id="showFrameBtn" class="styled-button">Show Frame</button>
+      </div>
+
+      <!-- ════════════════ Column 2: Output ════════════════ -->
+      <div class="output-column">
+
+        <!-- Checkbox row -->
+        <div class="checkbox-row">
+          <label><input type="checkbox" id="chkBitNames" checked /> show bit names</label>
+          <label><input type="checkbox" id="chkColor" checked /> color bits</label>
+          <label><input type="checkbox" id="chkColorStuff" checked /> color stuff bits</label>
+          <label><input type="checkbox" id="chkFields" checked /> show fields</label>
+        </div>
+
+        <!-- SVG container -->
+        <div class="svg-wrapper" id="svgContainer">
+          <p style="color:#999;padding:1em;">Press "Show Frame" to generate the waveform.</p>
+        </div>
+
+        <!-- Export row -->
+        <div class="export-row">
+          <span>Export:</span>
+          <button type="button" id="btnExportSVG" class="styled-button" style="margin-bottom:0;">Download SVG</button>
+          <button type="button" id="btnExportPNG" class="styled-button" style="margin-bottom:0;">Download PNG</button>
+          <button type="button" id="btnExportCSV" class="styled-button" style="margin-bottom:0;">Download CSV</button>
+        </div>
+
+        <!-- Info display -->
+        <pre id="infoDisplay" class="info-display">Frame information will appear here after pressing "Show Frame".</pre>
+      </div>
+
+    </div>
+
+    <!-- Load scripts: plain <script> tags, in dependency order -->
+    <script src="frame_definitions.js"></script>
+    <script src="frame_crc.js"></script>
+    <script src="frame_builder.js"></script>
+    <script src="frame_draw.js"></script>
+    <script src="frame_export.js"></script>
+    <script src="frame_main.js"></script>
+
+  </main>
+
+  <div id="site-footer"></div>
+  <script type="module" src="/can/footer.js"></script>
+
+</body>
+
+</html>
