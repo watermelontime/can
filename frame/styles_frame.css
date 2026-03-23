@@ -1,0 +1,63 @@
+/* ── Frame Generator: input form table ── */
+.input-table {
+  border-collapse: collapse;
+  width: auto;
+}
+.input-table td {
+  padding: 0.3em 0.4em;
+  border: none;
+  background: transparent;
+  vertical-align: middle;
+}
+.input-table td:first-child {
+  font-weight: bold;
+  white-space: nowrap;
+  padding-right: 0.8em;
+}
+.input-table .range-hint {
+  font-size: 0.85em;
+  color: #888;
+  padding-left: 0.4em;
+}
+
+/* ── Frame Generator: SVG container ── */
+.svg-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  min-height: 120px;
+  margin-bottom: 1em;
+}
+
+/* ── Frame Generator: export row ── */
+.export-row {
+  display: flex;
+  gap: 0.8em;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.export-row span {
+  font-weight: bold;
+  margin-right: 0.3em;
+}
+
+/* ── Frame Generator: info display ── */
+.info-display {
+  /*font-size: 0.95em;*/
+  color: #333;
+  white-space: pre;
+  margin-top: 0.8em;
+  padding: 0.5em;
+  background: #f8f8f8;
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+
+/* ── Disabled input styling ── */
+input:disabled,
+select:disabled {
+  opacity: 0.5;
+}

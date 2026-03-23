@@ -37,35 +37,29 @@ function dlcToBytes(frameType, dlc) {
 // =============================================================================
 // Helper: create an element object (for non-data fields)
 // =============================================================================
-function defElement(name, nominalBits, bitNamePrefix, isUserInput, value) {
+/**
+ * Create a field element definition.
+ * @param {string}  name                 - Element name (e.g. "DLC", "CRC del")
+ * @param {number}  nominalBits          - Number of nominal bits
+ * @param {string}  bitNamePrefix        - Prefix for auto-generated bit names ("" if unused)
+ * @param {boolean} isUserInput          - Whether the value is user-configurable
+ * @param {number}  value                - Bit value
+ * @param {boolean} printNameInFieldsBar - Whether to show element name in the SVG fields bar
+ * @param {Array}   customBitNamesArray  - Custom per-bit names ([] if using prefix scheme)
+ */
+function defElement(name, nominalBits, bitNamePrefix, isUserInput, value, printNameInFieldsBar, customBitNamesArray) {
+  if (!customBitNamesArray) customBitNamesArray = [];
   return {
-    name: name,
-    nominalBits: nominalBits,
-    bitNamePrefix: bitNamePrefix,
-    isUserInput: isUserInput,
-    value: value,
-    printName: true,
-    bits: []
+    name:                 name,
+    nominalBits:          nominalBits,
+    bitNamePrefix:        bitNamePrefix,
+    customBitNames:       customBitNamesArray.length > 0,
+    customBitNamesArray:  customBitNamesArray,
+    isUserInput:          isUserInput,
+    value:                value,
+    printNameInFieldsBar: printNameInFieldsBar,
+    bits:                 []
   };
-}
-
-/**
- * Same as defElement but with printName = false (element name not shown in SVG).
- */
-function defElementNoPrint(name, nominalBits, bitNamePrefix, isUserInput, value) {
-  var el = defElement(name, nominalBits, bitNamePrefix, isUserInput, value);
-  el.printName = false;
-  return el;
-}
-
-/**
- * Create an element with custom per-bit names (not following prefix+index scheme).
- * bitNames must have exactly nominalBits entries.
- */
-function defElementCustomBits(name, nominalBits, bitNames, isUserInput, value) {
-  var el = defElement(name, nominalBits, "", isUserInput, value);
-  el.bitNames = bitNames;
-  return el;
 }
 
 // =============================================================================
@@ -111,7 +105,7 @@ function getDefinition_CC_CBFF(input, isRemote) {
   fields.push({
     fieldName: "SOF",
     nominalBits: 1, totalBits: 1,
-    elements: [defElementNoPrint("SOF", 1, "", false, 0)]
+    elements: [defElement("SOF", 1, "", false, 0, false)]
   });
 
   // Arbitration field
@@ -119,8 +113,8 @@ function getDefinition_CC_CBFF(input, isRemote) {
     fieldName: "Arbitration field",
     nominalBits: 12, totalBits: 12,
     elements: [
-      defElement("ID[28:18]", 11, "ID", true, input.id & 0x7FF),
-      defElement("RTR", 1, "", false, isRemote ? 1 : 0)
+      defElement("Base ID", 11, "ID", true,  input.id & 0x7FF, true, ["ID28","ID27","ID26","ID25","ID24","ID23","ID22","ID21","ID20","ID19","ID18"]),
+      defElement("RTR",      1, "",   false, isRemote ? 1 : 0, true)
     ]
   });
 
@@ -129,9 +123,9 @@ function getDefinition_CC_CBFF(input, isRemote) {
     fieldName: "Control field",
     nominalBits: 6, totalBits: 6,
     elements: [
-      defElement("IDE", 1, "", false, 0),
-      defElement("r0",  1, "", false, 0),
-      defElement("DLC", 4, "Bit", true, dlc)
+      defElement("IDE", 1, "",    false, 0,   true),
+      defElement("r0",  1, "",    false, 0,   true),
+      defElement("DLC", 4, "Bit", true,  dlc, true)
     ]
   });
 
@@ -145,8 +139,8 @@ function getDefinition_CC_CBFF(input, isRemote) {
     fieldName: "CRC field",
     nominalBits: 16, totalBits: 16,
     elements: [
-      defElement("CRC",     15, "Bit", false, 0),
-      defElementNoPrint("CRC del",  1, "",    false, 1)
+      defElement("CRC",     15, "Bit", false, 0, true),
+      defElement("CRC del",  1, "",    false, 1, false)
     ]
   });
 
@@ -155,8 +149,8 @@ function getDefinition_CC_CBFF(input, isRemote) {
     fieldName: "ACK",
     nominalBits: 2, totalBits: 2,
     elements: [
-      defElementNoPrint("ACK slot", 1, "", true,  input.ackSlot),
-      defElementNoPrint("ACK del",  1, "", false, 1)
+      defElement("ACK slot", 1, "", true,  input.ackSlot, false),
+      defElement("ACK del",  1, "", false, 1,             false)
     ]
   });
 
@@ -164,7 +158,7 @@ function getDefinition_CC_CBFF(input, isRemote) {
   fields.push({
     fieldName: "EOF",
     nominalBits: 7, totalBits: 7,
-    elements: [defElementNoPrint("EOF", 7, "Bit", false, 0x7F)]
+    elements: [defElement("EOF", 7, "", false, 0x7F, false, ["Bit1","Bit2","Bit3","Bit4","Bit5","Bit6","Bit7"])]
   });
 
   return { fields: fields, dataByteCount: dataByteCount };
@@ -180,8 +174,8 @@ function getDefinition_CC_CEFF(input, isRemote) {
   while (dataBytes.length < dataByteCount) dataBytes.push(0x00);
 
   var id29 = input.id & 0x1FFFFFFF;
-  var idHigh = (id29 >> 18) & 0x7FF;  // ID[28:18]
-  var idLow  = id29 & 0x3FFFF;        // ID[17:0]
+  var idHigh = (id29 >> 18) & 0x7FF;  // ID[28:18] = Base ID
+  var idLow  = id29 & 0x3FFFF;        // ID[17:0] = Extended ID
 
   var fields = [];
 
@@ -189,19 +183,19 @@ function getDefinition_CC_CEFF(input, isRemote) {
   fields.push({
     fieldName: "SOF",
     nominalBits: 1, totalBits: 1,
-    elements: [defElementNoPrint("SOF", 1, "", false, 0)]
+    elements: [defElement("SOF", 1, "", false, 0, false)]
   });
 
-  // Arbitration field (29-bit: ID[28:18], SRR, IDE, ID[17:0], RTR)
+  // Arbitration field (29-bit: Base ID(11 bit), SRR, IDE, Extended ID(18 bit), RTR)
   fields.push({
     fieldName: "Arbitration field",
     nominalBits: 32, totalBits: 32,
     elements: [
-      defElement("ID[28:18]", 11, "ID", true, idHigh),
-      defElement("SRR",        1, "",   false, 1),
-      defElement("IDE",        1, "",   false, 1),
-      defElement("ID[17:0]",  18, "ID", true, idLow),
-      defElement("RTR",        1, "",   false, isRemote ? 1 : 0)
+      defElement("Base ID",      11, "ID", true,  idHigh,           true, ["ID28","ID27","ID26","ID25","ID24","ID23","ID22","ID21","ID20","ID19","ID18"]),
+      defElement("SRR",           1, "",   false, 1,                true),
+      defElement("IDE",           1, "",   false, 1,                true),
+      defElement("Extended ID",  18, "ID", true,  idLow,            true, ["ID17","ID16","ID15","ID14","ID13","ID12","ID11","ID10","ID9","ID8","ID7","ID6","ID5","ID4","ID3","ID2","ID1","ID0"]),
+      defElement("RTR",           1, "",   false, isRemote ? 1 : 0, true)
     ]
   });
 
@@ -210,9 +204,9 @@ function getDefinition_CC_CEFF(input, isRemote) {
     fieldName: "Control field",
     nominalBits: 6, totalBits: 6,
     elements: [
-      defElement("r1",  1, "", false, 0),
-      defElement("r0",  1, "", false, 0),
-      defElement("DLC", 4, "Bit", true, dlc)
+      defElement("r1",  1, "",    false, 0,   true),
+      defElement("r0",  1, "",    false, 0,   true),
+      defElement("DLC", 4, "Bit", true,  dlc, true)
     ]
   });
 
@@ -226,8 +220,8 @@ function getDefinition_CC_CEFF(input, isRemote) {
     fieldName: "CRC field",
     nominalBits: 16, totalBits: 16,
     elements: [
-      defElement("CRC",     15, "Bit", false, 0),
-      defElementNoPrint("CRC del",  1, "",    false, 1)
+      defElement("CRC",     15, "Bit", false, 0, true),
+      defElement("CRC del",  1, "",    false, 1, false)
     ]
   });
 
@@ -236,8 +230,8 @@ function getDefinition_CC_CEFF(input, isRemote) {
     fieldName: "ACK",
     nominalBits: 2, totalBits: 2,
     elements: [
-      defElementNoPrint("ACK slot", 1, "", true,  input.ackSlot),
-      defElementNoPrint("ACK del",  1, "", false, 1)
+      defElement("ACK slot", 1, "", true,  input.ackSlot, false),
+      defElement("ACK del",  1, "", false, 1,             false)
     ]
   });
 
@@ -245,7 +239,7 @@ function getDefinition_CC_CEFF(input, isRemote) {
   fields.push({
     fieldName: "EOF",
     nominalBits: 7, totalBits: 7,
-    elements: [defElementNoPrint("EOF", 7, "Bit", false, 0x7F)]
+    elements: [defElement("EOF", 7, "", false, 0x7F, false, ["Bit1","Bit2","Bit3","Bit4","Bit5","Bit6","Bit7"])]
   });
 
   return { fields: fields, dataByteCount: dataByteCount };
@@ -268,7 +262,7 @@ function getDefinition_FD_FBFF(input) {
   fields.push({
     fieldName: "SOF",
     nominalBits: 1, totalBits: 1,
-    elements: [defElementNoPrint("SOF", 1, "", false, 0)]
+    elements: [defElement("SOF", 1, "", false, 0, false)]
   });
 
   // Arbitration field
@@ -276,8 +270,8 @@ function getDefinition_FD_FBFF(input) {
     fieldName: "Arbitration field",
     nominalBits: 12, totalBits: 12,
     elements: [
-      defElement("ID[28:18]", 11, "ID", true, input.id & 0x7FF),
-      defElement("RRS",        1, "",   false, 0)
+      defElement("Base ID", 11, "ID", true,  input.id & 0x7FF, true, ["ID28","ID27","ID26","ID25","ID24","ID23","ID22","ID21","ID20","ID19","ID18"]),
+      defElement("RRS",      1, "",   false, 0,                true)
     ]
   });
 
@@ -286,12 +280,12 @@ function getDefinition_FD_FBFF(input) {
     fieldName: "Control field",
     nominalBits: 10, totalBits: 10,
     elements: [
-      defElement("IDE", 1, "", false, 0),
-      defElement("FDF", 1, "", false, 1),
-      defElement("res", 1, "", false, 0),
-      defElement("BRS", 1, "", true,  input.brs),
-      defElement("ESI", 1, "", true,  input.esi),
-      defElement("DLC", 4, "Bit", true, dlc)
+      defElement("IDE", 1, "",    false, 0,         true),
+      defElement("FDF", 1, "",    false, 1,         true),
+      defElement("res", 1, "",    false, 0,         true),
+      defElement("BRS", 1, "",    true,  input.brs, true),
+      defElement("ESI", 1, "",    true,  input.esi, true),
+      defElement("DLC", 4, "Bit", true,  dlc,       true)
     ]
   });
 
@@ -305,9 +299,9 @@ function getDefinition_FD_FBFF(input) {
     fieldName: "CRC field",
     nominalBits: 4 + crcLen + 1, totalBits: 4 + crcLen + 1,
     elements: [
-      defElement("SBC",      4,      "Bit", false, 0),
-      defElement("CRC",      crcLen, "Bit", false, 0),
-      defElementNoPrint("CRC del",  1,      "",    false, 1)
+      defElement("SBC",      4,      "Bit", false, 0, true),
+      defElement("CRC",      crcLen, "Bit", false, 0, true),
+      defElement("CRC del",  1,      "",    false, 1, false)
     ]
   });
 
@@ -316,8 +310,8 @@ function getDefinition_FD_FBFF(input) {
     fieldName: "ACK",
     nominalBits: 2, totalBits: 2,
     elements: [
-      defElementNoPrint("ACK slot", 1, "", true,  input.ackSlot),
-      defElementNoPrint("ACK del",  1, "", false, 1)
+      defElement("ACK slot", 1, "", true,  input.ackSlot, false),
+      defElement("ACK del",  1, "", false, 1,             false)
     ]
   });
 
@@ -325,7 +319,7 @@ function getDefinition_FD_FBFF(input) {
   fields.push({
     fieldName: "EOF",
     nominalBits: 7, totalBits: 7,
-    elements: [defElementNoPrint("EOF", 7, "Bit", false, 0x7F)]
+    elements: [defElement("EOF", 7, "", false, 0x7F, false, ["Bit1","Bit2","Bit3","Bit4","Bit5","Bit6","Bit7"])]
   });
 
   return { fields: fields, dataByteCount: dataByteCount, crcLen: crcLen };
@@ -351,7 +345,7 @@ function getDefinition_FD_FEFF(input) {
   fields.push({
     fieldName: "SOF",
     nominalBits: 1, totalBits: 1,
-    elements: [defElementNoPrint("SOF", 1, "", false, 0)]
+    elements: [defElement("SOF", 1, "", false, 0, false)]
   });
 
   // Arbitration field (29-bit)
@@ -359,11 +353,11 @@ function getDefinition_FD_FEFF(input) {
     fieldName: "Arbitration field",
     nominalBits: 32, totalBits: 32,
     elements: [
-      defElement("ID[28:18]", 11, "ID", true, idHigh),
-      defElement("SRR",        1, "",   false, 1),
-      defElement("IDE",        1, "",   false, 1),
-      defElement("ID[17:0]",  18, "ID", true, idLow),
-      defElement("RRS",        1, "",   false, 0)
+      defElement("Base ID",      11, "ID", true,  idHigh, true, ["ID28","ID27","ID26","ID25","ID24","ID23","ID22","ID21","ID20","ID19","ID18"]),
+      defElement("SRR",           1, "",   false, 1,      true),
+      defElement("IDE",           1, "",   false, 1,      true),
+      defElement("Extended ID",  18, "ID", true,  idLow,  true, ["ID17","ID16","ID15","ID14","ID13","ID12","ID11","ID10","ID9","ID8","ID7","ID6","ID5","ID4","ID3","ID2","ID1","ID0"]),
+      defElement("RRS",           1, "",   false, 0,      true)
     ]
   });
 
@@ -372,11 +366,11 @@ function getDefinition_FD_FEFF(input) {
     fieldName: "Control field",
     nominalBits: 10, totalBits: 10,
     elements: [
-      defElement("FDF", 1, "", false, 1),
-      defElement("res", 1, "", false, 0),
-      defElement("BRS", 1, "", true,  input.brs),
-      defElement("ESI", 1, "", true,  input.esi),
-      defElement("DLC", 4, "Bit", true, dlc)
+      defElement("FDF", 1, "",    false, 1,         true),
+      defElement("res", 1, "",    false, 0,         true),
+      defElement("BRS", 1, "",    true,  input.brs, true),
+      defElement("ESI", 1, "",    true,  input.esi, true),
+      defElement("DLC", 4, "Bit", true,  dlc,       true)
     ]
   });
 
@@ -390,9 +384,9 @@ function getDefinition_FD_FEFF(input) {
     fieldName: "CRC field",
     nominalBits: 4 + crcLen + 1, totalBits: 4 + crcLen + 1,
     elements: [
-      defElement("SBC",      4,      "Bit", false, 0),
-      defElement("CRC",      crcLen, "Bit", false, 0),
-      defElementNoPrint("CRC del",  1,      "",    false, 1)
+      defElement("SBC",      4,      "Bit", false, 0, true),
+      defElement("CRC",      crcLen, "Bit", false, 0, true),
+      defElement("CRC del",  1,      "",    false, 1, false)
     ]
   });
 
@@ -401,8 +395,8 @@ function getDefinition_FD_FEFF(input) {
     fieldName: "ACK",
     nominalBits: 2, totalBits: 2,
     elements: [
-      defElementNoPrint("ACK slot", 1, "", true,  input.ackSlot),
-      defElementNoPrint("ACK del",  1, "", false, 1)
+      defElement("ACK slot", 1, "", true,  input.ackSlot, false),
+      defElement("ACK del",  1, "", false, 1,             false)
     ]
   });
 
@@ -410,7 +404,7 @@ function getDefinition_FD_FEFF(input) {
   fields.push({
     fieldName: "EOF",
     nominalBits: 7, totalBits: 7,
-    elements: [defElementNoPrint("EOF", 7, "Bit", false, 0x7F)]
+    elements: [defElement("EOF", 7, "", false, 0x7F, false, ["Bit1","Bit2","Bit3","Bit4","Bit5","Bit6","Bit7"])]
   });
 
   return { fields: fields, dataByteCount: dataByteCount, crcLen: crcLen };
@@ -431,7 +425,7 @@ function getDefinition_XL_XBFF(input) {
   fields.push({
     fieldName: "SOF",
     nominalBits: 1, totalBits: 1,
-    elements: [defElementNoPrint("SOF", 1, "", false, 0)]
+    elements: [defElement("SOF", 1, "", false, 0, false)]
   });
 
   // Arbitration field
@@ -439,11 +433,11 @@ function getDefinition_XL_XBFF(input) {
     fieldName: "Arbitration field",
     nominalBits: 16, totalBits: 16,
     elements: [
-      defElement("ID[28:18]", 11, "ID", true, input.id & 0x7FF),
-      defElement("RRS",        1, "",   true, input.rrs !== undefined ? input.rrs : 0),
-      defElement("IDE",        1, "",   false, 0),
-      defElement("FDF",        1, "",   false, 1),
-      defElement("XLF",        1, "",   false, 1)
+      defElement("Base ID", 11, "ID", true,  input.id & 0x7FF,                        true, ["ID28","ID27","ID26","ID25","ID24","ID23","ID22","ID21","ID20","ID19","ID18"]),
+      defElement("RRS",      1, "",   true,  input.rrs !== undefined ? input.rrs : 0, true),
+      defElement("IDE",      1, "",   false, 0,                                       true),
+      defElement("FDF",      1, "",   false, 1,                                       true),
+      defElement("XLF",      1, "",   false, 1,                                       true)
     ]
   });
 
@@ -453,17 +447,17 @@ function getDefinition_XL_XBFF(input) {
   fields.push({
     fieldName: "Control field",
     nominalBits: 5 + 8 + 1 + 11 + 3 + 13 + 8 + 32, // = 81
-    totalBits: 5 + 8 + 1 + 11 + 3 + 13 + 8 + 32,
+    totalBits:   5 + 8 + 1 + 11 + 3 + 13 + 8 + 32, // = 81 (initially equal to nominal bits, will increase later when stuff bits are added)
     elements: [
-      defElementNoPrint("resXL", 1,  "",    false, 0),
-      defElementCustomBits("ADS", 4, ["ADH","DH1","DH2","DL1"], false, 0xE),
-      defElement("SDT",   8,  "Bit", true,  input.sdt),
-      defElement("SEC",   1,  "",    true,  input.sec),
-      defElement("DLC",   11, "Bit", true,  dlc),
-      defElement("SBC",   3,  "Bit", false, 0),   // computed
-      defElement("PCRC",  13, "Bit", false, 0),   // computed
-      defElement("VCID",  8,  "Bit", true,  input.vcid),
-      defElement("AF",    32, "Bit", true,  input.af)
+      defElement("resXL",  1, "",    false, 0,          false),
+      defElement("ADS",    4, "",    false, 0xE,        true,  ["ADH","DH1","DH2","DL1"]),
+      defElement("SDT",    8, "Bit", true,  input.sdt,  true),
+      defElement("SEC",    1, "",    true,  input.sec,  true),
+      defElement("DLC",   11, "Bit", true,  dlc,        true),
+      defElement("SBC",    3, "Bit", false, 0,          true),   // computed
+      defElement("PCRC",  13, "Bit", false, 0,          true),   // computed
+      defElement("VCID",   8, "Bit", true,  input.vcid, true),
+      defElement("AF",    32, "Bit", true,  input.af,   true)
     ]
   });
 
@@ -475,8 +469,8 @@ function getDefinition_XL_XBFF(input) {
     fieldName: "CRC field",
     nominalBits: 36, totalBits: 36,
     elements: [
-      defElement("FCRC", 32, "Bit", false, 0),     // computed
-      defElement("FCP",   4, "FCP", false, 0x0C)   // 1100 = 0x0C
+      defElement("FCRC", 32, "Bit", false, 0,    true),   // computed
+      defElement("FCP",   4, "FCP", false, 0x0C, true)    // 1100 = 0x0C
     ]
   });
 
@@ -485,8 +479,8 @@ function getDefinition_XL_XBFF(input) {
     fieldName: "ACK field",
     nominalBits: 6, totalBits: 6,
     elements: [
-      defElementCustomBits("DAS", 4, ["DAH","AH1","AL1","AH2"], false, 0xD),
-      defElementCustomBits("ACK", 2, ["ACK slot","ACK del"], true, (input.ackSlot << 1) | 1)
+      defElement("DAS", 4, "", false, 0xD,                       true,  ["DAH","AH1","AL1","AH2"]),
+      defElement("ACK", 2, "", true,  (input.ackSlot << 1) | 1, true,  ["ACK slot","ACK del"])
     ]
   });
 
@@ -494,7 +488,7 @@ function getDefinition_XL_XBFF(input) {
   fields.push({
     fieldName: "EOF",
     nominalBits: 7, totalBits: 7,
-    elements: [defElementNoPrint("EOF", 7, "Bit", false, 0x7F)]
+    elements: [defElement("EOF", 7, "", false, 0x7F, false, ["Bit1","Bit2","Bit3","Bit4","Bit5","Bit6","Bit7"])]
   });
 
   return { fields: fields, dataByteCount: dataByteCount };

@@ -89,7 +89,7 @@ function exportCSV(frame) {
         var byteElem = field.dataField[bi];
         for (var bk = 0; bk < byteElem.bits.length; bk++) {
           var bit = byteElem.bits[bk];
-          var elemName = bit.isStuffBit ? "stuff" : byteElem.name;
+          var elemName = bit.isStuffBit ? (bit.isStuffBitTypeFixed ? DRAW_CFG.fixedStuffBitName : DRAW_CFG.dynStuffBitName) : byteElem.name;
           lines.push(bit.v + sep + bit.name + sep + elemName + sep + field.fieldName);
         }
       }
@@ -98,7 +98,7 @@ function exportCSV(frame) {
         var elem = field.elements[ei];
         for (var ej = 0; ej < elem.bits.length; ej++) {
           var ebit = elem.bits[ej];
-          var eName = ebit.isStuffBit ? "stuff" : elem.name;
+          var eName = ebit.isStuffBit ? (ebit.isStuffBitTypeFixed ? DRAW_CFG.fixedStuffBitName : DRAW_CFG.dynStuffBitName) : elem.name;
           lines.push(ebit.v + sep + ebit.name + sep + eName + sep + field.fieldName);
         }
       }

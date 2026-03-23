@@ -18,17 +18,21 @@ var DRAW_CFG = {
   paddingBottom:       5,     // px below waveform
   paddingLeft:        10,     // px left margin
 
+  dynStuffBitName:    "stuff_D",  // display name for dynamic stuff bits (SVG + CSV)
+  fixedStuffBitName:  "stuff_F",  // display name for fixed stuff bits (SVG + CSV)
+
   colors: {
-    waveformLine:    "#000000",
-    background:      "#FFFFFF",
-    stuffBit:        "#FF8C00",          // orange
-    sof:             ["#B0BEC5","#CFD8DC"],
-    arbitration:     ["#90CAF9","#BBDEFB"],
-    control:         ["#A5D6A7","#C8E6C9"],
-    data:            ["#CE93D8","#E1BEE7"],
-    crc:             ["#FFCC80","#FFE0B2"],
-    ack:             ["#F48FB1","#F8BBD0"],
-    eof:             ["#B0BEC5","#CFD8DC"]
+    waveformLine:       "#000000",
+    background:         "#FFFFFF",
+    stuffBitBackground: "#fd821d", // background color for stuff bits
+    stuffBitFont:       "#fd821d", // font color for stuff bit names
+    sof:               ["#B0BEC5","#CFD8DC"],
+    arbitration:       ["#74c0ff","#BBDEFB"],
+    control:           ["#89cc8b","#b9ddba"],
+    data:              ["#CE93D8","#E1BEE7"],
+    crc:               ["#22f8ff","#a1f1fc"], //["#FFCC80","#FFE0B2"],
+    ack:               ["#ee7ca2","#F8BBD0"],
+    eof:               ["#B0BEC5","#CFD8DC"]
   }
 };
 
@@ -52,21 +56,16 @@ function drawFrame(frame, svgContainer, options) {
   // --- Compute layout dimensions ---
   var fieldHeaderHeight = 0;
   var elemHeaderHeight  = 0;
-  var bitNameHeight     = 0;
+
+  var headerArea = 0;
 
   if (showFields) {
     fieldHeaderHeight = cfg.fontSizeFieldName + 6;  // line 1
     elemHeaderHeight  = cfg.fontSizeFieldName + 6;  // line 2
-  }
-  if (showBitNames) {
-    // Bit names are drawn inside the waveform bits — no extra header height needed
-    bitNameHeight = 0;
+    headerArea = cfg.gapFieldToWave + fieldHeaderHeight + elemHeaderHeight;
   }
 
-  var headerArea = fieldHeaderHeight + elemHeaderHeight;
-  if (showFields && showBitNames) headerArea += cfg.gapFieldToWave;
-
-  var waveTop = cfg.paddingTop + headerArea + bitNameHeight;
+  var waveTop = cfg.paddingTop + headerArea;
   var waveHigh = waveTop;              // recessive (1) = top
   var waveLow  = waveTop + cfg.bitHeight;  // dominant (0) = bottom
 
@@ -90,7 +89,7 @@ function drawFrame(frame, svgContainer, options) {
       var color = null;
 
       if (useColorStuff && db.isStuffBit) {
-        color = cfg.colors.stuffBit;
+        color = cfg.colors.stuffBitBackground;
       } else if (useColor) {
         color = _fieldColor(db.fieldName, db.elemIdx);
       }
@@ -132,7 +131,7 @@ function drawFrame(frame, svgContainer, options) {
       text.setAttribute("dominant-baseline", "central");
       text.setAttribute("transform", "rotate(-90," + bx + "," + bitNameAnchorY + ")");
       if (drawBits[bn].isStuffBit) {
-        text.setAttribute("fill", cfg.colors.stuffBit);
+        text.setAttribute("fill", cfg.colors.stuffBitFont);
         text.setAttribute("font-weight", "bold");
       } else {
         text.setAttribute("fill", "#333");
@@ -150,7 +149,11 @@ function drawFrame(frame, svgContainer, options) {
     var yVal   = drawBits[wi].value === 1 ? waveHigh : waveLow;
 
     if (wi === 0) {
-      pathData += "M " + xStart + " " + yVal;
+      // Bus is recessive (high) before frame starts; SOF causes a falling edge
+      pathData += "M " + xStart + " " + waveHigh;
+      if (yVal !== waveHigh) {
+        pathData += " L " + xStart + " " + yVal;
+      }
     } else {
       // Vertical transition if value changed
       var prevY = drawBits[wi - 1].value === 1 ? waveHigh : waveLow;
@@ -189,9 +192,9 @@ function _collectDrawBits(frame) {
             value:       bit.v,
             bitName:     bit.name,
             isStuffBit:  bit.isStuffBit,
-            elemName:    bit.isStuffBit ? STUFF_DYN_NAME : byteElem.name,
+            elemName:    bit.isStuffBit ? (bit.isStuffBitTypeFixed ? DRAW_CFG.fixedStuffBitName : DRAW_CFG.dynStuffBitName) : byteElem.name,
             elemIdx:     bi,
-            printName:   byteElem.printName !== false,
+            printName:   byteElem.printNameInFieldsBar !== false,
             fieldName:   field.fieldName
           });
         }
@@ -205,9 +208,9 @@ function _collectDrawBits(frame) {
             value:       ebit.v,
             bitName:     ebit.name,
             isStuffBit:  ebit.isStuffBit,
-            elemName:    ebit.isStuffBit ? STUFF_DYN_NAME : elem.name,
+            elemName:    ebit.isStuffBit ? (ebit.isStuffBitTypeFixed ? DRAW_CFG.fixedStuffBitName : DRAW_CFG.dynStuffBitName) : elem.name,
             elemIdx:     ei,
-            printName:   elem.printName !== false,
+            printName:   elem.printNameInFieldsBar !== false,
             fieldName:   field.fieldName
           });
         }
@@ -240,21 +243,18 @@ function _drawFieldHeaders(svg, ns, drawBits, cfg, lineHeight) {
       rect.setAttribute("height", lineHeight);
       rect.setAttribute("fill", color);
       rect.setAttribute("opacity", "0.5");
-      rect.setAttribute("rx", "3");
       svg.appendChild(rect);
     }
 
-    // Separator line
-    if (si > 0) {
-      var line = document.createElementNS(ns, "line");
-      line.setAttribute("x1", x);
-      line.setAttribute("y1", cfg.paddingTop);
-      line.setAttribute("x2", x);
-      line.setAttribute("y2", cfg.paddingTop + lineHeight);
-      line.setAttribute("stroke", "#999");
-      line.setAttribute("stroke-width", "1");
-      svg.appendChild(line);
-    }
+    // Separator line (left edge of each span, including the first)
+    var line = document.createElementNS(ns, "line");
+    line.setAttribute("x1", x);
+    line.setAttribute("y1", cfg.paddingTop);
+    line.setAttribute("x2", x);
+    line.setAttribute("y2", cfg.paddingTop + lineHeight);
+    line.setAttribute("stroke", "#999");
+    line.setAttribute("stroke-width", "1");
+    svg.appendChild(line);
 
     // Text
     var text = document.createElementNS(ns, "text");
@@ -268,6 +268,20 @@ function _drawFieldHeaders(svg, ns, drawBits, cfg, lineHeight) {
     text.setAttribute("fill", "#333");
     text.textContent = span.label;
     svg.appendChild(text);
+  }
+
+  // Right-edge line after the last span
+  if (spans.length > 0) {
+    var last = spans[spans.length - 1];
+    var xEnd = cfg.paddingLeft + (last.start + last.count) * cfg.bitWidth;
+    var lineEnd = document.createElementNS(ns, "line");
+    lineEnd.setAttribute("x1", xEnd);
+    lineEnd.setAttribute("y1", cfg.paddingTop);
+    lineEnd.setAttribute("x2", xEnd);
+    lineEnd.setAttribute("y2", cfg.paddingTop + lineHeight);
+    lineEnd.setAttribute("stroke", "#999");
+    lineEnd.setAttribute("stroke-width", "1");
+    svg.appendChild(lineEnd);
   }
 }
 
@@ -285,17 +299,15 @@ function _drawElementHeaders(svg, ns, drawBits, cfg, line1Height, line2Height) {
     var x = cfg.paddingLeft + span.start * cfg.bitWidth;
     var w = span.count * cfg.bitWidth;
 
-    // Separator line
-    if (si > 0) {
-      var line = document.createElementNS(ns, "line");
-      line.setAttribute("x1", x);
-      line.setAttribute("y1", yTop);
-      line.setAttribute("x2", x);
-      line.setAttribute("y2", yTop + line2Height);
-      line.setAttribute("stroke", "#ccc");
-      line.setAttribute("stroke-width", "1");
-      svg.appendChild(line);
-    }
+    // Separator line (left edge of each span, including the first)
+    var line = document.createElementNS(ns, "line");
+    line.setAttribute("x1", x);
+    line.setAttribute("y1", yTop);
+    line.setAttribute("x2", x);
+    line.setAttribute("y2", yTop + line2Height);
+    line.setAttribute("stroke", "#ccc");
+    line.setAttribute("stroke-width", "1");
+    svg.appendChild(line);
 
     // Skip text if printName is false for this span
     if (span.printName === false) continue;
@@ -318,6 +330,20 @@ function _drawElementHeaders(svg, ns, drawBits, cfg, line1Height, line2Height) {
     }
     text.textContent = displayName;
     svg.appendChild(text);
+  }
+
+  // Right-edge line after the last span
+  if (spans.length > 0) {
+    var last = spans[spans.length - 1];
+    var xEnd = cfg.paddingLeft + (last.start + last.count) * cfg.bitWidth;
+    var lineEnd = document.createElementNS(ns, "line");
+    lineEnd.setAttribute("x1", xEnd);
+    lineEnd.setAttribute("y1", yTop);
+    lineEnd.setAttribute("x2", xEnd);
+    lineEnd.setAttribute("y2", yTop + line2Height);
+    lineEnd.setAttribute("stroke", "#ccc");
+    lineEnd.setAttribute("stroke-width", "1");
+    svg.appendChild(lineEnd);
   }
 }
 

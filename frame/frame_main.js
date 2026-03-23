@@ -150,6 +150,24 @@ function _parseDataInput(str) {
 // =============================================================================
 // Update info display below SVG
 // =============================================================================
+function _pushCrcTrace(lines, trace, crcBits, label) {
+  if (!trace || trace.length === 0) return;
+  lines.push("");
+  lines.push(label + " shift register trace:");
+  var dataLen = trace.length - 1 - crcBits; // number of data bits
+  for (var i = 0; i < trace.length; i++) {
+    var stepLabel;
+    if (i === 0) {
+      stepLabel = "Init   ";
+    } else if (i <= dataLen) {
+      stepLabel = "Bit  " + String(i - 1).padStart(3, " ") + " ";
+    } else {
+      stepLabel = "Zero " + String(i - 1 - dataLen).padStart(3, " ") + " ";
+    }
+    lines.push("  " + stepLabel + ": " + trace[i].toString(2).padStart(crcBits, "0"));
+  }
+}
+
 function _updateInfoDisplay(frame) {
   var info = document.getElementById("infoDisplay");
   if (!info) return;
@@ -163,11 +181,18 @@ function _updateInfoDisplay(frame) {
 
   if (frame._isCC()) {
     lines.push("CRC-15: 0x" + frame.computed.crcValue.toString(16).toUpperCase());
+    lines.push("CRC input bit stream: " + frame.debug.crcInputBitStream.join(""));
+    _pushCrcTrace(lines, frame.debug.crcShiftRegTrace, 15, "CRC-15");
   } else if (frame._isFD()) {
     lines.push("CRC-" + frame.computed.crcLength + ": 0x" + frame.computed.crcValue.toString(16).toUpperCase());
+    lines.push("CRC input bit stream: " + frame.debug.crcInputBitStream.join(""));
+    _pushCrcTrace(lines, frame.debug.crcShiftRegTrace, frame.computed.crcLength, "CRC-" + frame.computed.crcLength);
   } else if (frame._isXL()) {
     lines.push("PCRC-13: 0x" + frame.computed.pcrcValue.toString(16).toUpperCase());
+    lines.push("PCRC input bit stream: " + frame.debug.pcrcInputBitStream.join(""));
+    _pushCrcTrace(lines, frame.debug.pcrcShiftRegTrace, 13, "PCRC-13");
     lines.push("FCRC-32: 0x" + frame.computed.fcrcValue.toString(16).toUpperCase().padStart(8, "0"));
+    lines.push("FCRC input bit stream: " + frame.debug.fcrcInputBitStream.join(""));
   }
 
   info.textContent = lines.join("\n");

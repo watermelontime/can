@@ -68,6 +68,33 @@ function crcCalculateBigInt(bitStream, crcBits, poly, initVal) {
   return crc;
 }
 
+/**
+ * CRC calculation with trace: returns array of shift register values after each step.
+ * trace[0] = initial value, trace[i+1] = register after processing bit i.
+ * Total entries = bitStream.length + crcBits + 1.
+ */
+function crcCalculateTrace(bitStream, crcBits, poly, initVal) {
+  var crc = initVal;
+  var topBitMask = 1 << (crcBits - 1);
+  var crcMask = (1 << crcBits) - 1;
+  var trace = [crc];
+
+  var totalBits = bitStream.length + crcBits;
+  for (var i = 0; i < totalBits; i++) {
+    var dataBit = (i < bitStream.length) ? bitStream[i] : 0;
+    var topBit = (crc & topBitMask) ? 1 : 0;
+
+    crc = ((crc << 1) | dataBit) & crcMask;
+
+    if (topBit) {
+      crc = (crc ^ poly) & crcMask;
+    }
+    trace.push(crc);
+  }
+
+  return trace;
+}
+
 // =============================================================================
 // CRC-15 for CAN CC frames
 // Polynomial: x^15 + x^14 + x^10 + x^8 + x^7 + x^4 + x^3 + 1
@@ -107,6 +134,12 @@ function crc21(bitStream) {
 function crc13(bitStream) {
   return crcCalculate(bitStream, 13, 0x19E7, 0x0001);
 }
+
+// --- Trace variants (return array of shift register values after each step) ---
+function crc15Trace(bitStream) { return crcCalculateTrace(bitStream, 15, 0x4599, 0x0000); }
+function crc17Trace(bitStream) { return crcCalculateTrace(bitStream, 17, 0x1685B, 0x10000); }
+function crc21Trace(bitStream) { return crcCalculateTrace(bitStream, 21, 0x102899, 0x100000); }
+function crc13Trace(bitStream) { return crcCalculateTrace(bitStream, 13, 0x19E7, 0x0001); }
 
 // =============================================================================
 // CRC-32 for CAN XL FCRC (frame CRC)

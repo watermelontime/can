@@ -6,120 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CAN Frame Visualizer</title>
   <link rel="stylesheet" href="../styles.css" />
-  <style>
-    /* ── Layout: two-column (input left, output right) ── */
-    .frame-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-
-    .input-column {
-      flex: 0 0 auto;
-      width: fit-content;
-      min-width: 280px;
-      padding: 1rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      background-color: #f0f8ff;
-      border: 1px solid #e0e8f0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .output-column {
-      flex: 1 1 500px;
-      min-width: 400px;
-      padding: 1rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      background-color: #fafafa;
-      border: 1px solid #e8e8e8;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ── Input form table ── */
-    .input-table {
-      border-collapse: collapse;
-      width: auto;
-    }
-    .input-table td {
-      padding: 0.3em 0.4em;
-      border: none;
-      background: transparent;
-      vertical-align: middle;
-    }
-    .input-table td:first-child {
-      font-weight: bold;
-      white-space: nowrap;
-      padding-right: 0.8em;
-    }
-    .input-table .range-hint {
-      font-size: 0.85em;
-      color: #888;
-      padding-left: 0.4em;
-    }
-
-    /* ── Checkbox row above SVG ── */
-    .checkbox-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.2em;
-      margin-bottom: 0.8em;
-      align-items: center;
-    }
-    .checkbox-row label {
-      display: flex;
-      align-items: center;
-      gap: 0.3em;
-      font-size: 0.95em;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    /* ── SVG container: fixed height, horizontal scroll ── */
-    .svg-wrapper {
-      overflow-x: auto;
-      overflow-y: hidden;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      background: #fff;
-      min-height: 120px;
-      margin-bottom: 1em;
-    }
-
-    /* ── Export row ── */
-    .export-row {
-      display: flex;
-      gap: 0.8em;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .export-row span {
-      font-weight: bold;
-      margin-right: 0.3em;
-    }
-
-    /* ── Info display ── */
-    .info-display {
-      font-size: 0.95em;
-      color: #333;
-      white-space: pre;
-      margin-top: 0.8em;
-      padding: 0.5em;
-      background: #f8f8f8;
-      border-radius: 4px;
-      border: 1px solid #eee;
-    }
-
-    /* ── Disabled input styling ── */
-    input:disabled,
-    select:disabled {
-      opacity: 0.5;
-    }
-  </style>
+  <link rel="stylesheet" href="styles_frame.css" />
+  <link rel="icon" href="../favicon.ico" type="image/x-icon" />
 </head>
 
 <body>
@@ -130,14 +18,14 @@
   <main>
 
     <div class="page-header">
-      <h1>CAN Frame Visualizer <span class="version-label">V1.0.0</span></h1>
+      <h1>CAN Frame Generator <span class="version-label">V1.0.0</span></h1>
     </div>
 
-    <div class="frame-container">
+    <div class="responsive-container">
 
       <!-- ════════════════ Column 1: Input ════════════════ -->
-      <div class="input-column">
-        <h3>Frame Input</h3>
+      <div class="column settings-column">
+        <h3>Input</h3>
 
         <table class="input-table">
           <tr>
@@ -223,16 +111,17 @@
       </div>
 
       <!-- ════════════════ Column 2: Output ════════════════ -->
-      <div class="output-column">
+      <div class="column report-column">
 
         <!-- Checkbox row -->
-        <div class="checkbox-row">
-          <label><input type="checkbox" id="chkBitNames" checked /> show bit names</label>
-          <label><input type="checkbox" id="chkColor" checked /> color bits</label>
-          <label><input type="checkbox" id="chkColorStuff" checked /> color stuff bits</label>
-          <label><input type="checkbox" id="chkFields" checked /> show fields</label>
-        </div>
-
+        <h3 class="report-headline">Generated CAN Frame
+          <div class="inline-control">
+            <label><input type="checkbox" id="chkBitNames" checked /> show bit names</label>
+            <label><input type="checkbox" id="chkColor" checked /> color bits</label>
+            <label><input type="checkbox" id="chkColorStuff" checked /> color stuff bits</label>
+            <label><input type="checkbox" id="chkFields" checked /> show fields</label>
+          </div>
+        </h3>
         <!-- SVG container -->
         <div class="svg-wrapper" id="svgContainer">
           <p style="color:#999;padding:1em;">Press "Show Frame" to generate the waveform.</p>
@@ -241,13 +130,16 @@
         <!-- Export row -->
         <div class="export-row">
           <span>Export:</span>
-          <button type="button" id="btnExportSVG" class="styled-button" style="margin-bottom:0;">Download SVG</button>
-          <button type="button" id="btnExportPNG" class="styled-button" style="margin-bottom:0;">Download PNG</button>
-          <button type="button" id="btnExportCSV" class="styled-button" style="margin-bottom:0;">Download CSV</button>
+          <a href="#" id="btnExportSVG">Download SVG</a>
+          <a href="#" id="btnExportPNG">Download PNG</a>
+          <a href="#" id="btnExportCSV">Download CSV</a>
         </div>
 
         <!-- Info display -->
-        <pre id="infoDisplay" class="info-display">Frame information will appear here after pressing "Show Frame".</pre>
+        <div>
+          <b>Frame Information</b>
+          <pre id="infoDisplay" class="info-display">Frame information will appear here after pressing "Show Frame".</pre>
+        </div>
       </div>
 
     </div>

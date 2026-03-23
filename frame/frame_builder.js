@@ -2,9 +2,14 @@
 // frame_builder.js — CanFrame class: build frame structure, bits, stuffing, CRC
 // =============================================================================
 
-// --- Configurable stuff bit names (central place) ---
-var STUFF_DYN_NAME = "stuff";    // name for dynamic stuff bits
-var STUFF_FIX_NAME = "stuff";    // name for fixed stuff bits
+// --- Configurable stuff bit names (from DRAW_CFG in frame_draw.js) ---
+// Resolved lazily because frame_draw.js may load after this file.
+var STUFF_DYN_NAME;   // name for dynamic stuff bits
+var STUFF_FIX_NAME;   // name for fixed stuff bits
+function _initStuffNames() {
+  STUFF_DYN_NAME = DRAW_CFG.dynStuffBitName;
+  STUFF_FIX_NAME = DRAW_CFG.fixedStuffBitName;
+}
 
 // --- SBC lookup tables ---
 // FD: 4-bit SBC (Gray-coded + parity), indexed by (dynamic stuff count mod 8)
@@ -59,6 +64,14 @@ function CanFrame(frameType) {
   };
 
   this.fields = [];
+
+  this.debug = {
+    crcInputBitStream:  [],
+    pcrcInputBitStream: [],
+    fcrcInputBitStream: [],
+    crcShiftRegTrace:   [],
+    pcrcShiftRegTrace:  []
+  };
 }
 
 // =============================================================================
@@ -72,6 +85,7 @@ CanFrame.prototype._isXL = function() { return this.frameType.startsWith("XL_");
 // Public: build the complete frame
 // =============================================================================
 CanFrame.prototype.build = function() {
+  _initStuffNames();
   this._buildFrameStructure();
 
   if (this._isCC())      this._buildCC();
@@ -88,7 +102,7 @@ CanFrame.prototype._buildFrameStructure = function() {
   var def = getFrameDefinition(this.frameType, this.input);
   this.fields = def.fields;
   this.computed.dataFieldBytes = def.dataByteCount;
-  if (def.crcLen !== undefined) {
+  if (def.crcLen !== undefined) { // TODO: omitt this code; crcLen alwasys defined in frame definitions
     this.computed.crcLength = def.crcLen;
   } else if (this._isCC()) {
     this.computed.crcLength = 15;
@@ -104,28 +118,26 @@ CanFrame.prototype._generateBitsForElement = function(elem) {
   var bits = [];
   var n = elem.nominalBits;
   var prefix = elem.bitNamePrefix;
-  var customNames = elem.bitNames;  // optional custom per-bit names
+  var customNames = elem.customBitNames ? elem.customBitNamesArray : null;
 
-  // Special case for ID elements in 11-bit frames: bitNamePrefix="ID", offset 18
   var startIndex = n - 1;
-  if (prefix === "ID" && elem.name === "ID[28:18]") {
-    startIndex = 28;
-  } else if (prefix === "ID" && elem.name === "ID[17:0]") {
-    startIndex = 17;
-  }
 
   for (var i = 0; i < n; i++) {
-    var bitVal = (elem.value >> (n - 1 - i)) & 1;
+    var bitVal = (elem.value >> (n - 1 - i)) & 1; // extract bit value
     var bitName;
 
-    if (customNames && customNames.length === n) {
+    // custom bit names
+    if (customNames && customNames.length === n) { // customBitNamesArray
       bitName = customNames[i];
+    // single bits
     } else if (n === 1 && prefix === "") {
       bitName = elem.name;
+    // default bit names: prefix + bit index
     } else {
       bitName = prefix + String(startIndex - i);
     }
 
+    // create bit object (array element)
     bits.push({
       v: bitVal,
       name: bitName,
@@ -143,12 +155,12 @@ CanFrame.prototype._generateBitsForElement = function(elem) {
 // =============================================================================
 CanFrame.prototype._fillNominalBits = function(fieldIndices) {
   for (var fi = 0; fi < fieldIndices.length; fi++) {
-    var field = this.fields[fieldIndices[fi]];
-    if (field.dataField) {
+    var oneField = this.fields[fieldIndices[fi]];
+    if (oneField.dataField) { // Array of Data Field bytes is named dataField
       // Data field: generate bits for each byte
-      var prefix = field.bitNamePrefix || "Bit";
-      for (var bi = 0; bi < field.dataField.length; bi++) {
-        var byteElem = field.dataField[bi];
+      var prefix = oneField.bitNamePrefix || "Bit";
+      for (var bi = 0; bi < oneField.dataField.length; bi++) {
+        var byteElem = oneField.dataField[bi];
         if (byteElem.bits.length > 0) continue;
         byteElem.bits = [];
         for (var bitIdx = 7; bitIdx >= 0; bitIdx--) {
@@ -160,9 +172,9 @@ CanFrame.prototype._fillNominalBits = function(fieldIndices) {
           });
         }
       }
-    } else if (field.elements) {
-      for (var ei = 0; ei < field.elements.length; ei++) {
-        var elem = field.elements[ei];
+    } else if (oneField.elements) { // Array of Elements is named elements
+      for (var ei = 0; ei < oneField.elements.length; ei++) {
+        var elem = oneField.elements[ei];
         if (elem.bits.length > 0) continue; // already filled
         elem.bits = this._generateBitsForElement(elem);
       }
@@ -536,7 +548,9 @@ CanFrame.prototype._buildCC = function() {
   if (dataIdx >= 0) crcIndices.push(dataIdx);
   var unstuffedBits = this._flattenBits(crcIndices, { excludeStuff: true });
   var bitValues = unstuffedBits.map(function(b) { return b.v; });
+  this.debug.crcInputBitStream = bitValues;
   this.computed.crcValue = crc15(bitValues);
+  this.debug.crcShiftRegTrace = crc15Trace(bitValues);
 
   // Step 7: Append CRC, CRC del, ACK, EOF
   var crcFieldIdx = this._fieldIndex("CRC field");
@@ -563,11 +577,13 @@ CanFrame.prototype._buildCC = function() {
 // =============================================================================
 CanFrame.prototype._buildFD = function() {
   // Step 3: Build nominal bits for SOF, Arb, Control, Data
+  // nominal bits are the bits without stuff bits
   var sofIdx = 0;
   var arbIdx = this._fieldIndex("Arbitration field");
   var ctrlIdx = this._fieldIndex("Control field");
-  var dataIdx = this._fieldIndex("Data field");
+  var dataIdx = this._fieldIndex("Data field"); // index or -1 if no data field
   var indicesToFill = [sofIdx, arbIdx, ctrlIdx];
+  // if there is a data field at it to list of fields to fill with nominal bits; if not, skip it
   if (dataIdx >= 0) indicesToFill.push(dataIdx);
   this._fillNominalBits(indicesToFill);
 
@@ -587,13 +603,17 @@ CanFrame.prototype._buildFD = function() {
   // Append SBC bits
   for (var si = 0; si < sbcVal.length; si++) crcInput.push(sbcVal[si]);
 
+  this.debug.crcInputBitStream = crcInput;
+
   var dataByteCount = this.computed.dataFieldBytes;
   if (dataByteCount <= 16) {
     this.computed.crcValue = crc17(crcInput);
     this.computed.crcLength = 17;
+    this.debug.crcShiftRegTrace = crc17Trace(crcInput);
   } else {
     this.computed.crcValue = crc21(crcInput);
     this.computed.crcLength = 21;
+    this.debug.crcShiftRegTrace = crc21Trace(crcInput);
   }
 
   // Step 7: Fill SBC, CRC, CRC del, ACK, EOF
@@ -641,7 +661,8 @@ CanFrame.prototype._buildXL = function() {
   var ackFieldIdx = this._fieldIndex("ACK field");
   var eofFieldIdx = this._fieldIndex("EOF");
 
-  // Step 3a: Build nominal bits for arbitration: SOF, ID[28:18], RRS, IDE, FDF, XLF
+  console.log("myFrame with fields:", this); // DEBUG
+  // Step 3a: Build nominal bits[] for arbitration: SOF, ID[28:18], RRS, IDE, FDF, XLF
   this._fillNominalBits([sofIdx, arbIdx]);
 
   // Step 4: Insert dynamic stuff bits: SOF through before FDF (max 3)
@@ -649,29 +670,33 @@ CanFrame.prototype._buildXL = function() {
   var dynCount = this._insertDynStuffBitsArbXL();
   this.computed.stuffBitCountDyn = dynCount;
 
-  // Step 3b: Build nominal bits for control part 1: resXL, ADH, DH1, DH2, DL1, SDT, SEC, DLC
+  // Step 3b: Build nominal bits[] for control part 1: resXL, ADH, DH1, DH2, DL1, SDT, SEC, DLC
   this._fillNominalBitsCtrlPart1_XL();
 
   // Step 5: Compute SBC (3 bits)
-  var sbcVal = SBC_XL_TABLE[Math.min(dynCount, 3)];
+  var sbcValBits = SBC_XL_TABLE[Math.min(dynCount, 3)];
 
   // Step 6a: Compute PCRC-13
   // Input: ID[28:18] + RRS + dynamic stuff bits + SDT + SEC + DLC + SBC
   // Excludes: SOF, IDE, FDF, XLF, resXL, ADS (ADH, DH1, DH2, DL1)
-  var pcrcInput = this._buildPCRCStream(sbcVal);
-  this.computed.pcrcValue = crc13(pcrcInput);
+  // create BitStream for PCRC calculation
+  var pcrcInputBitStream = this._buildPCRCBitStream(sbcValBits);
+  this.debug.pcrcInputBitStream = pcrcInputBitStream;
+  // Calculate PCRC
+  this.computed.pcrcValue = crc13(pcrcInputBitStream);
+  this.debug.pcrcShiftRegTrace = crc13Trace(pcrcInputBitStream);
 
-  // Fill SBC and PCRC bits
+  // SBC and PCRC: Fill Elements with values and bits
   var sbcElem = this._getElement("Control field", "SBC");
   var pcrcElem = this._getElement("Control field", "PCRC");
-  sbcElem.value = this._sbcBitsToValue(sbcVal);
+  sbcElem.value = this._sbcBitsToValue(sbcValBits);
   pcrcElem.value = this.computed.pcrcValue;
-
+  
   sbcElem.bits = [];
-  for (var i = 0; i < sbcVal.length; i++) {
+  for (var i = 0; i < sbcValBits.length; i++) {
     sbcElem.bits.push({
-      v: sbcVal[i],
-      name: sbcElem.bitNamePrefix + String(sbcVal.length - 1 - i),
+      v: sbcValBits[i],
+      name: sbcElem.bitNamePrefix + String(sbcValBits.length - 1 - i),
       isStuffBit: false,
       isStuffBitTypeFixed: false
     });
@@ -687,10 +712,13 @@ CanFrame.prototype._buildXL = function() {
   // Step 6b: Compute FCRC-32
   // Input: ID[28:18] + RRS + SDT + SEC + DLC + SBC + PCRC + VCID + AF + Data
   // Excludes: SOF, IDE, FDF, XLF, resXL, ADS, ALL stuff bits
-  var fcrcInput = this._buildFCRCStream();
-  this.computed.fcrcValue = crc32can(fcrcInput);
+  // create BitStream for FCRC calculation
+  var fcrcInputBitStream = this._buildFCRCBitStream();
+  this.debug.fcrcInputBitStream = fcrcInputBitStream;
+  // Calculate FCRC
+  this.computed.fcrcValue = crc32can(fcrcInputBitStream);
 
-  // Fill FCRC and FCP bits
+  // FCRC and FCP: Fill Elements with values and bits
   var fcrcElem = this._getElement("CRC field", "FCRC");
   var fcpElem  = this._getElement("CRC field", "FCP");
   fcrcElem.value = this.computed.fcrcValue;
@@ -700,7 +728,7 @@ CanFrame.prototype._buildXL = function() {
   // Step 8: Insert fixed stuff bits (DL1 through FCRC)
   this._insertFixedStuffBits_XL();
 
-  // Step 7b: Fill DAS, ACK, EOF
+  // Step 9: Build nominalbits for DAS, ACK, EOF
   this._fillNominalBits([ackFieldIdx, eofFieldIdx]);
 };
 
@@ -709,6 +737,8 @@ CanFrame.prototype._buildXL = function() {
 // =============================================================================
 CanFrame.prototype._insertDynStuffBitsArbXL = function() {
   // Collect bit containers for SOF and arb elements up to but NOT including FDF
+  // Hint: containers[] is a flat list of pointers to the various bits[] arrays
+  //    scattered across fields/elements, making it easy to walk them sequentially.
   var containers = [];
 
   // SOF
@@ -747,7 +777,8 @@ CanFrame.prototype._insertDynStuffBitsArbXL = function() {
         consecutiveCount = 1;
         lastVal = bit.v;
       }
-
+      
+      // insert dynamic stuff bit after 5 consecutive bits of same value
       if (consecutiveCount === 5) {
         var stuffVal = lastVal === 0 ? 1 : 0;
         bitsArr.splice(i + 1, 0, {
@@ -770,7 +801,7 @@ CanFrame.prototype._insertDynStuffBitsArbXL = function() {
 };
 
 // =============================================================================
-// XL-specific: Fill bits for control part 1 (resXL through DLC)
+// XL-specific: Fill bits[] (array) for control part 1 (resXL through DLC)
 // =============================================================================
 CanFrame.prototype._fillNominalBitsCtrlPart1_XL = function() {
   var ctrlIdx = this._fieldIndex("Control field");
@@ -805,8 +836,8 @@ CanFrame.prototype._fillNominalBitsCtrlPart2_XL = function() {
 // Includes: ID[28:18] + RRS + dynamic stuff bits (before FDF) + SDT + SEC + DLC + SBC
 // Excludes: SOF, IDE, FDF, XLF, resXL, ADS, fixed stuff bits
 // =============================================================================
-CanFrame.prototype._buildPCRCStream = function(sbcBitsArr) {
-  var stream = [];
+CanFrame.prototype._buildPCRCBitStream = function(sbcBitsArr) {
+  var bitStream = [];
   var arbIdx = this._fieldIndex("Arbitration field");
   var arbField = this.fields[arbIdx];
 
@@ -818,7 +849,7 @@ CanFrame.prototype._buildPCRCStream = function(sbcBitsArr) {
       var bit = elem.bits[bi];
       // Include data bits and dynamic stuff bits
       if (bit.isStuffBit && bit.isStuffBitTypeFixed) continue; // exclude fixed
-      stream.push(bit.v);
+      bitStream.push(bit.v);
     }
   }
 
@@ -830,8 +861,8 @@ CanFrame.prototype._buildPCRCStream = function(sbcBitsArr) {
     var cElem = ctrlField.elements[ci];
     if (pcrcElems.indexOf(cElem.name) >= 0) {
       for (var bj = 0; bj < cElem.bits.length; bj++) {
-        if (!cElem.bits[bj].isStuffBit) {
-          stream.push(cElem.bits[bj].v);
+        if (!cElem.bits[bj].isStuffBit) { // here only fixed stuff bits are possible, so no check for isStuffBitTypeFixed needed
+          bitStream.push(cElem.bits[bj].v);
         }
       }
     }
@@ -839,10 +870,10 @@ CanFrame.prototype._buildPCRCStream = function(sbcBitsArr) {
 
   // SBC
   for (var si = 0; si < sbcBitsArr.length; si++) {
-    stream.push(sbcBitsArr[si]);
+    bitStream.push(sbcBitsArr[si]);
   }
 
-  return stream;
+  return bitStream;
 };
 
 // =============================================================================
@@ -850,7 +881,7 @@ CanFrame.prototype._buildPCRCStream = function(sbcBitsArr) {
 // Includes: ID[28:18] + RRS + SDT + SEC + DLC + SBC + PCRC + VCID + AF + Data
 // Excludes: SOF, IDE, FDF, XLF, resXL, ADS, ALL stuff bits
 // =============================================================================
-CanFrame.prototype._buildFCRCStream = function() {
+CanFrame.prototype._buildFCRCBitStream = function() {
   var stream = [];
   var arbIdx = this._fieldIndex("Arbitration field");
   var arbField = this.fields[arbIdx];
