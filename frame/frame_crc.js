@@ -8,11 +8,12 @@
 // CRC-32  (XL FCRC, frame CRC)
 //
 // All functions take an array of bit values (0/1) and return the CRC as integer.
-// The bit stream is appended internally with n_CRC zero bits before division.
 // =============================================================================
 
 /**
- * Generic CRC calculation using bit-by-bit shift register approach.
+ * Generic CRC calculation using standard LFSR feedback approach.
+ * feedback = dataBit XOR MSB(crc); shift left; if feedback, XOR with poly.
+ * This matches the CAN specification (ISO 11898-1) CRC algorithm.
  * @param {number[]} bitStream - Array of 0/1 values (MSB first)
  * @param {number} crcBits - Number of CRC bits (e.g., 15, 17, 21, 13, 32)
  * @param {number} poly - Generator polynomial WITHOUT leading 1 (e.g., 0x4599 for CRC-15)
@@ -29,15 +30,13 @@ function crcCalculate(bitStream, crcBits, poly, initVal) {
   var topBitMask = 1 << (crcBits - 1);
   var crcMask = (1 << crcBits) - 1;
 
-  // Process each data bit + n_CRC zero bits
-  var totalBits = bitStream.length + crcBits;
-  for (var i = 0; i < totalBits; i++) {
-    var dataBit = (i < bitStream.length) ? bitStream[i] : 0;
-    var topBit = (crc & topBitMask) ? 1 : 0;
+  for (var i = 0; i < bitStream.length; i++) {
+    var dataBit = bitStream[i];
+    var feedback = dataBit ^ ((crc & topBitMask) ? 1 : 0);
 
-    crc = ((crc << 1) | dataBit) & crcMask;
+    crc = (crc << 1) & crcMask;
 
-    if (topBit) {
+    if (feedback) {
       crc = (crc ^ poly) & crcMask;
     }
   }
@@ -53,14 +52,13 @@ function crcCalculateBigInt(bitStream, crcBits, poly, initVal) {
   var topBitMask = 1n << BigInt(crcBits - 1);
   var crcMask = (1n << BigInt(crcBits)) - 1n;
 
-  var totalBits = bitStream.length + crcBits;
-  for (var i = 0; i < totalBits; i++) {
-    var dataBit = (i < bitStream.length) ? BigInt(bitStream[i]) : 0n;
-    var topBit = (crc & topBitMask) ? 1n : 0n;
+  for (var i = 0; i < bitStream.length; i++) {
+    var dataBit = BigInt(bitStream[i]);
+    var feedback = dataBit ^ ((crc & topBitMask) ? 1n : 0n);
 
-    crc = ((crc << 1n) | dataBit) & crcMask;
+    crc = (crc << 1n) & crcMask;
 
-    if (topBit) {
+    if (feedback) {
       crc = (crc ^ poly) & crcMask;
     }
   }
@@ -71,7 +69,7 @@ function crcCalculateBigInt(bitStream, crcBits, poly, initVal) {
 /**
  * CRC calculation with trace: returns array of shift register values after each step.
  * trace[0] = initial value, trace[i+1] = register after processing bit i.
- * Total entries = bitStream.length + crcBits + 1.
+ * Total entries = bitStream.length + 1.
  */
 function crcCalculateTrace(bitStream, crcBits, poly, initVal) {
   var crc = initVal;
@@ -79,14 +77,13 @@ function crcCalculateTrace(bitStream, crcBits, poly, initVal) {
   var crcMask = (1 << crcBits) - 1;
   var trace = [crc];
 
-  var totalBits = bitStream.length + crcBits;
-  for (var i = 0; i < totalBits; i++) {
-    var dataBit = (i < bitStream.length) ? bitStream[i] : 0;
-    var topBit = (crc & topBitMask) ? 1 : 0;
+  for (var i = 0; i < bitStream.length; i++) {
+    var dataBit = bitStream[i];
+    var feedback = dataBit ^ ((crc & topBitMask) ? 1 : 0);
 
-    crc = ((crc << 1) | dataBit) & crcMask;
+    crc = (crc << 1) & crcMask;
 
-    if (topBit) {
+    if (feedback) {
       crc = (crc ^ poly) & crcMask;
     }
     trace.push(crc);
