@@ -7,7 +7,8 @@
 var DRAW_CFG = {
   bitWidth:           30,     // px per bit
   bitHeight:          60,     // px: waveform amplitude (vertical distance low ↔ high)
-  lineWidth:           3,     // px: waveform stroke width
+  lineWidthWaveForm:   3,     // px: waveform stroke width
+  lineWidthSeparators: 1,     // px: vertical lines separating bits (also field/element header lines)
   fontSizeBitName:    12,     // px
   fontSizeFieldName:  15,     // px
   fontFamilyBitName:  "sans-serif", // examples: "sans-serif", "monospace", "Arial", "Helvetica", "Verdana"
@@ -24,7 +25,8 @@ var DRAW_CFG = {
   defaultArbDataBitLenRatio: 2.0, // Ratio of Bit Lengths: Arbitration/Data, e.g. 2
 
   colors: {
-    waveformLine:       "#000000",
+    waveFormLine:       "#000000",
+    separatorLine:      "#999999",
     background:         "#FFFFFF",
     stuffBitBackground: "#fd821d", // background color for stuff bits
     stuffBitFont:       "#fd821d", // font color for stuff bit names
@@ -48,6 +50,7 @@ function drawFrame(frame, svgContainer, options) {
   var useColor       = !!opts.useColor;
   var useColorStuff  = !!opts.useColorStuff;
   var showFields     = !!opts.showFields;
+  var showBitSeparators = !!opts.showBitSeparators;
 
   var cfg = DRAW_CFG;
 
@@ -123,6 +126,21 @@ function drawFrame(frame, svgContainer, options) {
     _drawElementHeaders(svg, ns, drawBits, cfg, fieldHeaderHeight, elemHeaderHeight, bitGeom);
   }
 
+  // --- Draw bit separator lines (between background and waveform) ---
+  if (showBitSeparators) {
+    for (var si = 1; si < drawBits.length; si++) {
+      var sx = bitGeom.starts[si];
+      var sepLine = document.createElementNS(ns, "line");
+      sepLine.setAttribute("x1", sx);
+      sepLine.setAttribute("y1", waveTop);
+      sepLine.setAttribute("x2", sx);
+      sepLine.setAttribute("y2", waveLow);
+      sepLine.setAttribute("stroke", cfg.colors.separatorLine);
+      sepLine.setAttribute("stroke-width", cfg.lineWidthSeparators);
+      svg.appendChild(sepLine);
+    }
+  }
+
   // --- Draw bit names inside the bits (rotated 90°) ---
   if (showBitNames) {
     var bitNameAnchorY = waveLow - cfg.gapBitNameToWave;  // slightly above level-0 (dominant)
@@ -172,8 +190,8 @@ function drawFrame(frame, svgContainer, options) {
 
   var pathElem = document.createElementNS(ns, "path");
   pathElem.setAttribute("d", pathData);
-  pathElem.setAttribute("stroke", cfg.colors.waveformLine);
-  pathElem.setAttribute("stroke-width", cfg.lineWidth);
+  pathElem.setAttribute("stroke", cfg.colors.waveFormLine);
+  pathElem.setAttribute("stroke-width", cfg.lineWidthWaveForm);
   pathElem.setAttribute("fill", "none");
   svg.appendChild(pathElem);
 
@@ -330,8 +348,8 @@ function _drawFieldHeaders(svg, ns, drawBits, cfg, lineHeight, bitGeom) {
     line.setAttribute("y1", cfg.paddingTop);
     line.setAttribute("x2", x);
     line.setAttribute("y2", cfg.paddingTop + lineHeight);
-    line.setAttribute("stroke", "#999");
-    line.setAttribute("stroke-width", "1");
+    line.setAttribute("stroke", cfg.colors.separatorLine);
+    line.setAttribute("stroke-width", cfg.lineWidthSeparators);
     svg.appendChild(line);
 
     // Text
@@ -357,8 +375,8 @@ function _drawFieldHeaders(svg, ns, drawBits, cfg, lineHeight, bitGeom) {
     lineEnd.setAttribute("y1", cfg.paddingTop);
     lineEnd.setAttribute("x2", xEnd);
     lineEnd.setAttribute("y2", cfg.paddingTop + lineHeight);
-    lineEnd.setAttribute("stroke", "#999");
-    lineEnd.setAttribute("stroke-width", "1");
+    lineEnd.setAttribute("stroke", cfg.colors.separatorLine);
+    lineEnd.setAttribute("stroke-width", cfg.lineWidthSeparators);
     svg.appendChild(lineEnd);
   }
 }
@@ -384,7 +402,7 @@ function _drawElementHeaders(svg, ns, drawBits, cfg, line1Height, line2Height, b
     line.setAttribute("x2", x);
     line.setAttribute("y2", yTop + line2Height);
     line.setAttribute("stroke", "#ccc");
-    line.setAttribute("stroke-width", "1");
+    line.setAttribute("stroke-width", cfg.lineWidthSeparators);
     svg.appendChild(line);
 
     // Skip text if printName is false for this span
@@ -420,7 +438,7 @@ function _drawElementHeaders(svg, ns, drawBits, cfg, line1Height, line2Height, b
     lineEnd.setAttribute("x2", xEnd);
     lineEnd.setAttribute("y2", yTop + line2Height);
     lineEnd.setAttribute("stroke", "#ccc");
-    lineEnd.setAttribute("stroke-width", "1");
+    lineEnd.setAttribute("stroke-width", cfg.lineWidthSeparators);
     svg.appendChild(lineEnd);
   }
 }

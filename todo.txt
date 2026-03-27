@@ -6,8 +6,27 @@ If Fields are disabled: hide the field
 
 Vertical space between input fields: align them.
 
-Allow to configure the ratio of the bits: Arb/Data => at the SVG settings => Ratio of Bit lengths: Arb/Data [integer value]
-
 Expert configuration: add bit rate and SP for Arb & Data => VHDL file can be downloaded
 
+Allow to configure the ratio of the bits: Arb/Data => at the SVG settings => Ratio of Bit lengths: Arb/Data [integer value]
+I want to draw the bits with real proportianal bit lenghts. Since this is an expert feature it has to be first enabled. The user will enter bit rate and Sample Point position.
 
+In index.html
+- Add a slider like in iPhones to select "Real bit ratio": ON/OFF.
+If slider set to "ON", the following additional configuration input parameters appear: Two lines with each two input parameters.
+- Arbitration: Bit-rate [ 500] kbit/s, SP [80]%
+- Data:        Bit-rate [1000] kbit/s, SP [55]%
+
+in frame_definitions.js
+- add new inputs to var bitTimeInfo, when realBitRatio = ON.
+  - realArbDataBitLenRatio = data/arbitration (calculated from parameters)
+  - dataSP in %
+  - arbSP in %
+- add allways the value of realBitRatio as boolean, based on the slider
+
+in frame_draw.js
+Draw bits according the given bit ratio.
+In case of CAN FD, the bit where the data phase starts and ends is special.
+For the bit, where the data phase starts: Up to the Sample Point (SP) the bit is an Arbitration bit, from the SP the bit is a data bit.
+For the bit, where the data phase ends: Up to the Sample Point (SP) the bit is an Data bit, from the SP the bit is a arbitration bit.
+Show a vertiacal separtor line at the SP, with half the hight.

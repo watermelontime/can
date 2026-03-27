@@ -97,7 +97,8 @@ function onShowFrame() {
     showBitNames:  document.getElementById("chkBitNames").checked,
     useColor:      document.getElementById("chkColor").checked,
     useColorStuff: document.getElementById("chkColorStuff").checked,
-    showFields:    document.getElementById("chkFields").checked
+    showFields:    document.getElementById("chkFields").checked,
+    showBitSeparators: document.getElementById("chkBitSeparators").checked
   };
 
   // Draw
