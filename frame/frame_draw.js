@@ -21,6 +21,8 @@ var DRAW_CFG = {
   dynStuffBitName:    "stuff_D",  // display name for dynamic stuff bits (SVG + CSV)
   fixedStuffBitName:  "stuff_F",  // display name for fixed stuff bits (SVG + CSV)
 
+  defaultArbDataBitLenRatio: 2.0, // Ratio of Bit Lengths: Arbitration/Data, e.g. 2
+
   colors: {
     waveformLine:       "#000000",
     background:         "#FFFFFF",
@@ -41,6 +43,7 @@ var DRAW_CFG = {
 // =============================================================================
 function drawFrame(frame, svgContainer, options) {
   var opts = options || {};
+  var arbPhaseBitsLonger = !!opts.arbPhaseBitsLonger;
   var showBitNames   = !!opts.showBitNames;
   var useColor       = !!opts.useColor;
   var useColorStuff  = !!opts.useColorStuff;
@@ -52,6 +55,9 @@ function drawFrame(frame, svgContainer, options) {
   var drawBits = _collectDrawBits(frame);
   var totalBits = drawBits.length;
   if (totalBits === 0) return;
+
+  // --- Compute per-bit geometry (allows arbitration/data phase scaling) ---
+  var bitGeom = _computeBitGeometry(drawBits, frame.bitTimeInfo, cfg, arbPhaseBitsLonger);
 
   // --- Compute layout dimensions ---
   var fieldHeaderHeight = 0;
@@ -69,7 +75,7 @@ function drawFrame(frame, svgContainer, options) {
   var waveHigh = waveTop;              // recessive (1) = top
   var waveLow  = waveTop + cfg.bitHeight;  // dominant (0) = bottom
 
-  var svgWidth  = cfg.paddingLeft + totalBits * cfg.bitWidth + cfg.paddingLeft;
+  var svgWidth  = cfg.paddingLeft + bitGeom.totalWidth + cfg.paddingLeft;
   var svgHeight = waveLow + cfg.paddingBottom;
 
   // --- Create SVG element ---
@@ -85,7 +91,7 @@ function drawFrame(frame, svgContainer, options) {
   if (useColor || useColorStuff) {
     for (var bi = 0; bi < drawBits.length; bi++) {
       var db = drawBits[bi];
-      var x = cfg.paddingLeft + bi * cfg.bitWidth;
+      var x = bitGeom.starts[bi];
       var color = null;
 
       if (useColorStuff && db.isStuffBit) {
@@ -98,7 +104,7 @@ function drawFrame(frame, svgContainer, options) {
         var rect = document.createElementNS(ns, "rect");
         rect.setAttribute("x", x);
         rect.setAttribute("y", waveTop);
-        rect.setAttribute("width",  cfg.bitWidth);
+        rect.setAttribute("width",  bitGeom.widths[bi]);
         rect.setAttribute("height", cfg.bitHeight);
         rect.setAttribute("fill", color);
         rect.setAttribute("opacity", "0.3");
@@ -109,19 +115,19 @@ function drawFrame(frame, svgContainer, options) {
 
   // --- Draw field header (line 1: group names) ---
   if (showFields) {
-    _drawFieldHeaders(svg, ns, drawBits, cfg, fieldHeaderHeight);
+    _drawFieldHeaders(svg, ns, drawBits, cfg, fieldHeaderHeight, bitGeom);
   }
 
   // --- Draw element header (line 2: element names) ---
   if (showFields) {
-    _drawElementHeaders(svg, ns, drawBits, cfg, fieldHeaderHeight, elemHeaderHeight);
+    _drawElementHeaders(svg, ns, drawBits, cfg, fieldHeaderHeight, elemHeaderHeight, bitGeom);
   }
 
   // --- Draw bit names inside the bits (rotated 90°) ---
   if (showBitNames) {
     var bitNameAnchorY = waveLow - cfg.gapBitNameToWave;  // slightly above level-0 (dominant)
     for (var bn = 0; bn < drawBits.length; bn++) {
-      var bx = cfg.paddingLeft + bn * cfg.bitWidth + cfg.bitWidth / 2;
+      var bx = bitGeom.starts[bn] + bitGeom.widths[bn] / 2;
       var text = document.createElementNS(ns, "text");
       text.setAttribute("x", bx);
       text.setAttribute("y", bitNameAnchorY);
@@ -144,8 +150,8 @@ function drawFrame(frame, svgContainer, options) {
   // --- Draw waveform ---
   var pathData = "";
   for (var wi = 0; wi < drawBits.length; wi++) {
-    var xStart = cfg.paddingLeft + wi * cfg.bitWidth;
-    var xEnd   = xStart + cfg.bitWidth;
+    var xStart = bitGeom.starts[wi];
+    var xEnd   = xStart + bitGeom.widths[wi];
     var yVal   = drawBits[wi].value === 1 ? waveHigh : waveLow;
 
     if (wi === 0) {
@@ -221,17 +227,89 @@ function _collectDrawBits(frame) {
 }
 
 // =============================================================================
+// Compute variable geometry for all bits.
+// Arbitration bits can be stretched relative to data-phase bits.
+// =============================================================================
+function _computeBitGeometry(drawBits, bitTimeInfo, cfg, arbPhaseBitsLonger) {
+  var ratio = cfg.defaultArbDataBitLenRatio;
+  var widths = [];
+  var starts = [];
+  var totalWidth = 0;
+  var dataRange = _findDataPhaseRange(drawBits, bitTimeInfo);
+
+  for (var i = 0; i < drawBits.length; i++) {
+    var isDataBit = dataRange.found && i >= dataRange.start && i <= dataRange.end;
+    var width = cfg.bitWidth;
+    if (arbPhaseBitsLonger && !isDataBit) {
+      width = cfg.bitWidth * ratio;
+    }
+
+    widths.push(width);
+    starts.push(cfg.paddingLeft + totalWidth);
+    totalWidth += width;
+  }
+
+  return {
+    widths: widths,
+    starts: starts,
+    totalWidth: totalWidth
+  };
+}
+
+// =============================================================================
+// Find data-phase start/end indices from bit names provided in bitTimeInfo.
+// =============================================================================
+function _findDataPhaseRange(drawBits, bitTimeInfo) {
+  if (!bitTimeInfo || !bitTimeInfo.dataPhasePresent) {
+    return { found: false, start: -1, end: -1 };
+  }
+
+  var firstName = bitTimeInfo.firstDataPhaseBit;
+  var lastName = bitTimeInfo.lastDataPhaseBit;
+  var start = -1;
+  var end = -1;
+
+  for (var i = 0; i < drawBits.length; i++) {
+    if (drawBits[i].bitName === firstName) {
+      start = i;
+      break;
+    }
+  }
+
+  for (var j = drawBits.length - 1; j >= 0; j--) {
+    if (drawBits[j].bitName === lastName) {
+      end = j;
+      break;
+    }
+  }
+
+  if (start < 0 || end < 0 || start > end) {
+    return { found: false, start: -1, end: -1 };
+  }
+
+  return { found: true, start: start, end: end };
+}
+
+function _spanPixelWidth(bitGeom, spanStart, spanCount) {
+  var width = 0;
+  for (var i = spanStart; i < spanStart + spanCount; i++) {
+    width += bitGeom.widths[i];
+  }
+  return width;
+}
+
+// =============================================================================
 // Draw field header (line 1): group name spans
 // =============================================================================
-function _drawFieldHeaders(svg, ns, drawBits, cfg, lineHeight) {
+function _drawFieldHeaders(svg, ns, drawBits, cfg, lineHeight, bitGeom) {
   var y = cfg.paddingTop + lineHeight / 2;
   var spans = _computeMergedSpans(drawBits, "fieldName");
 
   for (var si = 0; si < spans.length; si++) {
     var span = spans[si];
 
-    var x = cfg.paddingLeft + span.start * cfg.bitWidth;
-    var w = span.count * cfg.bitWidth;
+    var x = bitGeom.starts[span.start];
+    var w = _spanPixelWidth(bitGeom, span.start, span.count);
 
     // Background bar
     var color = _fieldColor(span.label, 0);
@@ -273,7 +351,7 @@ function _drawFieldHeaders(svg, ns, drawBits, cfg, lineHeight) {
   // Right-edge line after the last span
   if (spans.length > 0) {
     var last = spans[spans.length - 1];
-    var xEnd = cfg.paddingLeft + (last.start + last.count) * cfg.bitWidth;
+    var xEnd = bitGeom.starts[last.start] + _spanPixelWidth(bitGeom, last.start, last.count);
     var lineEnd = document.createElementNS(ns, "line");
     lineEnd.setAttribute("x1", xEnd);
     lineEnd.setAttribute("y1", cfg.paddingTop);
@@ -288,7 +366,7 @@ function _drawFieldHeaders(svg, ns, drawBits, cfg, lineHeight) {
 // =============================================================================
 // Draw element header (line 2): element name spans
 // =============================================================================
-function _drawElementHeaders(svg, ns, drawBits, cfg, line1Height, line2Height) {
+function _drawElementHeaders(svg, ns, drawBits, cfg, line1Height, line2Height, bitGeom) {
   var yTop = cfg.paddingTop + line1Height;
   var y = yTop + line2Height / 2;
   var spans = _computeMergedSpans(drawBits, "elemName");
@@ -296,8 +374,8 @@ function _drawElementHeaders(svg, ns, drawBits, cfg, line1Height, line2Height) {
   for (var si = 0; si < spans.length; si++) {
     var span = spans[si];
 
-    var x = cfg.paddingLeft + span.start * cfg.bitWidth;
-    var w = span.count * cfg.bitWidth;
+    var x = bitGeom.starts[span.start];
+    var w = _spanPixelWidth(bitGeom, span.start, span.count);
 
     // Separator line (left edge of each span, including the first)
     var line = document.createElementNS(ns, "line");
@@ -335,7 +413,7 @@ function _drawElementHeaders(svg, ns, drawBits, cfg, line1Height, line2Height) {
   // Right-edge line after the last span
   if (spans.length > 0) {
     var last = spans[spans.length - 1];
-    var xEnd = cfg.paddingLeft + (last.start + last.count) * cfg.bitWidth;
+    var xEnd = bitGeom.starts[last.start] + _spanPixelWidth(bitGeom, last.start, last.count);
     var lineEnd = document.createElementNS(ns, "line");
     lineEnd.setAttribute("x1", xEnd);
     lineEnd.setAttribute("y1", yTop);

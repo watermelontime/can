@@ -64,6 +64,12 @@ function CanFrame(frameType) {
   };
 
   this.fields = [];
+  
+  this.bitTimeInfo = {
+    dataPhasePresent: false,
+    firstDataPhaseBit: null,
+    lastDataPhaseBit: null
+  };
 
   this.debug = {
     crcInputBitStream:  [],
@@ -101,6 +107,11 @@ CanFrame.prototype.build = function() {
 CanFrame.prototype._buildFrameStructure = function() {
   var def = getFrameDefinition(this.frameType, this.input);
   this.fields = def.fields;
+  this.bitTimeInfo = def.bitTimeInfo || {
+    dataPhasePresent: false,
+    firstDataPhaseBit: null,
+    lastDataPhaseBit: null
+  };
   this.computed.dataFieldBytes = def.dataByteCount;
   if (def.crcLen !== undefined) { // TODO: omitt this code; crcLen alwasys defined in frame definitions
     this.computed.crcLength = def.crcLen;

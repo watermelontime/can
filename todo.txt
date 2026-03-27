@@ -1,0 +1,13 @@
+Add a leg: for stuff bits: stuff(D): dynamic stuff bit
+
+Improve colors of input fields => blue is to dark
+
+If Fields are disabled: hide the field
+
+Vertical space between input fields: align them.
+
+Allow to configure the ratio of the bits: Arb/Data => at the SVG settings => Ratio of Bit lengths: Arb/Data [integer value]
+
+Expert configuration: add bit rate and SP for Arb & Data => VHDL file can be downloaded
+
+

@@ -93,6 +93,7 @@ function onShowFrame() {
 
   // Read drawing options (only on button press)
   var opts = {
+    arbPhaseBitsLonger: document.getElementById("chkArbPhaseBitsLonger").checked,
     showBitNames:  document.getElementById("chkBitNames").checked,
     useColor:      document.getElementById("chkColor").checked,
     useColorStuff: document.getElementById("chkColorStuff").checked,

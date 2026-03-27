@@ -161,7 +161,17 @@ function getDefinition_CC_CBFF(input, isRemote) {
     elements: [defElement("EOF", 7, "", false, 0x7F, false, ["Bit1","Bit2","Bit3","Bit4","Bit5","Bit6","Bit7"])]
   });
 
-  return { fields: fields, dataByteCount: dataByteCount };
+  var bitTimeInfo = {
+    dataPhasePresent: false,
+    firstDataPhaseBit: null,
+    lastDataPhaseBit: null
+  };
+
+  return {
+    fields: fields,
+    dataByteCount: dataByteCount,
+    bitTimeInfo: bitTimeInfo
+  };
 }
 
 /**
@@ -242,7 +252,17 @@ function getDefinition_CC_CEFF(input, isRemote) {
     elements: [defElement("EOF", 7, "", false, 0x7F, false, ["Bit1","Bit2","Bit3","Bit4","Bit5","Bit6","Bit7"])]
   });
 
-  return { fields: fields, dataByteCount: dataByteCount };
+  var bitTimeInfo = {
+    dataPhasePresent: false,
+    firstDataPhaseBit: null,
+    lastDataPhaseBit: null
+  };
+
+  return {
+    fields: fields,
+    dataByteCount: dataByteCount,
+    bitTimeInfo: bitTimeInfo
+  };
 }
 
 /**
@@ -322,7 +342,18 @@ function getDefinition_FD_FBFF(input) {
     elements: [defElement("EOF", 7, "", false, 0x7F, false, ["Bit1","Bit2","Bit3","Bit4","Bit5","Bit6","Bit7"])]
   });
 
-  return { fields: fields, dataByteCount: dataByteCount, crcLen: crcLen };
+  var bitTimeInfo = {
+    dataPhasePresent: !!input.brs,
+    firstDataPhaseBit: "BRS",
+    lastDataPhaseBit: "CRC del"
+  };
+
+  return {
+    fields: fields,
+    dataByteCount: dataByteCount,
+    crcLen: crcLen,
+    bitTimeInfo: bitTimeInfo
+  };
 }
 
 /**
@@ -407,7 +438,18 @@ function getDefinition_FD_FEFF(input) {
     elements: [defElement("EOF", 7, "", false, 0x7F, false, ["Bit1","Bit2","Bit3","Bit4","Bit5","Bit6","Bit7"])]
   });
 
-  return { fields: fields, dataByteCount: dataByteCount, crcLen: crcLen };
+  var bitTimeInfo = {
+    dataPhasePresent: !!input.brs,
+    firstDataPhaseBit: "BRS",
+    lastDataPhaseBit: "CRC del"
+  };
+
+  return {
+    fields: fields,
+    dataByteCount: dataByteCount,
+    crcLen: crcLen,
+    bitTimeInfo: bitTimeInfo
+  };
 }
 
 /**
@@ -433,7 +475,7 @@ function getDefinition_XL_XBFF(input) {
     fieldName: "Arbitration field",
     nominalBits: 16, totalBits: 16,
     elements: [
-      defElement("Base ID", 11, "ID", true,  input.id & 0x7FF,                        true, ["ID28","ID27","ID26","ID25","ID24","ID23","ID22","ID21","ID20","ID19","ID18"]),
+      defElement("Priority ID", 11, "ID", true,  input.id & 0x7FF,                        true, ["ID28","ID27","ID26","ID25","ID24","ID23","ID22","ID21","ID20","ID19","ID18"]),
       defElement("RRS",      1, "",   true,  input.rrs !== undefined ? input.rrs : 0, true),
       defElement("IDE",      1, "",   false, 0,                                       true),
       defElement("FDF",      1, "",   false, 1,                                       true),
@@ -491,7 +533,17 @@ function getDefinition_XL_XBFF(input) {
     elements: [defElement("EOF", 7, "", false, 0x7F, false, ["Bit1","Bit2","Bit3","Bit4","Bit5","Bit6","Bit7"])]
   });
 
-  return { fields: fields, dataByteCount: dataByteCount };
+  var bitTimeInfo = {
+    dataPhasePresent: true,
+    firstDataPhaseBit: "DH1",
+    lastDataPhaseBit: "FCP0",
+  };
+
+  return {
+    fields: fields,
+    dataByteCount: dataByteCount,
+    bitTimeInfo: bitTimeInfo
+  };
 }
 
 /**
