@@ -185,6 +185,10 @@ function onShowFrame() {
 
   // Update VHDL button visibility
   _updateVHDLButtonVisibility();
+
+  // Debug
+  console.log("myFrame with fields:", myFrame); // DEBUG
+
 }
 
 // =============================================================================

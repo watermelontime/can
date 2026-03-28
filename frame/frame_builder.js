@@ -529,6 +529,43 @@ CanFrame.prototype._insertFixedStuffBits_XL = function() {
 };
 
 // =============================================================================
+// Helper: remove trailing dynamic stuff bit from the last bits[] container
+// Returns 1 if a bit was removed, 0 otherwise.
+// Used by FD to prevent double stuffing at the SBC boundary.
+// =============================================================================
+CanFrame.prototype._removeTrailingDynStuffBit = function(fieldIndices) {
+  for (var fi = fieldIndices.length - 1; fi >= 0; fi--) {
+    var field = this.fields[fieldIndices[fi]];
+    if (field.dataField) {
+      for (var bi = field.dataField.length - 1; bi >= 0; bi--) {
+        var bits = field.dataField[bi].bits;
+        if (bits.length > 0) {
+          var last = bits[bits.length - 1];
+          if (last.isStuffBit && !last.isStuffBitTypeFixed) {
+            bits.pop();
+            return 1;
+          }
+          return 0;
+        }
+      }
+    } else if (field.elements) {
+      for (var ei = field.elements.length - 1; ei >= 0; ei--) {
+        var bits = field.elements[ei].bits;
+        if (bits.length > 0) {
+          var last = bits[bits.length - 1];
+          if (last.isStuffBit && !last.isStuffBitTypeFixed) {
+            bits.pop();
+            return 1;
+          }
+          return 0;
+        }
+      }
+    }
+  }
+  return 0;
+};
+
+// =============================================================================
 // Helper: get last bit value before a given field index
 // =============================================================================
 CanFrame.prototype._getLastBitValueBefore = function(fieldIdx) {
@@ -610,6 +647,11 @@ CanFrame.prototype._buildFD = function() {
   var stuffIndices = [sofIdx, arbIdx, ctrlIdx];
   if (dataIdx >= 0) stuffIndices.push(dataIdx);
   var dynCount = this._insertDynamicStuffBitsInRange(stuffIndices);
+
+  // FD special rule: If preceding 5 bits before SBC were equal, only the
+  // fixed stuff bit is inserted (no double stuffing). Remove trailing
+  // dynamic stuff bit if one was placed at the very end of the range.
+  dynCount -= this._removeTrailingDynStuffBit(stuffIndices);
   this.computed.stuffBitCountDyn = dynCount;
 
   // Step 5: Compute SBC (4 bits)
@@ -680,7 +722,6 @@ CanFrame.prototype._buildXL = function() {
   var ackFieldIdx = this._fieldIndex("ACK field");
   var eofFieldIdx = this._fieldIndex("EOF");
 
-  console.log("myFrame with fields:", this); // DEBUG
   // Step 3a: Build nominal bits[] for arbitration: SOF, ID[28:18], RRS, IDE, FDF, XLF
   this._fillNominalBits([sofIdx, arbIdx]);
 

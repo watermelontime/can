@@ -147,7 +147,7 @@ export function drawBitTiming(PropSeg, PhaseSeg1, PhaseSeg2, spPercent, sjwLen, 
     spLabel.setAttribute('font-size', fontSize);
     spLabel.setAttribute('font-family', 'sans-serif');
     spLabel.setAttribute('text-anchor', 'middle');
-    spLabel.setAttribute('dominant-baseline', 'text-before-edge'); // Vertical alignment: auto, middle, central, hanging, text-before-edge, text-after-edge, alphabetic (default), ideographic
+    spLabel.setAttribute('dominant-baseline', 'hanging'); // Vertical alignment: auto, middle, central, hanging, text-before-edge, text-after-edge, alphabetic (default), ideographic
     spLabel.textContent = `SP ${Math.round(spPercent)}%`;
     svg.appendChild(spLabel);
   } else {
@@ -189,7 +189,7 @@ export function drawBitTiming(PropSeg, PhaseSeg1, PhaseSeg2, spPercent, sjwLen, 
   titleText.setAttribute('fill', textColor);
   titleText.setAttribute('font-size', fontSize);
   titleText.setAttribute('font-family', 'sans-serif');
-  titleText.setAttribute('dominant-baseline', 'text-before-edge'); // Vertical alignment: auto, middle, central, hanging, text-before-edge, text-after-edge, alphabetic (default), ideographic
+  titleText.setAttribute('dominant-baseline', 'hanging'); // Vertical alignment: auto, middle, central, hanging, text-before-edge, text-after-edge, alphabetic (default), ideographic
   titleText.textContent = BitTimingName;
   svg.appendChild(titleText);
 }
@@ -314,7 +314,7 @@ export function drawPWMsymbols(PWMS, PWML, pwm_symbols_per_bit, HTMLDrawingName,
   titleText.setAttribute('fill', 'black');
   titleText.setAttribute('font-size', fontSize);
   titleText.setAttribute('font-family', 'sans-serif');
-  titleText.setAttribute('dominant-baseline', 'text-before-edge'); // Vertical alignment: auto, middle, central, hanging, text-before-edge, text-after-edge, alphabetic (default), ideographic
+  titleText.setAttribute('dominant-baseline', 'hanging'); // Vertical alignment: auto, middle, central, hanging, text-before-edge, text-after-edge, alphabetic (default), ideographic
   titleText.textContent = NameToPrint;
   svg.appendChild(titleText);
 }
@@ -363,7 +363,7 @@ export function drawErrorMessage(HTMLDrawingName, NameToPrint, ErrorMsgToPrint) 
   titleText.setAttribute('fill', 'black');
   titleText.setAttribute('font-size', fontSize);
   titleText.setAttribute('font-family', 'sans-serif');
-  titleText.setAttribute('dominant-baseline', 'text-before-edge'); // Vertical alignment
+  titleText.setAttribute('dominant-baseline', 'hanging'); // Vertical alignment
   titleText.textContent = NameToPrint;
   svg.appendChild(titleText);
 

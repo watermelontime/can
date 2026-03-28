@@ -32,13 +32,13 @@
             <td>Frame Type</td>
             <td>
               <select id="frameTypeSelect" class="styled-select">
-                <option value="CC_CBFF">CAN CC: CBFF (11-bit ID)</option>
-                <option value="CC_CBFF_RTR">CAN CC: CBFF (11-bit ID, remote)</option>
-                <option value="CC_CEFF">CAN CC: CEFF (29-bit ID)</option>
-                <option value="CC_CEFF_RTR">CAN CC: CEFF (29-bit ID, remote)</option>
-                <option value="FD_FBFF">CAN FD: FBFF (11-bit ID)</option>
-                <option value="FD_FEFF">CAN FD: FEFF (29-bit ID)</option>
-                <option value="XL_XBFF">CAN XL: XBFF (11-bit ID)</option>
+                <option value="CC_CBFF">CAN CC: CBFF (ID11)</option>
+                <option value="CC_CBFF_RTR">CAN CC: CBFF (ID11, remote)</option>
+                <option value="CC_CEFF">CAN CC: CEFF (ID29)</option>
+                <option value="CC_CEFF_RTR">CAN CC: CEFF (ID29, remote)</option>
+                <option value="FD_FBFF">CAN FD: FBFF (ID11)</option>
+                <option value="FD_FEFF">CAN FD: FEFF (ID29)</option>
+                <option value="XL_XBFF">CAN XL: XBFF (ID11)</option>
               </select>
             </td>
           </tr>
@@ -99,7 +99,7 @@
           <tr>
             <td>ACK slot</td>
             <td>
-              <select id="inputACK" class="styled-select" style="margin:0;height:auto;">
+              <select id="inputACK" class="input-field" style="width:29ch">
                 <option value="1" selected>1 (recessive / no ACK)</option>
                 <option value="0">0 (dominant / ACK received)</option>
               </select>
@@ -122,7 +122,7 @@
             <label><input type="checkbox" id="chkColorStuff" checked /> color stuff bits</label>
             <label><input type="checkbox" id="chkBitSeparators" checked /> bit separators</label>
             <label><input type="checkbox" id="chkFields" checked /> fields</label>
-            <label><input type="checkbox" id="chkPhases" unchecked /> phases</label>
+            <label><input type="checkbox" id="chkPhases" checked /> phases</label>
             <label><input type="checkbox" id="chkArbPhaseBitsLonger" unchecked /> Arb-bits longer</label>
             <label class="switch-label"><input type="checkbox" id="chkRealArbDataBitRatio" /><span class="switch-slider"></span> Real Arb/Data bit ratio</label>
           </div>
