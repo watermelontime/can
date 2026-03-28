@@ -76,7 +76,7 @@ th, td {
 }
 
 .input-field {
-  background-color: #33DDFF;
+  background-color: #BBE5FF;
 }
 
 /* Font in Fields */
@@ -94,7 +94,7 @@ th, td {
 .register-field {
   text-align: right;
   width: 8ch;
-  padding: 0.2em;
+  padding: 0.1em;
   box-sizing: border-box;
 }
 

@@ -61,3 +61,54 @@ input:disabled,
 select:disabled {
   opacity: 0.5;
 }
+
+/* ── iPhone-style toggle switch ── */
+.switch-label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  cursor: pointer;
+  gap: 0.4em;
+}
+.switch-label input[type="checkbox"] {
+  display: none;
+}
+.switch-slider {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  background: #ccc;
+  border-radius: 20px;
+  transition: background 0.25s;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.switch-slider::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.25s;
+}
+.switch-label input:checked + .switch-slider {
+  background: #4cd964;
+}
+.switch-label input:checked + .switch-slider::after {
+  transform: translateX(16px);
+}
+
+/* ── Real Arb/Data bit ratio input row ── */
+.real-bit-ratio-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  flex-wrap: wrap;
+  padding: 0.6em 0;
+  font-size: 0.95em;
+}

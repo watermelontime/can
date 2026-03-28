@@ -15,6 +15,7 @@ var DRAW_CFG = {
   fontFamilyFieldName: "sans-serif", // examples: "sans-serif", "monospace", "Arial", "Helvetica", "Verdana"
   gapBitNameToWave:   4,      // px gap (unused when bit names are inside bits)
   gapFieldToWave:     20,     // px between field/element header area and waveform
+  gapPhaseToWave:     20,     // px between waveform and phase bar below
   paddingTop:         10,     // px above everything
   paddingBottom:       5,     // px below waveform
   paddingLeft:        10,     // px left margin
@@ -36,7 +37,10 @@ var DRAW_CFG = {
     data:              ["#CE93D8","#E1BEE7"],
     crc:               ["#22f8ff","#a1f1fc"], //["#FFCC80","#FFE0B2"],
     ack:               ["#ee7ca2","#F8BBD0"],
-    eof:               ["#B0BEC5","#CFD8DC"]
+    eof:               ["#B0BEC5","#CFD8DC"],
+    spMarker:          "#8B0000",  // dark red: SP marker line in FD transition bits
+    arbPhase:          "#a1c7f0",  // arbitration phase bar
+    dataPhase:         "#e27979"   // data phase bar
   }
 };
 
@@ -51,6 +55,7 @@ function drawFrame(frame, svgContainer, options) {
   var useColorStuff  = !!opts.useColorStuff;
   var showFields     = !!opts.showFields;
   var showBitSeparators = !!opts.showBitSeparators;
+  var showPhases     = !!opts.showPhases;
 
   var cfg = DRAW_CFG;
 
@@ -79,7 +84,16 @@ function drawFrame(frame, svgContainer, options) {
   var waveLow  = waveTop + cfg.bitHeight;  // dominant (0) = bottom
 
   var svgWidth  = cfg.paddingLeft + bitGeom.totalWidth + cfg.paddingLeft;
-  var svgHeight = waveLow + cfg.paddingBottom;
+
+  // Phase bar area below waveform
+  var phaseBarHeight = 0;
+  var phaseBarTop = waveLow;
+  if (showPhases) {
+    phaseBarHeight = cfg.fontSizeFieldName + 6;
+    phaseBarTop = waveLow + cfg.gapPhaseToWave;
+  }
+
+  var svgHeight = (showPhases ? phaseBarTop + phaseBarHeight : waveLow) + cfg.paddingBottom;
 
   // --- Create SVG element ---
   var ns = "http://www.w3.org/2000/svg";
@@ -195,9 +209,146 @@ function drawFrame(frame, svgContainer, options) {
   pathElem.setAttribute("fill", "none");
   svg.appendChild(pathElem);
 
+  // --- Draw SP markers for real bit ratio transition bits (half height) ---
+  if (bitGeom.spMarkers && bitGeom.spMarkers.length > 0) {
+    var spMidY = waveTop + cfg.bitHeight / 2;
+    for (var mi = 0; mi < bitGeom.spMarkers.length; mi++) {
+      var mx = bitGeom.spMarkers[mi].x;
+      var spLine = document.createElementNS(ns, "line");
+      spLine.setAttribute("x1", mx);
+      spLine.setAttribute("y1", spMidY);
+      spLine.setAttribute("x2", mx);
+      spLine.setAttribute("y2", waveLow);
+      spLine.setAttribute("stroke", cfg.colors.spMarker);
+      spLine.setAttribute("stroke-width", cfg.lineWidthSeparators);
+      spLine.setAttribute("stroke-dasharray", "4,2");
+      svg.appendChild(spLine);
+    }
+  }
+
+  // --- Draw phase bars below waveform ---
+  if (showPhases && bitGeom.totalWidth > 0) {
+    _drawPhaseBars(svg, ns, drawBits, frame.bitTimeInfo, cfg, bitGeom, phaseBarTop, phaseBarHeight);
+  }
+
   // --- Insert SVG into container ---
   svgContainer.innerHTML = "";
   svgContainer.appendChild(svg);
+}
+
+// =============================================================================
+// Draw phase bars below the waveform (arbitration phase / data phase)
+// =============================================================================
+function _drawPhaseBars(svg, ns, drawBits, bitTimeInfo, cfg, bitGeom, barTop, barHeight) {
+  var dataRange = _findDataPhaseRange(drawBits, bitTimeInfo);
+  var isXL = bitTimeInfo && bitTimeInfo.firstDataPhaseBit === "DH1";
+  var isFDReal = bitTimeInfo && bitTimeInfo.realBitRatio && dataRange.found && !isXL;
+
+  // Build pixel-based segments: { x, w, label }
+  var segments = [];
+
+  if (isFDReal && bitGeom.spMarkers && bitGeom.spMarkers.length >= 2) {
+    // FD with real bit ratio: data phase starts/ends at SP markers
+    var spStart = bitGeom.spMarkers[0].x;  // SP of first transition bit
+    var spEnd   = bitGeom.spMarkers[1].x;  // SP of last transition bit
+    var totalStart = bitGeom.starts[0];
+    var lastBit = drawBits.length - 1;
+    var totalEnd = bitGeom.starts[lastBit] + bitGeom.widths[lastBit];
+
+    // Arb phase before SP of first transition bit
+    if (spStart > totalStart) {
+      segments.push({ x: totalStart, w: spStart - totalStart, label: "Arbitration phase" });
+    }
+    // Data phase between the two SP markers
+    if (spEnd > spStart) {
+      segments.push({ x: spStart, w: spEnd - spStart, label: "Data phase" });
+    }
+    // Arb phase after SP of last transition bit
+    if (totalEnd > spEnd) {
+      segments.push({ x: spEnd, w: totalEnd - spEnd, label: "Arbitration phase" });
+    }
+  } else if (dataRange.found) {
+    // Non-real-ratio mode or XL: data phase from middle of first to middle of last data phase bit
+    var totalStart = bitGeom.starts[0];
+    var lastBitIdx = drawBits.length - 1;
+    var totalEnd = bitGeom.starts[lastBitIdx] + bitGeom.widths[lastBitIdx];
+    var dataMidStart = bitGeom.starts[dataRange.start] + bitGeom.widths[dataRange.start] / 2;
+    var dataMidEnd   = bitGeom.starts[dataRange.end]   + bitGeom.widths[dataRange.end]   / 2;
+
+    if (dataMidStart > totalStart) {
+      segments.push({ x: totalStart, w: dataMidStart - totalStart, label: "Arbitration phase" });
+    }
+    if (dataMidEnd > dataMidStart) {
+      segments.push({ x: dataMidStart, w: dataMidEnd - dataMidStart, label: "Data phase" });
+    }
+    if (totalEnd > dataMidEnd) {
+      segments.push({ x: dataMidEnd, w: totalEnd - dataMidEnd, label: "Arbitration phase" });
+    }
+  } else {
+    // No data phase (CC): entire frame is arbitration
+    var totalW = bitGeom.totalWidth;
+    segments.push({ x: bitGeom.starts[0], w: totalW, label: "Arbitration phase" });
+  }
+
+  var midY = barTop + barHeight / 2;
+
+  for (var si = 0; si < segments.length; si++) {
+    var seg = segments[si];
+    var color = seg.label === "Data phase" ? cfg.colors.dataPhase : cfg.colors.arbPhase;
+
+    // Background bar
+    var rect = document.createElementNS(ns, "rect");
+    rect.setAttribute("x", seg.x);
+    rect.setAttribute("y", barTop);
+    rect.setAttribute("width", seg.w);
+    rect.setAttribute("height", barHeight);
+    rect.setAttribute("fill", color);
+    rect.setAttribute("opacity", "0.5");
+    svg.appendChild(rect);
+
+    // Left separator
+    var line = document.createElementNS(ns, "line");
+    line.setAttribute("x1", seg.x);
+    line.setAttribute("y1", barTop);
+    line.setAttribute("x2", seg.x);
+    line.setAttribute("y2", barTop + barHeight);
+    line.setAttribute("stroke", cfg.colors.separatorLine);
+    line.setAttribute("stroke-width", cfg.lineWidthSeparators);
+    svg.appendChild(line);
+
+    // Label text
+    var text = document.createElementNS(ns, "text");
+    text.setAttribute("x", seg.x + seg.w / 2);
+    text.setAttribute("y", midY);
+    text.setAttribute("font-size", cfg.fontSizeFieldName);
+    text.setAttribute("font-family", cfg.fontFamilyFieldName);
+    text.setAttribute("font-weight", "bold");
+    text.setAttribute("text-anchor", "middle");
+    text.setAttribute("dominant-baseline", "central");
+    text.setAttribute("fill", "#333");
+
+    var displayName = seg.label;
+    var maxChars = Math.floor(seg.w / (cfg.fontSizeFieldName * 0.5));
+    if (displayName.length > maxChars && maxChars > 2) {
+      displayName = displayName.substring(0, maxChars - 1) + "\u2026";
+    }
+    text.textContent = displayName;
+    svg.appendChild(text);
+  }
+
+  // Right-edge line
+  if (segments.length > 0) {
+    var lastSeg = segments[segments.length - 1];
+    var xEnd = lastSeg.x + lastSeg.w;
+    var lineEnd = document.createElementNS(ns, "line");
+    lineEnd.setAttribute("x1", xEnd);
+    lineEnd.setAttribute("y1", barTop);
+    lineEnd.setAttribute("x2", xEnd);
+    lineEnd.setAttribute("y2", barTop + barHeight);
+    lineEnd.setAttribute("stroke", cfg.colors.separatorLine);
+    lineEnd.setAttribute("stroke-width", cfg.lineWidthSeparators);
+    svg.appendChild(lineEnd);
+  }
 }
 
 // =============================================================================
@@ -255,6 +406,53 @@ function _computeBitGeometry(drawBits, bitTimeInfo, cfg, arbPhaseBitsLonger) {
   var totalWidth = 0;
   var dataRange = _findDataPhaseRange(drawBits, bitTimeInfo);
 
+  // Real bit ratio mode: widths proportional to real bit times
+  if (bitTimeInfo && bitTimeInfo.realBitRatio) {
+    var arbDataRatio = bitTimeInfo.realArbDataBitLenRatio || 1.0; // data_bitrate / arb_bitrate = arb_bit_time / data_bit_time
+    var dataBitWidth = cfg.bitWidth;                               // data phase bits always use bitWidth
+    var arbBitWidth  = cfg.bitWidth * arbDataRatio;                // only arb phase bit length changes
+    var arbSP  = (bitTimeInfo.arbSP  || 80) / 100;
+    var dataSP = (bitTimeInfo.dataSP || 70) / 100;
+    var isXL = bitTimeInfo.firstDataPhaseBit === "DH1"; // XL: transition at bit boundary
+    var isFD = dataRange.found && !isXL;
+    var spMarkers = []; // { x: pixel_x } for vertical SP separators
+
+    for (var i = 0; i < drawBits.length; i++) {
+      var isDataBit = dataRange.found && i >= dataRange.start && i <= dataRange.end;
+      var width;
+
+      if (isFD && i === dataRange.start) {
+        // First transition bit (arb→data): arbSP% of arb bit + (1-dataSP)% of data bit
+        var part1 = arbSP * arbBitWidth;
+        var part2 = (1 - dataSP) * dataBitWidth;
+        width = part1 + part2;
+        spMarkers.push({ x: cfg.paddingLeft + totalWidth + part1 });
+      } else if (isFD && i === dataRange.end) {
+        // Last transition bit (data→arb): dataSP% of data bit + (1-arbSP)% of arb bit
+        var part1d = dataSP * dataBitWidth;
+        var part2d = (1 - arbSP) * arbBitWidth;
+        width = part1d + part2d;
+        spMarkers.push({ x: cfg.paddingLeft + totalWidth + part1d });
+      } else if (isDataBit) {
+        width = dataBitWidth;
+      } else {
+        width = arbBitWidth;
+      }
+
+      widths.push(width);
+      starts.push(cfg.paddingLeft + totalWidth);
+      totalWidth += width;
+    }
+
+    return {
+      widths: widths,
+      starts: starts,
+      totalWidth: totalWidth,
+      spMarkers: spMarkers
+    };
+  }
+
+  // Default mode: simple arb-bits-longer scaling
   for (var i = 0; i < drawBits.length; i++) {
     var isDataBit = dataRange.found && i >= dataRange.start && i <= dataRange.end;
     var width = cfg.bitWidth;
@@ -270,7 +468,8 @@ function _computeBitGeometry(drawBits, bitTimeInfo, cfg, arbPhaseBitsLonger) {
   return {
     widths: widths,
     starts: starts,
-    totalWidth: totalWidth
+    totalWidth: totalWidth,
+    spMarkers: []
   };
 }
 

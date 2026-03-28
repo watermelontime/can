@@ -68,7 +68,11 @@ function CanFrame(frameType) {
   this.bitTimeInfo = {
     dataPhasePresent: false,
     firstDataPhaseBit: null,
-    lastDataPhaseBit: null
+    lastDataPhaseBit: null,
+    realBitRatio: false,
+    realArbDataBitLenRatio: 1.0,
+    arbSP: 80,
+    dataSP: 70
   };
 
   this.debug = {
@@ -110,7 +114,11 @@ CanFrame.prototype._buildFrameStructure = function() {
   this.bitTimeInfo = def.bitTimeInfo || {
     dataPhasePresent: false,
     firstDataPhaseBit: null,
-    lastDataPhaseBit: null
+    lastDataPhaseBit: null,
+    realBitRatio: false,
+    realArbDataBitLenRatio: 1.0,
+    arbSP: 80,
+    dataSP: 70
   };
   this.computed.dataFieldBytes = def.dataByteCount;
   if (def.crcLen !== undefined) { // TODO: omitt this code; crcLen alwasys defined in frame definitions

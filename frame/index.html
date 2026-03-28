@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CAN Frame Visualizer</title>
+  <title>CAN Frame Generator</title>
   <link rel="stylesheet" href="../styles.css" />
   <link rel="stylesheet" href="styles_frame.css" />
   <link rel="icon" href="../favicon.ico" type="image/x-icon" />
@@ -18,7 +18,7 @@
   <main>
 
     <div class="page-header">
-      <h1>CAN Frame Generator <a href="versionhistory.html" class="version-label" target="_blank" rel="noopener noreferrer">V1.0.0</a></h1>
+      <h1>CAN Frame Generator <a href="versionhistory.html" class="version-label" target="_blank" rel="noopener noreferrer">V1.1.0</a></h1>
     </div>
 
     <div class="responsive-container">
@@ -55,41 +55,42 @@
               <span id="dlcRangeHint" class="range-hint">(0–15)</span>
             </td>
           </tr>
-          <tr>
+          <tr id="rowBRS">
             <td>BRS</td>
             <td><input type="checkbox" id="inputBRS" disabled /></td>
           </tr>
-          <tr>
+          <tr id="rowESI">
             <td>ESI</td>
             <td><input type="checkbox" id="inputESI" disabled /></td>
           </tr>
-          <tr>
+          <tr id="rowRRS">
             <td>RRS</td>
             <td><input type="checkbox" id="inputRRS" disabled /></td>
           </tr>
-          <tr>
+          <tr id="rowSEC">
             <td>SEC</td>
             <td><input type="checkbox" id="inputSEC" disabled /></td>
           </tr>
-          <tr>
+          <tr id="rowSDT">
             <td>SDT (hex)</td>
             <td>
               <input type="text" id="inputSDT" class="input-field" value="0x00" disabled style="width:8ch;" />
             </td>
           </tr>
-          <tr>
+          <tr id="rowVCID">
             <td>VCID (hex)</td>
             <td>
               <input type="text" id="inputVCID" class="input-field" value="0x00" disabled style="width:8ch;" />
             </td>
           </tr>
-          <tr>
+          <tr id="rowAF">
             <td>AF (hex)</td>
             <td>
               <input type="text" id="inputAF" class="input-field" value="0x00000000" disabled style="width:12ch;" />
+              <span id="dlcRangeHint" class="range-hint"> [31:0]</span>
             </td>
           </tr>
-          <tr>
+          <tr id="rowData">
             <td>Data (hex)</td>
             <td>
               <textarea id="inputData" class="input-field" placeholder="DE AD BE EF ..." rows="4" style="width:36ch; resize:vertical;"></textarea>
@@ -119,11 +120,32 @@
             <label><input type="checkbox" id="chkBitNames" checked /> bit names</label>
             <label><input type="checkbox" id="chkColor" checked /> color bits</label>
             <label><input type="checkbox" id="chkColorStuff" checked /> color stuff bits</label>
+            <label><input type="checkbox" id="chkBitSeparators" checked /> bit separators</label>
             <label><input type="checkbox" id="chkFields" checked /> fields</label>
-            <label><input type="checkbox" id="chkBitSeparators" unchecked /> bit separators</label>
+            <label><input type="checkbox" id="chkPhases" unchecked /> phases</label>
             <label><input type="checkbox" id="chkArbPhaseBitsLonger" unchecked /> Arb-bits longer</label>
+            <label class="switch-label"><input type="checkbox" id="chkRealArbDataBitRatio" /><span class="switch-slider"></span> Real Arb/Data bit ratio</label>
           </div>
         </h3>
+
+        <!-- Real Arb/Data bit ratio inputs (hidden by default) -->
+        <div id="realBitRatioInputs" style="display:none;" class="real-bit-ratio-row">
+          <span><b>Arbitration Phase:</b></span>
+          <span style="margin-left:0.5em;">Bit-rate</span>
+          <input type="number" id="inputArbBitrate" class="input-field" value="500" min="100" max="20000" style="width:10ch; margin:0 6px; vertical-align:middle;" />
+          <span>kbit/s,</span>
+          <span style="margin-left:0.5em;">SP</span>
+          <input type="number" id="inputArbSP" class="input-field" value="80" min="1" max="99" style="width:8ch; margin:0 6px; vertical-align:middle;" />
+          <span>%</span>
+          <span style="margin-left:1.2em;"><b>Data Phase:</b></span>
+          <span style="margin-left:0.5em;">Bit-rate</span>
+          <input type="number" id="inputDataBitrate" class="input-field" value="1000" min="100" max="20000" style="width:10ch; margin:0 6px; vertical-align:middle;" />
+          <span>kbit/s,</span>
+          <span  style="margin-left:0.5em;">SP</span>
+          <input type="number" id="inputDataSP" class="input-field" value="70" min="1" max="99" style="width:8ch; margin:0 6px; vertical-align:middle;" />
+          <span>%</span>
+        </div>
+
         <!-- SVG container -->
         <div class="svg-wrapper" id="svgContainer">
           <p style="color:#999;padding:1em;">Press "Show Frame" to generate the waveform.</p>
@@ -135,6 +157,7 @@
           <a href="#" id="btnExportSVG">Download SVG</a>
           <a href="#" id="btnExportPNG">Download PNG</a>
           <a href="#" id="btnExportCSV">Download CSV</a>
+          <a href="#" id="btnExportVHDL" style="display:none;">Download VHDL</a>
         </div>
 
         <!-- Info display -->

@@ -21,6 +21,12 @@ function frameInit() {
   document.getElementById("btnExportCSV").addEventListener("click", function() {
     if (myFrame) exportCSV(myFrame);
   });
+  document.getElementById("btnExportVHDL").addEventListener("click", function() {
+    if (myFrame) exportVHDL(myFrame);
+  });
+
+  // Real Arb/Data bit ratio switch toggle
+  document.getElementById("chkRealArbDataBitRatio").addEventListener("change", onRealBitRatioToggle);
 
   // Set initial field enable/disable state
   onFrameTypeChange();
@@ -52,6 +58,16 @@ function onFrameTypeChange() {
   // RRS: XL only (user input)
   document.getElementById("inputRRS").disabled = !isXL;
 
+  // Hide/show rows based on frame type
+  document.getElementById("rowBRS").style.display  = isFD ? "" : "none";
+  document.getElementById("rowESI").style.display  = isFD ? "" : "none";
+  document.getElementById("rowRRS").style.display  = isXL ? "" : "none";
+  document.getElementById("rowSEC").style.display  = isXL ? "" : "none";
+  document.getElementById("rowSDT").style.display  = isXL ? "" : "none";
+  document.getElementById("rowVCID").style.display = isXL ? "" : "none";
+  document.getElementById("rowAF").style.display   = isXL ? "" : "none";
+  document.getElementById("rowData").style.display = isRTR ? "none" : "";
+
   // Update DLC label/range hint
   var dlcInput = document.getElementById("inputDLC");
   if (isXL) {
@@ -64,6 +80,49 @@ function onFrameTypeChange() {
     dlcInput.max = 15;
     document.getElementById("dlcRangeHint").textContent = "(0–15)";
   }
+}
+
+// =============================================================================
+// Real Arb/Data bit ratio switch toggled
+// =============================================================================
+function onRealBitRatioToggle() {
+  var isOn = document.getElementById("chkRealArbDataBitRatio").checked;
+  var inputsDiv = document.getElementById("realBitRatioInputs");
+  var arbLongerChk = document.getElementById("chkArbPhaseBitsLonger");
+
+  inputsDiv.style.display = isOn ? "flex" : "none";
+
+  if (isOn) {
+    arbLongerChk.checked = false;
+    arbLongerChk.disabled = true;
+  } else {
+    arbLongerChk.disabled = false;
+  }
+
+  // Update VHDL button visibility
+  _updateVHDLButtonVisibility();
+}
+
+// =============================================================================
+// Show/hide VHDL download button (requires realBitRatio ON + frame generated)
+// =============================================================================
+function _updateVHDLButtonVisibility() {
+  var isOn = document.getElementById("chkRealArbDataBitRatio").checked;
+  var btn = document.getElementById("btnExportVHDL");
+  btn.style.display = (isOn && myFrame) ? "" : "none";
+}
+
+// =============================================================================
+// Clamp a numeric input value to [min, max]
+// =============================================================================
+function _clampInput(id, min, max) {
+  var el = document.getElementById(id);
+  var v = parseInt(el.value, 10);
+  if (isNaN(v)) v = min;
+  if (v < min) v = min;
+  if (v > max) v = max;
+  el.value = v;
+  return v;
 }
 
 // =============================================================================
@@ -91,6 +150,22 @@ function onShowFrame() {
   // Build frame
   myFrame.build();
 
+  // Apply real bit ratio settings to bitTimeInfo after build
+  var realBitRatioOn = document.getElementById("chkRealArbDataBitRatio").checked;
+  if (realBitRatioOn) {
+    var arbBR  = _clampInput("inputArbBitrate",  100, 20000);
+    var dataBR = _clampInput("inputDataBitrate", 100, 20000);
+    var arbSP  = _clampInput("inputArbSP",  1, 99);
+    var dataSP = _clampInput("inputDataSP", 1, 99);
+
+    myFrame.bitTimeInfo.realBitRatio = true;
+    myFrame.bitTimeInfo.realArbDataBitLenRatio = dataBR / arbBR;
+    myFrame.bitTimeInfo.arbSP = arbSP;
+    myFrame.bitTimeInfo.dataSP = dataSP;
+    myFrame.bitTimeInfo.arbBitrate = arbBR;
+    myFrame.bitTimeInfo.dataBitrate = dataBR;
+  }
+
   // Read drawing options (only on button press)
   var opts = {
     arbPhaseBitsLonger: document.getElementById("chkArbPhaseBitsLonger").checked,
@@ -98,7 +173,8 @@ function onShowFrame() {
     useColor:      document.getElementById("chkColor").checked,
     useColorStuff: document.getElementById("chkColorStuff").checked,
     showFields:    document.getElementById("chkFields").checked,
-    showBitSeparators: document.getElementById("chkBitSeparators").checked
+    showBitSeparators: document.getElementById("chkBitSeparators").checked,
+    showPhases:    document.getElementById("chkPhases").checked
   };
 
   // Draw
@@ -106,6 +182,9 @@ function onShowFrame() {
 
   // Update info display
   _updateInfoDisplay(myFrame);
+
+  // Update VHDL button visibility
+  _updateVHDLButtonVisibility();
 }
 
 // =============================================================================

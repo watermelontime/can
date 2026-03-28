@@ -111,6 +111,183 @@ function exportCSV(frame) {
 }
 
 // =============================================================================
+// VHDL download — generates a FRAME_GENERATOR entity + testbench
+// =============================================================================
+function exportVHDL(frame) {
+  var bti = frame.bitTimeInfo;
+  if (!bti || !bti.realBitRatio) { alert("Real Arb/Data bit ratio must be enabled."); return; }
+
+  var arbBitrate  = bti.arbBitrate  || 500;   // kbit/s
+  var dataBitrate = bti.dataBitrate || 1000;   // kbit/s
+  var arbSP       = bti.arbSP  || 80;         // %
+  var dataSP      = bti.dataSP || 70;         // %
+
+  // Bit times in ns
+  var arbBitTimeNs  = Math.round(1e6 / arbBitrate);
+  var dataBitTimeNs = Math.round(1e6 / dataBitrate);
+
+  // Collect flat bit list with metadata
+  var bits = _collectVHDLBits(frame);
+
+  var lines = [];
+  lines.push("-- =============================================================================");
+  lines.push("-- Auto-generated CAN frame VHDL waveform: " + frame.frameType);
+  lines.push("-- Arbitration: " + arbBitrate + " kbit/s, SP " + arbSP + "%");
+  lines.push("-- Data:        " + dataBitrate + " kbit/s, SP " + dataSP + "%");
+  lines.push("-- =============================================================================");
+  lines.push("");
+  lines.push("library ieee;");
+  lines.push("use ieee.std_logic_1164.all;");
+  lines.push("");
+  lines.push("entity FRAME_GENERATOR is");
+  lines.push("  generic (");
+  lines.push("    ARB_BITRATE_KBPS : integer := " + arbBitrate + ";");
+  lines.push("    DATA_BITRATE_KBPS : integer := " + dataBitrate + ";");
+  lines.push("    ARB_SP_PCT : integer := " + arbSP + ";");
+  lines.push("    DATA_SP_PCT : integer := " + dataSP);
+  lines.push("  );");
+  lines.push("  port (");
+  lines.push("    CAN_TX : out std_logic");
+  lines.push("  );");
+  lines.push("end entity FRAME_GENERATOR;");
+  lines.push("");
+  lines.push("architecture BEH of FRAME_GENERATOR is");
+  lines.push("  constant ARB_BIT_TIME : time := " + arbBitTimeNs + " ns;");
+  lines.push("  constant DATA_BIT_TIME : time := " + dataBitTimeNs + " ns;");
+  lines.push("begin");
+  lines.push("  P_FRAME : process");
+  lines.push("  begin");
+
+  // 15 arbitration bit times of recessive before SOF
+  lines.push("    -- Bus idle: 15 arbitration bit times recessive");
+  lines.push("    CAN_TX <= '1';");
+  lines.push("    wait for 15 * ARB_BIT_TIME;");
+  lines.push("");
+
+  // Determine data phase range
+  var dataRange = _findVHDLDataPhaseRange(bits, bti);
+  var isXL = bti.firstDataPhaseBit === "DH1";
+
+  for (var i = 0; i < bits.length; i++) {
+    var b = bits[i];
+    var inDataPhase = dataRange.found && i >= dataRange.start && i <= dataRange.end;
+    var bitTime;
+
+    if (!dataRange.found) {
+      // CC: all arbitration
+      bitTime = "ARB_BIT_TIME";
+    } else if (isXL) {
+      // XL: transition at bit boundary, data phase bits fully data
+      bitTime = inDataPhase ? "DATA_BIT_TIME" : "ARB_BIT_TIME";
+    } else {
+      // FD: transition bits split at SP
+      if (i === dataRange.start) {
+        // First transition bit: arbSP% of arb bit + (1-dataSP)% of data bit
+        lines.push("    -- [" + b.fieldName + " / " + b.elemName + "] " + b.bitName + " (arb->data transition)");
+        lines.push("    CAN_TX <= '" + b.value + "';");
+        lines.push("    wait for (ARB_BIT_TIME * " + arbSP + ") / 100;");
+        lines.push("    wait for (DATA_BIT_TIME * " + (100 - dataSP) + ") / 100;");
+        continue;
+      } else if (i === dataRange.end) {
+        // Last transition bit: dataSP% of data bit + (1-arbSP)% of arb bit
+        lines.push("    -- [" + b.fieldName + " / " + b.elemName + "] " + b.bitName + " (data->arb transition)");
+        lines.push("    CAN_TX <= '" + b.value + "';");
+        lines.push("    wait for (DATA_BIT_TIME * " + dataSP + ") / 100;");
+        lines.push("    wait for (ARB_BIT_TIME * " + (100 - arbSP) + ") / 100;");
+        continue;
+      } else {
+        bitTime = inDataPhase ? "DATA_BIT_TIME" : "ARB_BIT_TIME";
+      }
+    }
+
+    lines.push("    -- [" + b.fieldName + " / " + b.elemName + "] " + b.bitName);
+    lines.push("    CAN_TX <= '" + b.value + "';");
+    lines.push("    wait for " + bitTime + ";");
+  }
+
+  lines.push("");
+  lines.push("    -- End: hold recessive");
+  lines.push("    CAN_TX <= '1';");
+  lines.push("    wait;");
+  lines.push("  end process P_FRAME;");
+  lines.push("end architecture BEH;");
+
+  // Testbench
+  lines.push("");
+  lines.push("-- =============================================================================");
+  lines.push("-- Testbench");
+  lines.push("-- =============================================================================");
+  lines.push("library ieee;");
+  lines.push("use ieee.std_logic_1164.all;");
+  lines.push("");
+  lines.push("entity FRAME_GENERATOR_TB is");
+  lines.push("end entity FRAME_GENERATOR_TB;");
+  lines.push("");
+  lines.push("architecture TB of FRAME_GENERATOR_TB is");
+  lines.push("  signal CAN_TX : std_logic;");
+  lines.push("begin");
+  lines.push("  DUT : entity work.FRAME_GENERATOR");
+  lines.push("    port map (CAN_TX => CAN_TX);");
+  lines.push("end architecture TB;");
+
+  var vhdlString = lines.join("\n");
+  var blob = new Blob([vhdlString], { type: "text/plain;charset=utf-8" });
+  _downloadBlob(blob, _exportFilename(frame, "vhd"));
+}
+
+// Helper: collect flat bit list for VHDL export
+function _collectVHDLBits(frame) {
+  var bits = [];
+  for (var fi = 0; fi < frame.fields.length; fi++) {
+    var field = frame.fields[fi];
+    if (field.dataField) {
+      for (var bi = 0; bi < field.dataField.length; bi++) {
+        var byteElem = field.dataField[bi];
+        for (var bk = 0; bk < byteElem.bits.length; bk++) {
+          var bit = byteElem.bits[bk];
+          bits.push({
+            value:     bit.v,
+            bitName:   bit.name,
+            elemName:  bit.isStuffBit ? (bit.isStuffBitTypeFixed ? DRAW_CFG.fixedStuffBitName : DRAW_CFG.dynStuffBitName) : byteElem.name,
+            fieldName: field.fieldName
+          });
+        }
+      }
+    } else if (field.elements) {
+      for (var ei = 0; ei < field.elements.length; ei++) {
+        var elem = field.elements[ei];
+        for (var ej = 0; ej < elem.bits.length; ej++) {
+          var ebit = elem.bits[ej];
+          bits.push({
+            value:     ebit.v,
+            bitName:   ebit.name,
+            elemName:  ebit.isStuffBit ? (ebit.isStuffBitTypeFixed ? DRAW_CFG.fixedStuffBitName : DRAW_CFG.dynStuffBitName) : elem.name,
+            fieldName: field.fieldName
+          });
+        }
+      }
+    }
+  }
+  return bits;
+}
+
+// Helper: find data phase range by bit names (mirrors _findDataPhaseRange from frame_draw.js)
+function _findVHDLDataPhaseRange(bits, bitTimeInfo) {
+  if (!bitTimeInfo || !bitTimeInfo.dataPhasePresent) {
+    return { found: false, start: -1, end: -1 };
+  }
+  var start = -1, end = -1;
+  for (var i = 0; i < bits.length; i++) {
+    if (bits[i].bitName === bitTimeInfo.firstDataPhaseBit) { start = i; break; }
+  }
+  for (var j = bits.length - 1; j >= 0; j--) {
+    if (bits[j].bitName === bitTimeInfo.lastDataPhaseBit) { end = j; break; }
+  }
+  if (start < 0 || end < 0 || start > end) return { found: false, start: -1, end: -1 };
+  return { found: true, start: start, end: end };
+}
+
+// =============================================================================
 // Generic blob download helper
 // =============================================================================
 function _downloadBlob(blob, filename) {

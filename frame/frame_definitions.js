@@ -1,5 +1,5 @@
 // =============================================================================
-// frame_definitions.js â€” Field definition templates per CAN frame type
+// frame_definitions.js Field definition templates per CAN frame type
 // =============================================================================
 // Used by CanFrame._buildFrameStructure() to create the fields[] hierarchy.
 // Each template defines the frame fields, elements, and their metadata.
