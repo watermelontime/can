@@ -28,6 +28,15 @@ function frameInit() {
   // Real Arb/Data bit ratio switch toggle
   document.getElementById("chkRealArbDataBitRatio").addEventListener("change", onRealBitRatioToggle);
 
+  // Redraw on display-checkbox change (only if frame already generated)
+  var displayChkIds = [
+    "chkBitNames", "chkColor", "chkColorStuff", "chkBitSeparators",
+    "chkFields", "chkPhases", "chkArbPhaseBitsLonger"
+  ];
+  for (var i = 0; i < displayChkIds.length; i++) {
+    document.getElementById(displayChkIds[i]).addEventListener("change", _redraw);
+  }
+
   // Set initial field enable/disable state
   onFrameTypeChange();
 }
@@ -101,6 +110,26 @@ function onRealBitRatioToggle() {
 
   // Update VHDL button visibility
   _updateVHDLButtonVisibility();
+
+  // Update bitTimeInfo and redraw if frame already exists
+  if (myFrame) {
+    if (isOn) {
+      var arbBR  = _clampInput("inputArbBitrate",  100, 20000);
+      var dataBR = _clampInput("inputDataBitrate", 100, 20000);
+      var arbSP  = _clampInput("inputArbSP",  1, 99);
+      var dataSP = _clampInput("inputDataSP", 1, 99);
+
+      myFrame.bitTimeInfo.realBitRatio = true;
+      myFrame.bitTimeInfo.realArbDataBitLenRatio = dataBR / arbBR;
+      myFrame.bitTimeInfo.arbSP = arbSP;
+      myFrame.bitTimeInfo.dataSP = dataSP;
+      myFrame.bitTimeInfo.arbBitrate = arbBR;
+      myFrame.bitTimeInfo.dataBitrate = dataBR;
+    } else {
+      myFrame.bitTimeInfo.realBitRatio = false;
+    }
+    _redraw();
+  }
 }
 
 // =============================================================================
@@ -166,7 +195,22 @@ function onShowFrame() {
     myFrame.bitTimeInfo.dataBitrate = dataBR;
   }
 
-  // Read drawing options (only on button press)
+  // Draw + update displays
+  _redraw();
+
+  // Update info display (frame data, not drawing-related)
+  _updateInfoDisplay(myFrame);
+
+  // Debug
+  console.log("myFrame with fields:", myFrame); // DEBUG
+}
+
+// =============================================================================
+// Redraw the frame using current checkboxes (only if myFrame exists)
+// =============================================================================
+function _redraw() {
+  if (!myFrame) return;
+
   var opts = {
     arbPhaseBitsLonger: document.getElementById("chkArbPhaseBitsLonger").checked,
     showBitNames:  document.getElementById("chkBitNames").checked,
@@ -177,18 +221,8 @@ function onShowFrame() {
     showPhases:    document.getElementById("chkPhases").checked
   };
 
-  // Draw
   drawFrame(myFrame, document.getElementById("svgContainer"), opts);
-
-  // Update info display
-  _updateInfoDisplay(myFrame);
-
-  // Update VHDL button visibility
   _updateVHDLButtonVisibility();
-
-  // Debug
-  console.log("myFrame with fields:", myFrame); // DEBUG
-
 }
 
 // =============================================================================
@@ -266,18 +300,18 @@ function _updateInfoDisplay(frame) {
 
   if (frame._isCC()) {
     lines.push("CRC-15: 0x" + frame.computed.crcValue.toString(16).toUpperCase());
-    lines.push("CRC input bit stream: " + frame.debug.crcInputBitStream.join(""));
-    _pushCrcTrace(lines, frame.debug.crcShiftRegTrace, 15, "CRC-15");
+    //lines.push("CRC input bit stream: " + frame.debug.crcInputBitStream.join(""));
+    //_pushCrcTrace(lines, frame.debug.crcShiftRegTrace, 15, "CRC-15");
   } else if (frame._isFD()) {
     lines.push("CRC-" + frame.computed.crcLength + ": 0x" + frame.computed.crcValue.toString(16).toUpperCase());
-    lines.push("CRC input bit stream: " + frame.debug.crcInputBitStream.join(""));
-    _pushCrcTrace(lines, frame.debug.crcShiftRegTrace, frame.computed.crcLength, "CRC-" + frame.computed.crcLength);
+    //lines.push("CRC input bit stream: " + frame.debug.crcInputBitStream.join(""));
+    //_pushCrcTrace(lines, frame.debug.crcShiftRegTrace, frame.computed.crcLength, "CRC-" + frame.computed.crcLength);
   } else if (frame._isXL()) {
     lines.push("PCRC-13: 0x" + frame.computed.pcrcValue.toString(16).toUpperCase());
-    lines.push("PCRC input bit stream: " + frame.debug.pcrcInputBitStream.join(""));
-    _pushCrcTrace(lines, frame.debug.pcrcShiftRegTrace, 13, "PCRC-13");
+    //lines.push("PCRC input bit stream: " + frame.debug.pcrcInputBitStream.join(""));
+    //_pushCrcTrace(lines, frame.debug.pcrcShiftRegTrace, 13, "PCRC-13");
     lines.push("FCRC-32: 0x" + frame.computed.fcrcValue.toString(16).toUpperCase().padStart(8, "0"));
-    lines.push("FCRC input bit stream: " + frame.debug.fcrcInputBitStream.join(""));
+    //lines.push("FCRC input bit stream: " + frame.debug.fcrcInputBitStream.join(""));
   }
 
   info.textContent = lines.join("\n");

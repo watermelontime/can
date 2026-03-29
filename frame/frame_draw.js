@@ -153,6 +153,17 @@ function drawFrame(frame, svgContainer, options) {
       sepLine.setAttribute("stroke-width", cfg.lineWidthSeparators);
       svg.appendChild(sepLine);
     }
+    // Right edge of last bit
+    var lastIdx = drawBits.length - 1;
+    var sxEnd = bitGeom.starts[lastIdx] + bitGeom.widths[lastIdx];
+    var sepLineEnd = document.createElementNS(ns, "line");
+    sepLineEnd.setAttribute("x1", sxEnd);
+    sepLineEnd.setAttribute("y1", waveTop);
+    sepLineEnd.setAttribute("x2", sxEnd);
+    sepLineEnd.setAttribute("y2", waveLow);
+    sepLineEnd.setAttribute("stroke", cfg.colors.separatorLine);
+    sepLineEnd.setAttribute("stroke-width", cfg.lineWidthSeparators);
+    svg.appendChild(sepLineEnd);
   }
 
   // --- Draw bit names inside the bits (rotated 90°) ---
@@ -268,21 +279,29 @@ function _drawPhaseBars(svg, ns, drawBits, bitTimeInfo, cfg, bitGeom, barTop, ba
       segments.push({ x: spEnd, w: totalEnd - spEnd, label: "Arbitration phase" });
     }
   } else if (dataRange.found) {
-    // Non-real-ratio mode or XL: data phase from middle of first to middle of last data phase bit
     var totalStart = bitGeom.starts[0];
     var lastBitIdx = drawBits.length - 1;
     var totalEnd = bitGeom.starts[lastBitIdx] + bitGeom.widths[lastBitIdx];
-    var dataMidStart = bitGeom.starts[dataRange.start] + bitGeom.widths[dataRange.start] / 2;
-    var dataMidEnd   = bitGeom.starts[dataRange.end]   + bitGeom.widths[dataRange.end]   / 2;
+    var dataStart, dataEnd;
 
-    if (dataMidStart > totalStart) {
-      segments.push({ x: totalStart, w: dataMidStart - totalStart, label: "Arbitration phase" });
+    if (isXL) {
+      // XL: data phase from beginning of first to end of last data phase bit
+      dataStart = bitGeom.starts[dataRange.start];
+      dataEnd   = bitGeom.starts[dataRange.end] + bitGeom.widths[dataRange.end];
+    } else {
+      // Non-real-ratio FD/CC: data phase from middle of first to middle of last data phase bit
+      dataStart = bitGeom.starts[dataRange.start] + bitGeom.widths[dataRange.start] / 2;
+      dataEnd   = bitGeom.starts[dataRange.end]   + bitGeom.widths[dataRange.end]   / 2;
     }
-    if (dataMidEnd > dataMidStart) {
-      segments.push({ x: dataMidStart, w: dataMidEnd - dataMidStart, label: "Data phase" });
+
+    if (dataStart > totalStart) {
+      segments.push({ x: totalStart, w: dataStart - totalStart, label: "Arbitration phase" });
     }
-    if (totalEnd > dataMidEnd) {
-      segments.push({ x: dataMidEnd, w: totalEnd - dataMidEnd, label: "Arbitration phase" });
+    if (dataEnd > dataStart) {
+      segments.push({ x: dataStart, w: dataEnd - dataStart, label: "Data phase" });
+    }
+    if (totalEnd > dataEnd) {
+      segments.push({ x: dataEnd, w: totalEnd - dataEnd, label: "Arbitration phase" });
     }
   } else {
     // No data phase (CC): entire frame is arbitration
@@ -367,7 +386,7 @@ function _collectDrawBits(frame) {
             value:       bit.v,
             bitName:     bit.name,
             isStuffBit:  bit.isStuffBit,
-            elemName:    bit.isStuffBit ? (bit.isStuffBitTypeFixed ? DRAW_CFG.fixedStuffBitName : DRAW_CFG.dynStuffBitName) : byteElem.name,
+            elemName:    byteElem.name,
             elemIdx:     bi,
             printName:   byteElem.printNameInFieldsBar !== false,
             fieldName:   field.fieldName
@@ -383,7 +402,7 @@ function _collectDrawBits(frame) {
             value:       ebit.v,
             bitName:     ebit.name,
             isStuffBit:  ebit.isStuffBit,
-            elemName:    ebit.isStuffBit ? (ebit.isStuffBitTypeFixed ? DRAW_CFG.fixedStuffBitName : DRAW_CFG.dynStuffBitName) : elem.name,
+            elemName:    elem.name,
             elemIdx:     ei,
             printName:   elem.printNameInFieldsBar !== false,
             fieldName:   field.fieldName
@@ -675,45 +694,16 @@ function _computeMergedSpans(drawBits, propName) {
   var spans = [];
   if (drawBits.length === 0) return spans;
 
-  // Build effective labels: stuff bits inherit from their left non-stuff neighbor
+  // Build effective labels: each bit uses its own field/element assignment
   var labels = [];
   var printNames = [];
   var elemIdxs = [];
   var fieldNames = [];
-  var lastNonStuffLabel = null;
-  var lastNonStuffPrintName = true;
-  var lastNonStuffElemIdx = 0;
-  var lastNonStuffFieldName = "";
   for (var i = 0; i < drawBits.length; i++) {
-    if (drawBits[i].isStuffBit) {
-      labels.push(lastNonStuffLabel);  // inherit from left neighbor
-      printNames.push(lastNonStuffPrintName);
-      elemIdxs.push(lastNonStuffElemIdx);
-      fieldNames.push(lastNonStuffFieldName);
-    } else {
-      lastNonStuffLabel = drawBits[i][propName];
-      lastNonStuffPrintName = drawBits[i].printName !== false;
-      lastNonStuffElemIdx = drawBits[i].elemIdx || 0;
-      lastNonStuffFieldName = drawBits[i].fieldName || "";
-      labels.push(lastNonStuffLabel);
-      printNames.push(lastNonStuffPrintName);
-      elemIdxs.push(lastNonStuffElemIdx);
-      fieldNames.push(lastNonStuffFieldName);
-    }
-  }
-  // Fill any leading stuff bits from the right
-  for (var i = 0; i < labels.length; i++) {
-    if (labels[i] !== null) break;
-    // find first non-null
-    for (var j = i + 1; j < labels.length; j++) {
-      if (labels[j] !== null) {
-        labels[i] = labels[j];
-        printNames[i] = printNames[j];
-        elemIdxs[i] = elemIdxs[j];
-        fieldNames[i] = fieldNames[j];
-        break;
-      }
-    }
+    labels.push(drawBits[i][propName]);
+    printNames.push(drawBits[i].printName !== false);
+    elemIdxs.push(drawBits[i].elemIdx || 0);
+    fieldNames.push(drawBits[i].fieldName || "");
   }
 
   // Compute spans from effective labels

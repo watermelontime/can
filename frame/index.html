@@ -18,7 +18,7 @@
   <main>
 
     <div class="page-header">
-      <h1>CAN Frame Generator <a href="versionhistory.html" class="version-label" target="_blank" rel="noopener noreferrer">V1.1.0</a></h1>
+      <h1>CAN Frame Generator <a href="versionhistory.html" class="version-label" target="_blank" rel="noopener noreferrer">V1.1.1</a></h1>
     </div>
 
     <div class="responsive-container">
@@ -57,7 +57,7 @@
           </tr>
           <tr id="rowBRS">
             <td>BRS</td>
-            <td><input type="checkbox" id="inputBRS" disabled /></td>
+            <td><input type="checkbox" id="inputBRS" checked /></td>
           </tr>
           <tr id="rowESI">
             <td>ESI</td>
@@ -100,8 +100,8 @@
             <td>ACK slot</td>
             <td>
               <select id="inputACK" class="input-field" style="width:29ch">
-                <option value="1" selected>1 (recessive / no ACK)</option>
-                <option value="0">0 (dominant / ACK received)</option>
+                <option value="1" selected>1 (no ACK)</option>
+                <option value="0">0 (ACK received)</option>
               </select>
             </td>
           </tr>
