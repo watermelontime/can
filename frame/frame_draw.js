@@ -4,7 +4,7 @@
 // Reads myFrame.fields[] hierarchy and renders a digital waveform as SVG.
 // =============================================================================
 
-var DRAW_CFG = {
+export var DRAW_CFG = {
   bitWidth:           30,     // px per bit
   bitHeight:          60,     // px: waveform amplitude (vertical distance low ↔ high)
   lineWidthWaveForm:   3,     // px: waveform stroke width
@@ -47,7 +47,7 @@ var DRAW_CFG = {
 // =============================================================================
 // Main draw function
 // =============================================================================
-function drawFrame(frame, svgContainer, options) {
+export function drawFrame(frame, svgContainer, options) {
   var opts = options || {};
   var arbPhaseBitsLonger = !!opts.arbPhaseBitsLonger;
   var showBitNames   = !!opts.showBitNames;

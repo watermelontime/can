@@ -12,10 +12,7 @@
  * @param {number} tdcEna - TDC enabled (true) or disabled (false).
  */
 // ===================================================================================
-export function drawBitTiming(PropSeg, PhaseSeg1, PhaseSeg2, spPercent, sjwLen, sspPercent, tdcEna, HTMLDrawingName, BitTimingName) { // TODO: receive width as parameter
-  // svg widht/height
-  const svgHeight = 60; // Height of the SVG element in Pixel
-  const svgWidth = document.getElementById('BitTimingTable').offsetWidth; // Width of the SVG element
+export function drawBitTiming(PropSeg, PhaseSeg1, PhaseSeg2, spPercent, sjwLen, sspPercent, tdcEna, HTMLDrawingName, BitTimingName, svgWidth, svgHeight) {
 
   // dimension svg element
   let svg = document.getElementById(HTMLDrawingName);
@@ -196,10 +193,7 @@ export function drawBitTiming(PropSeg, PhaseSeg1, PhaseSeg2, spPercent, sjwLen, 
 
 // ===================================================================================
 // Draw PWM symbols of 1 XL Data Phase Bit
-export function drawPWMsymbols(PWMS, PWML, pwm_symbols_per_bit, HTMLDrawingName, NameToPrint) {
-  // svg widht/height
-  const svgHeight = 60; // Height of the SVG element in Pixel
-  const svgWidth = document.getElementById('BitTimingTable').offsetWidth; // Width of the SVG element
+export function drawPWMsymbols(PWMS, PWML, pwm_symbols_per_bit, HTMLDrawingName, NameToPrint, svgWidth, svgHeight) {
 
   // dimension svg element
   let svg = document.getElementById(HTMLDrawingName);
@@ -321,10 +315,7 @@ export function drawPWMsymbols(PWMS, PWML, pwm_symbols_per_bit, HTMLDrawingName,
 
 // ===================================================================================
 // Draw Error Message in a grey box
-export function drawErrorMessage(HTMLDrawingName, NameToPrint, ErrorMsgToPrint) {
-  // svg widht/height
-  const svgHeight = 60; // Height of the SVG element in Pixel
-  const svgWidth = document.getElementById('BitTimingTable').offsetWidth; // Width of the SVG element
+export function drawErrorMessage(HTMLDrawingName, NameToPrint, ErrorMsgToPrint, svgWidth, svgHeight) {
 
   // dimension svg element
   let svg = document.getElementById(HTMLDrawingName);

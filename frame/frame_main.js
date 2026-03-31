@@ -1,6 +1,9 @@
 // =============================================================================
 // frame_main.js — Init, event listeners, input parsing, orchestration
 // =============================================================================
+import { CanFrame } from './frame_builder.js';
+import { drawFrame } from './frame_draw.js';
+import { exportSVG, exportPNG, exportCSV, exportVHDL } from './frame_export.js';
 
 var myFrame = null;
 

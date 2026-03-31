@@ -1,6 +1,7 @@
 // =============================================================================
 // frame_export.js — SVG, PNG, CSV download helpers
 // =============================================================================
+import { DRAW_CFG } from './frame_draw.js';
 
 /**
  * Build the export filename.
@@ -17,7 +18,7 @@ function _exportFilename(frame, ext) {
 // =============================================================================
 // SVG download
 // =============================================================================
-function exportSVG(frame, svgContainer) {
+export function exportSVG(frame, svgContainer) {
   var svgElem = svgContainer.querySelector("svg");
   if (!svgElem) { alert("No frame drawn yet."); return; }
 
@@ -35,7 +36,7 @@ function exportSVG(frame, svgContainer) {
 // =============================================================================
 // PNG download
 // =============================================================================
-function exportPNG(frame, svgContainer) {
+export function exportPNG(frame, svgContainer) {
   var svgElem = svgContainer.querySelector("svg");
   if (!svgElem) { alert("No frame drawn yet."); return; }
 
@@ -76,7 +77,7 @@ function exportPNG(frame, svgContainer) {
 // =============================================================================
 // CSV download
 // =============================================================================
-function exportCSV(frame) {
+export function exportCSV(frame) {
   var sep = ";";
   var lines = [];
   lines.push("bit_value" + sep + "bit_name" + sep + "element_name" + sep + "field_name");
@@ -113,7 +114,7 @@ function exportCSV(frame) {
 // =============================================================================
 // VHDL download — generates a FRAME_GENERATOR entity + testbench
 // =============================================================================
-function exportVHDL(frame) {
+export function exportVHDL(frame) {
   var bti = frame.bitTimeInfo;
   if (!bti || !bti.realBitRatio) { alert("Real Arb/Data bit ratio must be enabled."); return; }
 

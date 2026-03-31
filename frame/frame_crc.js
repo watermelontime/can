@@ -98,7 +98,7 @@ function crcCalculateTrace(bitStream, crcBits, poly, initVal) {
 // Hex (without leading 1): 0x4599
 // Init: all zeros
 // =============================================================================
-function crc15(bitStream) {
+export function crc15(bitStream) {
   return crcCalculate(bitStream, 15, 0x4599, 0x0000);
 }
 
@@ -108,7 +108,7 @@ function crc15(bitStream) {
 // Hex (without leading 1): 0x1685B
 // Init: MSB=1, rest 0 → 0x10000
 // =============================================================================
-function crc17(bitStream) {
+export function crc17(bitStream) {
   return crcCalculate(bitStream, 17, 0x1685B, 0x10000);
 }
 
@@ -118,7 +118,7 @@ function crc17(bitStream) {
 // Hex (without leading 1): 0x102899
 // Init: MSB=1, rest 0 → 0x100000
 // =============================================================================
-function crc21(bitStream) {
+export function crc21(bitStream) {
   return crcCalculate(bitStream, 21, 0x102899, 0x100000);
 }
 
@@ -128,15 +128,15 @@ function crc21(bitStream) {
 // Hex (without leading 1): 0x19E7
 // Init: LSB=1, rest 0 → 0x0001
 // =============================================================================
-function crc13(bitStream) {
+export function crc13(bitStream) {
   return crcCalculate(bitStream, 13, 0x19E7, 0x0001);
 }
 
 // --- Trace variants (return array of shift register values after each step) ---
-function crc15Trace(bitStream) { return crcCalculateTrace(bitStream, 15, 0x4599, 0x0000); }
-function crc17Trace(bitStream) { return crcCalculateTrace(bitStream, 17, 0x1685B, 0x10000); }
-function crc21Trace(bitStream) { return crcCalculateTrace(bitStream, 21, 0x102899, 0x100000); }
-function crc13Trace(bitStream) { return crcCalculateTrace(bitStream, 13, 0x19E7, 0x0001); }
+export function crc15Trace(bitStream) { return crcCalculateTrace(bitStream, 15, 0x4599, 0x0000); }
+export function crc17Trace(bitStream) { return crcCalculateTrace(bitStream, 17, 0x1685B, 0x10000); }
+export function crc21Trace(bitStream) { return crcCalculateTrace(bitStream, 21, 0x102899, 0x100000); }
+export function crc13Trace(bitStream) { return crcCalculateTrace(bitStream, 13, 0x19E7, 0x0001); }
 
 // =============================================================================
 // CRC-32 for CAN XL FCRC (frame CRC)
@@ -144,6 +144,6 @@ function crc13Trace(bitStream) { return crcCalculateTrace(bitStream, 13, 0x19E7,
 // Hex (without leading 1): 0xF4ACFB13
 // Init: LSB=1, rest 0 → 0x00000001
 // =============================================================================
-function crc32can(bitStream) {
+export function crc32can(bitStream) {
   return crcCalculate(bitStream, 32, 0xF4ACFB13, 0x00000001);
 }

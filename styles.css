@@ -76,7 +76,7 @@ th, td {
 }
 
 .input-field {
-  background-color: #E5F5FF;
+  background-color: #c0e6ff;
 }
 
 /* Font in Fields */
@@ -256,17 +256,26 @@ svg {
   filter: grayscale(100%);
 }
 
+.my-textarea,
+.register-textarea,
+.report-textarea{
+  width: 100%; /* Take full column width */
+  padding: 16px 20px;
+  border: 2px solid #ccc;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  margin: 0; /* Reset any default margins */
+  box-sizing: border-box; /* Include padding and border in width calculation */
+  font-family: monospace;
+  font-size: 1.0em;
+  text-align: left;
+  font-weight: normal;
+}
+
 .register-textarea,
 .report-textarea {
-    width: 100%; /* Take full column width */
     height: 450px;
-    padding: 16px 20px;
-    border: 2px solid #ccc;
-    border-radius: 12px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    background-color: white;
-    margin: 0; /* Reset any default margins */
-    box-sizing: border-box; /* Include padding and border in width calculation */
 }
 
 /* Make register textarea fill vertical space in register column */
@@ -275,14 +284,6 @@ svg {
     height: auto; /* Override fixed height */
     min-height: 600px; /* Minimum height for usability */
     resize: both; /* Allow both vertical and horizontal resizing */
-}
-
-.register-textarea,
-.report-textarea {
-  font-family: monospace;
-  font-size: 1.0em;
-  text-align: left;
-  font-weight: normal;
 }
 
 /* Enable line wrapping for the report area while preserving other pre formatting */

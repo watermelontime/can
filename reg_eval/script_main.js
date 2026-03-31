@@ -660,6 +660,8 @@ function displayResults(results) {
 // ===================================================================================
 // Display SVGs in HTML
 function displaySVGs(reg) {
+  const svgWidth = document.getElementById('BitTimingTable').offsetWidth;
+  const svgHeight = 60;
 
   // Show SSP optionally, if TDC is enabled and TMS is disabled: generate variable here and use variable in drawBitTiming()
   let showSSP = false;
@@ -688,13 +690,17 @@ function displaySVGs(reg) {
       0, // SSP in % of Bit Time => not used because TDC = false
       false, // TDC disabled (false)
       'DrawingBTArb', // name of SVG element in HTML
-      'Arbitration Phase' // label in Drawing
+      'Arbitration Phase', // label in Drawing
+      svgWidth,
+      svgHeight
     ); 
   } else { // draw error message
     draw_svg.drawErrorMessage(
       'DrawingBTArb',
       'Arbitration Phase',
-      'No data'
+      'No data',
+      svgWidth,
+      svgHeight
     );
   }
 
@@ -722,13 +728,17 @@ function displaySVGs(reg) {
       reg.general.bt_fddata.res.ssp, // SSP in % of Bit Time
       showSSP, // TDC enabled (true) or disabled (false)
       'DrawingBTFDdata', // name of SVG element in HTML
-      'FD Data Phase' // label in Drawing
+      'FD Data Phase', // label in Drawing
+      svgWidth,
+      svgHeight
     ); 
   } else { // draw error message
     draw_svg.drawErrorMessage(
       'DrawingBTFDdata',
       'FD Data Phase',
-      'No data or ES=OFF or TMS=ON'
+      'No data or ES=OFF or TMS=ON',
+      svgWidth,
+      svgHeight
     );
   }
 
@@ -756,13 +766,17 @@ function displaySVGs(reg) {
       reg.general.bt_xldata.res.ssp, // SSP in % of Bit Time
       showSSP, // TDC enabled (true) or disabled (false)
       'DrawingBTXLdata', // name of SVG element in HTML
-      'XL Data Phase' // label in Drawing
+      'XL Data Phase', // label in Drawing
+      svgWidth,
+      svgHeight
     ); 
   } else { // draw error message
     draw_svg.drawErrorMessage(
       'DrawingBTXLdata',
       'XL Data Phase',
-      'No data'
+      'No data',
+      svgWidth,
+      svgHeight
     );
   }
 
@@ -779,13 +793,17 @@ function displaySVGs(reg) {
       reg.general.bt_xldata.set.pwm_long,
       reg.general.bt_xldata.res.pwm_symbols_per_bit_time,
       'DrawingBTXLdataPWM',
-      'XL Data Phase PWM symbols');
+      'XL Data Phase PWM symbols',
+      svgWidth,
+      svgHeight);
   } else {
     // Draw PWM symbols with error message
     draw_svg.drawErrorMessage(
       'DrawingBTXLdataPWM',
       'XL Data Phase PWM symbols',
-      'No data or TMS = off'
+      'No data or TMS = off',
+      svgWidth,
+      svgHeight
     );
   }
 

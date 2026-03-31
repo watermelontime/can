@@ -1,9 +1,11 @@
 // =============================================================================
 // frame_builder.js — CanFrame class: build frame structure, bits, stuffing, CRC
 // =============================================================================
+import { getFrameDefinition } from './frame_definitions.js';
+import { crc15, crc17, crc21, crc13, crc15Trace, crc17Trace, crc21Trace, crc13Trace, crc32can } from './frame_crc.js';
+import { DRAW_CFG } from './frame_draw.js';
 
 // --- Configurable stuff bit names (from DRAW_CFG in frame_draw.js) ---
-// Resolved lazily because frame_draw.js may load after this file.
 var STUFF_DYN_NAME;   // name for dynamic stuff bits
 var STUFF_FIX_NAME;   // name for fixed stuff bits
 function _initStuffNames() {
@@ -35,7 +37,7 @@ var SBC_XL_TABLE = [
 // =============================================================================
 // CanFrame class
 // =============================================================================
-function CanFrame(frameType) {
+export function CanFrame(frameType) {
   this.frameType = frameType;
 
   this.input = {

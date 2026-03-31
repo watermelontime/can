@@ -15,6 +15,9 @@
   <div id="site-menu"></div>
   <script type="module" src="/can/menu.js"></script>
 
+  <!-- Load scripts: ES module, imports resolved by frame_main.js -->
+  <script type="module" src="frame_main.js"></script>
+
   <main>
 
     <div class="page-header">
@@ -166,16 +169,7 @@
           <pre id="infoDisplay" class="info-display">Frame information will appear here after pressing "Show Frame".</pre>
         </div>
       </div>
-
     </div>
-
-    <!-- Load scripts: plain <script> tags, in dependency order -->
-    <script src="frame_definitions.js"></script>
-    <script src="frame_crc.js"></script>
-    <script src="frame_builder.js"></script>
-    <script src="frame_draw.js"></script>
-    <script src="frame_export.js"></script>
-    <script src="frame_main.js"></script>
 
   </main>
 

@@ -549,7 +549,7 @@ function getDefinition_XL_XBFF(input) {
 /**
  * Master function: get field definition for any frame type.
  */
-function getFrameDefinition(frameType, input) {
+export function getFrameDefinition(frameType, input) {
   switch (frameType) {
     case "CC_CBFF":     return getDefinition_CC_CBFF(input, false);
     case "CC_CBFF_RTR": return getDefinition_CC_CBFF(input, true);

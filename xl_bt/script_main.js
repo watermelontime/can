@@ -354,16 +354,17 @@ function generateHardwareRegisters(results, params) {
     boschRegisters.res_reg_PCFG = setBits(boschRegisters.res_reg_PCFG, results.res_pwms-1, 5, 0);
   }
 
-  // Convert Register-Values into Hex-Strings (0x AA BB CC DD)
-  for (const [name, val] of Object.entries(boschRegisters)) {
-    results[name] =
-      '0x ' +
-      val
-        .toString(16)
-        .toUpperCase()
-        .padStart(8, '0')
-        .match(/.{2}/g) // in 2er-Gruppen (Bytes) teilen
-        .join(' ');  }
+  // Convert Register-Values into Hex-Strings and write to textarea
+  function regToHex(val) {
+    return '0x' + val.toString(16).toUpperCase().padStart(8, '0');
+  }
+  var configText = '### Bit Timing configuration ###\n';
+  configText +=    '### X_CAN, XS_CAN, X_CANB    ###\n\n';
+  configText +=    'PRT.MODE: ' + regToHex(boschRegisters.res_reg_MODE) + '\n';
+  configText +=    'PRT.NBTP: ' + regToHex(boschRegisters.res_reg_NBTP) + '\n';
+  configText +=    'PRT.XBTP: ' + regToHex(boschRegisters.res_reg_XBTP) + '\n';
+  configText +=    'PRT.PCFG: ' + regToHex(boschRegisters.res_reg_PCFG);
+  document.getElementById('canModuleConfig').textContent = configText;
 }
 
 // ===================================================================================
@@ -538,6 +539,9 @@ function processChanges() {
   printResults(results);
 
   // Draw Bit Timing: Arbitration Phase
+  const svgWidth = document.getElementById('BitTimingTable').offsetWidth; // here: 322 px, reg_eval = 393 px
+  const svgHeight = 60;
+
   draw_svg.drawBitTiming(
     params.par_propseg_arb.value,
     params.par_phaseseg1_arb.value,
@@ -547,7 +551,9 @@ function processChanges() {
     10, // SSP in % of Bit Time => not used because TDC = false
     false, // TDC disabled (false)
     'DrawingBTArb', // name of SVG element in HTML
-    'Arbitration Phase' // label in Drawing
+    'Arbitration Phase', // label in Drawing
+    svgWidth,
+    svgHeight
   ); 
   
   // Draw Bit Timing: XL Data Phase
@@ -560,7 +566,9 @@ function processChanges() {
     results.res_ssp_dat, // SSP in % of Bit Time
     params.par_tdc_dat.value, // TDC enabled (true) or disabled (false)
     'DrawingBTXLdata', // name of SVG element in HTML
-    'XL Data Phase' // label in Drawing
+    'XL Data Phase', // label in Drawing
+    svgWidth,
+    svgHeight
   ); 
 
   // Draw PWM symbols for XL Data Phase
@@ -568,19 +576,19 @@ function processChanges() {
     // Check if PWM symbols exist
     if (results.res_pwm_symbols_per_bit_time > 0) {
       // Draw PWM symbols
-      draw_svg.drawPWMsymbols(results.res_pwms, results.res_pwml, results.res_pwm_symbols_per_bit_time, 'DrawingBTXLdataPWM', 'XL Data Phase PWM symbols');
+      draw_svg.drawPWMsymbols(results.res_pwms, results.res_pwml, results.res_pwm_symbols_per_bit_time, 'DrawingBTXLdataPWM', 'XL Data Phase PWM symbols', svgWidth, svgHeight);
     } else { // no PWM symbols exist
       // Draw error message
-      draw_svg.drawErrorMessage('DrawingBTXLdataPWM', 'XL Data Phase PWM symbols', 'no PWM config exists for this bit rate');
+      draw_svg.drawErrorMessage('DrawingBTXLdataPWM', 'XL Data Phase PWM symbols', 'no PWM config exists for this bit rate', svgWidth, svgHeight);
     }
   } else {
     // Draw error message
     //draw_svg.drawPWMsymbols(0, 0, 0, 'DrawingBTXLdataPWM', 'XL Data Phase: TMS = off');
-    draw_svg.drawErrorMessage('DrawingBTXLdataPWM', 'XL Data Phase PWM symbols', 'TMS = off, means no PWM used');
+    draw_svg.drawErrorMessage('DrawingBTXLdataPWM', 'XL Data Phase PWM symbols', 'TMS = off, means no PWM used', svgWidth, svgHeight);
   }
 
-  // Legend for Bit Timing Drawings: adapt width to table width
-  document.getElementById("DrawingBTLegend").style.width =   document.getElementById("BitTimingTable").offsetWidth + "px";
+  // Legend for Bit Timing Drawings: adapt width to column width
+  document.getElementById("DrawingBTLegend").style.width =  svgWidth + "px";
 }
 
 // ===================================================================================
