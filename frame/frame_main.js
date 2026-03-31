@@ -110,26 +110,6 @@ function onRealBitRatioToggle() {
 
   // Update VHDL button visibility
   _updateVHDLButtonVisibility();
-
-  // Update bitTimeInfo and redraw if frame already exists
-  if (myFrame) {
-    if (isOn) {
-      var arbBR  = _clampInput("inputArbBitrate",  100, 20000);
-      var dataBR = _clampInput("inputDataBitrate", 100, 20000);
-      var arbSP  = _clampInput("inputArbSP",  1, 99);
-      var dataSP = _clampInput("inputDataSP", 1, 99);
-
-      myFrame.bitTimeInfo.realBitRatio = true;
-      myFrame.bitTimeInfo.realArbDataBitLenRatio = dataBR / arbBR;
-      myFrame.bitTimeInfo.arbSP = arbSP;
-      myFrame.bitTimeInfo.dataSP = dataSP;
-      myFrame.bitTimeInfo.arbBitrate = arbBR;
-      myFrame.bitTimeInfo.dataBitrate = dataBR;
-    } else {
-      myFrame.bitTimeInfo.realBitRatio = false;
-    }
-    _redraw();
-  }
 }
 
 // =============================================================================
@@ -222,6 +202,7 @@ function _redraw() {
   };
 
   drawFrame(myFrame, document.getElementById("svgContainer"), opts);
+  _updateInfoDisplay(myFrame);
   _updateVHDLButtonVisibility();
 }
 
@@ -301,7 +282,7 @@ function _updateInfoDisplay(frame) {
   if (frame._isCC()) {
     lines.push("CRC-15: 0x" + frame.computed.crcValue.toString(16).toUpperCase());
     //lines.push("CRC input bit stream: " + frame.debug.crcInputBitStream.join(""));
-    //_pushCrcTrace(lines, frame.debug.crcShiftRegTrace, 15, "CRC-15");
+    //z_pushCrcTrace(lines, frame.debug.crcShiftRegTrace, 15, "CRC-15");
   } else if (frame._isFD()) {
     lines.push("CRC-" + frame.computed.crcLength + ": 0x" + frame.computed.crcValue.toString(16).toUpperCase());
     //lines.push("CRC input bit stream: " + frame.debug.crcInputBitStream.join(""));

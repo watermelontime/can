@@ -76,7 +76,7 @@ th, td {
 }
 
 .input-field {
-  background-color: #BBE5FF;
+  background-color: #E5F5FF;
 }
 
 /* Font in Fields */
@@ -133,7 +133,7 @@ th, td {
   color: #004080;
   cursor: pointer;
   margin-top: 0.5em; /* Add space above select */
-  margin-bottom: 1em; /* Add space below select */
+  margin-bottom: 0.5em; /* Add space below select */
   height: 2.2em; /* Set consistent height */
   box-sizing: border-box;
 }

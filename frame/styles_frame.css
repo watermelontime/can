@@ -4,13 +4,13 @@
   width: auto;
 }
 .input-table td {
-  padding: 0.3em 0.4em;
+  padding: 0.3em 0.0em;
   border: none;
   background: transparent;
   vertical-align: middle;
 }
 .input-table td:first-child {
-  font-weight: bold;
+  font-weight: normal;
   white-space: nowrap;
   padding-right: 0.8em;
 }
