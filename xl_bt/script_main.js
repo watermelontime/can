@@ -31,7 +31,13 @@ const floatResults = [
   'res_sp_dat',
   'res_ssp_dat',
   'res_tqlen',
-  'res_pwm_symbol_len_ns'
+  'res_pwm_symbol_len_ns',
+  'res_df_cond1',
+  'res_df_cond2',
+  'res_df_cond3',
+  'res_df_allowed',
+  'res_pm1',
+  'res_pm2'
 ];
 
 const paramFields  = Array.from(document.querySelectorAll('input[id^="par_"], select[id^="par_"]'));
@@ -483,7 +489,40 @@ function calculate(params) {
 	  results['res_pwm_symbol_len_ns']         = 'TMS off';
 	  results['res_pwm_symbol_len_clk_cycles'] = 'TMS off';
 	  results['res_pwm_symbols_per_bit_time']  = 'TMS off';
-	}	
+	}
+
+	// --- Robustness: df (clock tolerance) and Phase Margin ---
+	const S_Stuff = 11; // each S-th bit is a fixed stuff bit in data phase
+	const bt_a = results.res_tqperbit_arb;
+	const bt_d = results.res_tqperbit_dat;
+	const sjw_a = params.par_sjw_arb.value;
+	const sjw_d = params.par_sjw_dat.value;
+	const ps1_a = params.par_phaseseg1_arb.value;
+	const ps2_a = params.par_phaseseg2_arb.value;
+	const ps2_d = params.par_phaseseg2_dat.value;
+	const BRP   = params.par_brp.value;
+	const clk_period = results.res_clk_period;
+	const df_used = params.par_dfused.value / 100; // convert from % to fraction
+
+	// 3 conditions for df_allowed (all fractional)
+	const df_cond1 = sjw_a / (10 * bt_a) / 2;                          // condition 1: resync arbitration
+	const df_cond2 = Math.min(ps1_a, ps2_a) / (13 * bt_a - ps2_a) / 2; // condition 2: error flag
+	const df_cond3 = sjw_d / (2 * (2 * S_Stuff + 1) * bt_d);           // condition 3: resync data
+	const df_allowed = Math.min(df_cond1, df_cond2, df_cond3);
+
+	results['res_df_cond1']   = df_cond1 * 100;   // display as %
+	results['res_df_cond2']   = df_cond2 * 100;
+	results['res_df_cond3']   = df_cond3 * 100;
+	results['res_df_allowed'] = df_allowed * 100;
+
+	// Phase Margin
+	if (df_used <= df_allowed) {
+	  results['res_pm1'] = (((S_Stuff + 1) * bt_d - ps2_d - 1) / (1 + df_used) - S_Stuff * bt_d / (1 - df_used)) * BRP * clk_period;
+	  results['res_pm2'] = (S_Stuff * bt_d / (1 + df_used) - (S_Stuff * bt_d - ps2_d) / (1 - df_used)) * BRP * clk_period;
+	} else {
+	  results['res_pm1'] = 'df_used too large';
+	  results['res_pm2'] = 'df_used too large';
+	}
 
   return results; // return results object
 }
@@ -589,6 +628,36 @@ function processChanges() {
 
   // Legend for Bit Timing Drawings: adapt width to column width
   document.getElementById("DrawingBTLegend").style.width =  svgWidth + "px";
+
+  // Draw Phase Margin diagram (PM1)
+  const pmSvgWidth = 360;//document.getElementById('res_pm1').closest('table').offsetWidth;
+  const spFraction_dat = results.res_sp_dat / 100; // convert from % to fraction 0..1
+  const df_used_frac = params.par_dfused.value / 100; // convert from % to fraction
+
+  draw_svg.drawPM1(
+    results.res_pm1,
+    results.res_tqperbit_dat,
+    params.par_phaseseg2_dat.value,
+    spFraction_dat,
+    df_used_frac,
+    params.par_brp.value,
+    results.res_clk_period,
+    'DrawingPM1',
+    pmSvgWidth
+  );
+
+  // Draw Phase Margin diagram (PM2)
+  draw_svg.drawPM2(
+    results.res_pm2,
+    results.res_tqperbit_dat,
+    params.par_phaseseg2_dat.value,
+    spFraction_dat,
+    df_used_frac,
+    params.par_brp.value,
+    results.res_clk_period,
+    'DrawingPM2',
+    pmSvgWidth
+  );
 }
 
 // ===================================================================================

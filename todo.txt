@@ -1,21 +1,15 @@
-Add a leg: for stuff bits: stuff(D): dynamic stuff bit
+no TODOs
 
-Improve colors of input fields => blue is to dark
-
-If Fields are disabled: hide the field
-
-Vertical space between input fields: align them.
-
---------------------------
-Expert configuration: add bit rate and SP for Arb & Data => VHDL file can be downloaded
-
-I want an option, to also draw the bits with real proportianal bit lenghts. Since this is an expert feature it has to be first enabled. The user will enter the bit rate in the arbitration phase and the data phase, and also both Sample Point position.
+----Prompt----------------------
+I want a new feature chkRealArbDataBitRatio.
+If checked the bits shall be drawn with real proportianal bit lenghts. Therefore the user will enter the bit rate in the arbitration phase and the data phase, and also both Sample Point positions.
 
 In index.html
-- Add a slider like in iPhones to select "Real bit ratio": ON/OFF.
-If slider set to "ON", the following additional configuration input parameters appear below the ACK slot input: Two lines with each two input parameters.
-- Arbitration: Bit-rate [ 500] kbit/s, SP [80]%
-- Data:        Bit-rate [1000] kbit/s, SP [70]%
+- Add a switch like in iPhones to select "Real Arb/Data bit ratio": ON/OFF.
+- Positions it after after the last checkbox chkArbPhaseBitsLonger. 
+- If the switch is set to "ON", the following additional configuration input parameters appear below the checkboxes (above the SVG)
+- Arbitration Phase: Bit-rate [ 500] kbit/s, SP [80]%
+- Data Phase:        Bit-rate [1000] kbit/s, SP [70]%
 The values in paranthesis are the default values.
 
 In frame_definitions.js
@@ -33,4 +27,9 @@ For the bit, where the data phase ends: Up to the Sample Point (SP) the bit is a
 Show a vertiacal separtor line at the SP, with half the hight.
 
 In frame_export.js
-asdf
+If the new switch is ON, then also "Download VHDL" shall appear.
+This download shall deliver a *.VHDL file that contains
+- Entity FRAME_GENERATOR
+- Output signal CAN_TX, standard logic
+- CAN_TX shall transmit the frame with real values according the settings (Bit-rates and SPs)
+- CAN_TX shall be = '1' for 15 arbitration bit times, before the frame starts with SOF

@@ -1,11 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-<!---
-Status: added textfield for register values
-TODO: - print register values in text field
-TODO: - make elements of calculator individulal and lem them float.
-
--->
 
 <head>
   <meta charset="UTF-8" />
@@ -34,7 +28,8 @@ TODO: - make elements of calculator individulal and lem them float.
 
       <!-- Content 1: Settings -->
       <div class="column settings-column">
-        <h3>Transceiver Type selection</h3>
+        <h3>Input 1</h3>
+        <h3>Transceiver Type</h3>
         <div class="select-group">
           <h4>Transceiver</h4>
           <button class="select-btn" data-group="transceiverType" data-value="TFD" id="btnTFD">FD</button>
@@ -95,7 +90,7 @@ TODO: - make elements of calculator individulal and lem them float.
 
       <!-- Content 2: Bit Timing Parameters -->
       <div class="column settings-column">
-        <h3>Bit Timing Parameters</h3>
+        <h3>Input 2: Bit Timing Parameters</h3>
         <table id="BitTimingTable">
           <thead>
             <tr>
@@ -180,7 +175,7 @@ TODO: - make elements of calculator individulal and lem them float.
 
       <!-- Content 3: Bit Timing Drawings -->
       <div class="column settings-column">
-        <h3>Bit Timing Properties</h3>
+        <h3>Output 1: Bit Timing Properties</h3>
         <table>
                     <thead>
             <tr>
@@ -257,7 +252,7 @@ TODO: - make elements of calculator individulal and lem them float.
 
       <!-- Content 4: Bit Timing Drawings -->
       <div class="column settings-column">
-        <h3>Bit Timing Visualization</h3>
+        <h3>Output 2: Bit Timing Visualization</h3>
         <svg id="DrawingBTArb" width="350" height="60"></svg>
         <svg id="DrawingBTXLdata" width="350" height="60"></svg>
         <svg id="DrawingBTXLdataPWM" width="350" height="60"></svg>
@@ -273,9 +268,57 @@ TODO: - make elements of calculator individulal and lem them float.
         </div>
       </div>
 
-      <!-- Content 5: Register Values -->
+      <!-- Content 5: Robustness Info -->
       <div class="column settings-column">
-        <h3>Register Values</h3>
+        <h3>Output 3: Robustness Info</h3>
+        <table>
+          <thead>
+            <tr>
+              <th colspan="2" class="headline_in_table">Clock Tolerance (df)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>df usable [%]</td>
+              <td><input type="text" id="res_df_allowed" class="result-field" readonly /></td>
+            </tr>
+            <tr style = "color : rgb(140, 140, 140)">
+              <td>Cond. 1 (resync arb.) [%]</td>
+              <td><input type="text" id="res_df_cond1" class="result-field" style="color : rgb(140, 140, 140)"  readonly /></td>
+            </tr>
+            <tr style = "color : rgb(140, 140, 140)">
+              <td>Cond. 2 (error flag arb.) [%]</td>
+              <td><input type="text" id="res_df_cond2" class="result-field" style="color : rgb(140, 140, 140)" readonly /></td>
+            </tr>
+            <tr style = "color : rgb(140, 140, 140)">
+              <td>Cond. 3 (resync data) [%]</td>
+              <td><input type="text" id="res_df_cond3" class="result-field" style="color : rgb(140, 140, 140)" readonly /></td>
+            </tr>
+          </tbody>
+          <thead>
+            <tr>
+              <th colspan="2" class="headline_in_table">Phase Margin</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>PM1 [ns]</td>
+              <td><input type="text" id="res_pm1" class="result-field" readonly /></td>
+            </tr>
+            <tr>
+              <td>PM2 [ns]</td>
+              <td><input type="text" id="res_pm2" class="result-field" readonly /></td>
+            </tr>
+          </tbody>
+        </table>
+        <svg id="DrawingPM1" width="350" height="120"></svg>
+        <div style="height: 1em;"></div>
+        <svg id="DrawingPM2" width="350" height="120"></svg>
+      </div>
+
+      <!-- Content 6: Register Values -->
+      <div class="column settings-column">
+        <h3>Output 4: Register Values</h3>
         <div id="canModuleConfig" class="my-textarea" style="white-space: pre-line;">register values will appear here.</div>
       </div>
 

@@ -1,14 +1,14 @@
 /**
- * Zeichnet das CAN Bit Timing als Balkendiagramm mit SVG.
- * @param {string} HTMLDrawingName - Name des SVG-Elements, in dem gezeichnet werden soll.
- *   Beispiel: 'DrawingBTNominal' für das nominale Bit Timing.
- * @param {string} BitTimingName - Name des Bit Timings, der im Balkenbereich angezeigt wird.
- *   Beispiel: 'Nominal Bit Timing' für das nominale Bit Timing.
- * @param {number} spPercent - Prozentualer Wert des Sample-Punkts (0-100).
- *   Beispiel: 80 für 80% des Bit Timing. 
+ * Draws the CAN Bit Timing as a bar chart with SVG.
+ * @param {string} HTMLDrawingName - Name of the SVG element to draw into.
+ *   Example: 'DrawingBTNominal' for the nominal Bit Timing.
+ * @param {string} BitTimingName - Name of the Bit Timing, displayed in the bar area.
+ *   Example: 'Nominal Bit Timing' for the nominal Bit Timing.
+ * @param {number} spPercent - Sample Point percentage value (0-100).
+ *   Example: 80 for 80% of the Bit Timing.
  * @param {number} PropSeg, PhaseSeg1, PhaseSeg2, sjwLen - Bit timing parameter in TQ.
- * @param {number} sspPercent - Prozentualer Wert des SSP (0-100).
- *   Beispiel: 60 für 60% des Bit Timing.
+ * @param {number} sspPercent - SSP percentage value (0-100).
+ *   Example: 60 for 60% of the Bit Timing.
  * @param {number} tdcEna - TDC enabled (true) or disabled (false).
  */
 // ===================================================================================
@@ -23,31 +23,31 @@ export function drawBitTiming(PropSeg, PhaseSeg1, PhaseSeg2, spPercent, sjwLen, 
   svg.innerHTML = '';
 
   // define colors
-  const sjwColor = '#999999'; // Farbe der SJW Linie
-  const spColor = 'red'; // Farbe der Sample Point Linie
-  const sspColor = '#800080'; // Farbe der SSP Linie (TDC)
-  const textColor = 'black'; // Farbe der Beschriftung
-  const syncSegColor = '#555555'; // Farbe des SyncSeg Balkens
-  const PropSegColor = '#FFD000'; // Farbe des PropSeg Balkens
-  const PhaseSeg1Color = '#4CAF50'; // Farbe des PhaseSeg1 Balkens
-  const PhaseSeg2Color = '#2196F3'; // Farbe des PhaseSeg2 Balkens #FF9800
+  const sjwColor = '#999999'; // Color of the SJW line
+  const spColor = 'red'; // Color of the Sample Point line
+  const sspColor = '#800080'; // Color of the SSP line (TDC)
+  const textColor = 'black'; // Color of the labels
+  const syncSegColor = '#555555'; // Color of the SyncSeg bar
+  const PropSegColor = '#FFD000'; // Color of the PropSeg bar
+  const PhaseSeg1Color = '#4CAF50'; // Color of the PhaseSeg1 bar
+  const PhaseSeg2Color = '#2196F3'; // Color of the PhaseSeg2 bar #FF9800
 
   // Positions in SVG
-  const fontSize = 14; // Schriftgröße
+  const fontSize = 14; // Font size
   const yTextSP = 0; // Text position SP
-  const yTextName = 0; // Y-Position des Textes
-  const xTextName = 0; // X-Position des Textes
+  const yTextName = 0; // Y-Position of the text
+  const xTextName = 0; // X-Position of the text
 
-  const ySPueberstand = 5; // Sample Point Line übersteht den Balken um 5px nach oben und unten
+  const ySPueberstand = 5; // Sample Point line extends beyond the bar by 5px top and bottom
   const yBarTop = fontSize + ySPueberstand + 2; // Y-Position of bar
   const yBarHeigth = svg.clientHeight - yBarTop - ySPueberstand;
 
-  const spLineWidht = 5; // Dicke der SP Linie
-  const sspLineWidht = 2; // Dicke der SSP Linie
-  const sjwLineWidth = 8; // Dicke der SJW Linie
+  const spLineWidht = 5; // Thickness of the SP line
+  const sspLineWidht = 2; // Thickness of the SSP line
+  const sjwLineWidth = 8; // Thickness of the SJW line
 
-  // Berechnungen für die Balken
-  const totalTQ = 1 + PropSeg + PhaseSeg1 + PhaseSeg2;; // Gesamtlänge in TQ
+  // Calculations for the bars
+  const totalTQ = 1 + PropSeg + PhaseSeg1 + PhaseSeg2;; // Total length in TQ
   let x = 0; // current x-Position in SVG
 
   // Sample Point
@@ -70,7 +70,7 @@ export function drawBitTiming(PropSeg, PhaseSeg1, PhaseSeg2, spPercent, sjwLen, 
   segWidthPixel = (1 / totalTQ) * svgWidth;
   rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
   rect.setAttribute('x', x);
-  rect.setAttribute('y', yBarTop); // 25px Abstand von oben
+  rect.setAttribute('y', yBarTop); // Top margin
   rect.setAttribute('width', segWidthPixel);
   rect.setAttribute('height', yBarHeigth);
   rect.setAttribute('fill', syncSegColor);
@@ -81,7 +81,7 @@ export function drawBitTiming(PropSeg, PhaseSeg1, PhaseSeg2, spPercent, sjwLen, 
   segWidthPixel = (PropSeg / totalTQ) * svgWidth;
   rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
   rect.setAttribute('x', x);
-  rect.setAttribute('y', yBarTop); // 25px Abstand von oben
+  rect.setAttribute('y', yBarTop); // Top margin
   rect.setAttribute('width', segWidthPixel);
   rect.setAttribute('height', yBarHeigth);
   rect.setAttribute('fill', PropSegColor);
@@ -92,21 +92,21 @@ export function drawBitTiming(PropSeg, PhaseSeg1, PhaseSeg2, spPercent, sjwLen, 
   segWidthPixel = (PhaseSeg1 / totalTQ) * svgWidth;
   rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
   rect.setAttribute('x', x);
-  rect.setAttribute('y', yBarTop); // 25px Abstand von oben
+  rect.setAttribute('y', yBarTop); // Top margin
   rect.setAttribute('width', segWidthPixel);
   rect.setAttribute('height', yBarHeigth);
   rect.setAttribute('fill', PhaseSeg1Color);
   svg.appendChild(rect);
   x += segWidthPixel; // x-Position for next Segment
 
-  // SP Position: X-Postion merken
-  sampleX = x; // Position am Ende des PhaseSeg1, hier wird der Sample Point gezeichnet
+  // SP Position: save X-Position
+  sampleX = x; // Position at the end of PhaseSeg1, the Sample Point is drawn here
   
-  // PhaseSeg1 drawing ----------------------------------
+  // PhaseSeg2 drawing ----------------------------------
   segWidthPixel = (PhaseSeg2 / totalTQ) * svgWidth;
   rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
   rect.setAttribute('x', x);
-  rect.setAttribute('y', yBarTop); // 25px Abstand von oben
+  rect.setAttribute('y', yBarTop); // Top margin
   rect.setAttribute('width', segWidthPixel);
   rect.setAttribute('height', yBarHeigth);
   rect.setAttribute('fill', PhaseSeg2Color);
@@ -179,9 +179,9 @@ export function drawBitTiming(PropSeg, PhaseSeg1, PhaseSeg2, spPercent, sjwLen, 
     // Debug: console.log(`[Error] drawBitTiming(${BitTimingName}): tdcEna or sspPercent is not defined!`);
   }
 
-  // Gesamtbeschriftung im Balkenbereich (links)
+  // Title label in the bar area (left)
   const titleText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  titleText.setAttribute('x', xTextName);       // Abstand vom linken Rand
+  titleText.setAttribute('x', xTextName);       // Distance from left edge
   titleText.setAttribute('y', yTextName);  
   titleText.setAttribute('fill', textColor);
   titleText.setAttribute('font-size', fontSize);
@@ -204,18 +204,18 @@ export function drawPWMsymbols(PWMS, PWML, pwm_symbols_per_bit, HTMLDrawingName,
   svg.innerHTML = '';
 
   // Positions in SVG
-  const fontSize = 14; // Schriftgröße
-  const yTextName = 0; // Y-Position des Textes
-  const xTextName = 0; // X-Position des Textes
+  const fontSize = 14; // Font size
+  const yTextName = 0; // Y-Position of the text
+  const xTextName = 0; // X-Position of the text
 
-  const lineWidth = 6; // Dicke der SJW Linie
+  const lineWidth = 6; // Line width
   const lineColor = 'black'; // Color of the Line
   const noPWMboxColor = '#DDDDDD'; // Color of the box, if no PWM symbols are possible
 
-  const yMarginText2PWM = 7; // Sample Point Line übersteht den Balken um 5px nach oben und unten
+  const yMarginText2PWM = 7; // Margin from text to PWM symbols
   const yMarginPWM2Bottom = lineWidth/2 + 1; // Margin from PWM symbols to bottom of SVG: as much, that the line is fully visible
   const y_pwm_top = fontSize + yMarginText2PWM + lineWidth/2; // y-Position of PWM symbol
-  const y_pwm_bottom = svg.clientHeight - yMarginPWM2Bottom; // y-Position des Balkens unten
+  const y_pwm_bottom = svg.clientHeight - yMarginPWM2Bottom; // y-Position of the bar bottom
 
   // Calculate pixels for PWMs and PWML
   const totalMTQ = (PWMS + PWML) * pwm_symbols_per_bit; // Total lenght in mTQ (minimum TQ = CAN CLOCK Periods)
@@ -237,7 +237,7 @@ export function drawPWMsymbols(PWMS, PWML, pwm_symbols_per_bit, HTMLDrawingName,
   if (pwm_symbols_per_bit > 0) {
     // Draw PWM symbols
     for (let i = 0; i < pwm_symbols_per_bit; i++) {
-      // Berechne Breite des aktuellen PWM-Symbols
+      // Calculate width of the current PWM symbol
       const PWMSwidthPX = (svgWidth / totalMTQ) * PWMS; // Width of PWMS in Pixel
       const PWMLwidthPX = (svgWidth / totalMTQ) * PWML; // Width of PWML in Pixel
     
@@ -326,9 +326,9 @@ export function drawErrorMessage(HTMLDrawingName, NameToPrint, ErrorMsgToPrint, 
   svg.innerHTML = '';
 
   // Positions in SVG
-  const fontSize = 14; // Schriftgröße
-  const yTextName = 0; // Y-Position des Textes
-  const xTextName = 0; // X-Position des Textes
+  const fontSize = 14; // Font size
+  const yTextName = 0; // Y-Position of the text
+  const xTextName = 0; // X-Position of the text
 
   const lineWidth = 6; // Line width for consistency
   const errorBoxColor = '#DDDDDD'; // Color of the error box (same grey as noPWMboxColor)
@@ -368,4 +368,802 @@ export function drawErrorMessage(HTMLDrawingName, NameToPrint, ErrorMsgToPrint, 
   errorText.setAttribute('dominant-baseline', 'central'); // Vertical alignment: perfectly center the text on the y position
   errorText.textContent = ErrorMsgToPrint;
   svg.appendChild(errorText);
+}
+
+// ===================================================================================
+// Draw Phase Margin 1 (PM1) diagram
+// See SPECIFICATION_PM1_DRAWING.md for detailed specification.
+//
+// Line 1: RX Signal waveform (30% preceding bit + stuff bit + break + Bit 11 + stuff bit)
+// Line 2: Node internal view (rectangles with SP lines, shifted by 1 tq + phase error)
+// Vertical bars: TQ (blue), Phase Error (green), PM1 (red)
+// Labels with connector lines below the bars.
+export function drawPM1(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_period, HTMLDrawingName, svgWidth) {
+  const S_Stuff = 11;
+
+  // --- Configurable layout constants ---
+  const svgPadding = 4; // padding inside the SVG around the figure
+
+  const titleFontSize = 14;
+  const titleBold = true;
+  const labelFontSize = 14;
+  const lineLabelBold = false;
+  const valueLabelBold = false;
+
+  const waveLineHeight = 25;
+  const waveLineColor = '#333333';
+  const waveLineWidth = 3;
+  
+  const spColor = '#2196F3';
+  const spLineWidth = 3;
+  
+  const pm1BarColor = 'rgba(255, 100, 100, 0.3)';
+  const phaseErrorBarColor = 'rgba(100, 255, 100, 0.3)';
+  const tqBarColor = 'rgba(82, 146, 255, 0.3)';
+
+  const bitFillColor = '#CCCCCC';
+  const bitStrokeColor = '#000000';
+  const breakIndicatorColor = '#888888';
+  const breakIndicatorWidth = 1.5;
+  const breakIndicatorExceedBit = 5;
+  const rowLabelColor = '#000000';
+  const errorBoxColor = '#DDDDDD';
+  const labelColor = 'black';
+  const connectorColor = 'black';
+  
+  const gap_title_to_label = 10;
+  const gap_label_to_line = 8;
+  const gap_Line1_Line2 = 20;
+  const bar_exceed_top = 5;
+  const bar_exceed_bottom = 20;
+  const gap_bars_to_labels = 13;
+  const SP_text_gap = 3;
+  const sp_exceed_top = 10; // how many pixels the SP line exceeds above the top of the bit in Line 2
+  const connector_line_width = 1; // width of the connector lines from bars to labels
+  const gap_connector_to_label = 4; // gap in px between connector line end and value label
+  const vertical_bar_min_width = 1;
+  const breakWidth = 30;
+  const Line1PrecedingBitFraction = 0.3;
+
+  // Bit separator parameters
+  const bitSeparatorExceedBit = 5;
+  const bitSeparatorDash = '4,2'; // dash pattern for bit separator lines (3px dash, 1px gap)
+  const bitSeparatorColor = 'red';
+  const bitSeparatorWidth = 1;
+
+  // Bit separator connector line parameters (connects matching separators between Line 1 and Line 2)
+  const bitSepConnectorDash = '4,2'; // dash pattern for bit separator connector lines (4px dash, 2px gap)
+  const bitSepConnectorColor = '#CCCCCC';
+  const bitSepConnectorWidth = 1;
+
+  // Title and row label texts
+  const titleText = 'Phase Margin 1 (PM1)';
+  const line1Label = 'RX Signal';
+  const line2Label = 'Node internal view';
+
+  // Bit label texts
+  const line1Bit1 = 'Stuff Bit';
+  const line1Bit2 = 'Bit 11';
+  const line1Bit3 = 'Stuff Bit';
+  const line2Bit1 = 'Stuff Bit';
+  const line2Bit2 = 'Bit 11';
+  const line2Bit3 = 'Stuff Bit';
+
+  // --- Vertical layout ---
+  const y_title = 0;
+  const y_line1_label = titleFontSize + gap_title_to_label;
+  const y_line1_top = y_line1_label + labelFontSize + gap_label_to_line;
+  const y_line1_bottom = y_line1_top + waveLineHeight;
+  const y_line2_label = y_line1_bottom + gap_Line1_Line2;
+  const y_line2_top = y_line2_label + labelFontSize + gap_label_to_line;
+  const y_line2_bottom = y_line2_top + waveLineHeight;
+  const y_bars_top = y_line1_top - bar_exceed_top;
+  const y_bars_bottom = y_line2_bottom + bar_exceed_bottom;
+  const y_bars_height = y_bars_bottom - y_bars_top;
+  const y_labels_line = y_bars_bottom + gap_bars_to_labels;
+  const svgHeight = y_labels_line + labelFontSize + 4;
+
+  // Content width excludes padding on both sides
+  const contentWidth = svgWidth - 2 * svgPadding;
+
+  // Waveform levels (Line 1)
+  const y_high = y_line1_top;   // recessive
+  const y_low = y_line1_bottom; // dominant
+
+  // --- SVG setup ---
+  const svg = document.getElementById(HTMLDrawingName);
+  svg.setAttribute('width', svgWidth);
+  svg.setAttribute('height', svgHeight + 2 * svgPadding);
+  svg.innerHTML = '';
+  svg.style.backgroundColor = 'white';
+
+  const ns = 'http://www.w3.org/2000/svg';
+
+  // Content group: translates all content by padding
+  const contentGroup = document.createElementNS(ns, 'g');
+  contentGroup.setAttribute('transform', `translate(${svgPadding},${svgPadding})`);
+
+  // Text group: appended to content group last so all labels render on top of lines/shapes
+  const textGroup = document.createElementNS(ns, 'g');
+
+  function addText(x, y, text, size, color, anchor, baseline, bold) {
+    const el = document.createElementNS(ns, 'text');
+    el.setAttribute('x', x);
+    el.setAttribute('y', y);
+    el.setAttribute('fill', color);
+    el.setAttribute('font-size', size);
+    el.setAttribute('font-family', 'sans-serif');
+    el.setAttribute('text-anchor', anchor || 'start');
+    el.setAttribute('dominant-baseline', baseline || 'hanging');
+    if (bold) el.setAttribute('font-weight', 'bold');
+    el.textContent = text;
+    contentGroup.appendChild(el);
+    return el;
+  }
+
+  function addTextOnTop(x, y, text, size, color, anchor, baseline, bold) {
+    const el = document.createElementNS(ns, 'text');
+    el.setAttribute('x', x);
+    el.setAttribute('y', y);
+    el.setAttribute('fill', color);
+    el.setAttribute('font-size', size);
+    el.setAttribute('font-family', 'sans-serif');
+    el.setAttribute('text-anchor', anchor || 'start');
+    el.setAttribute('dominant-baseline', baseline || 'hanging');
+    if (bold) el.setAttribute('font-weight', 'bold');
+    el.textContent = text;
+    textGroup.appendChild(el);
+    return el;
+  }
+
+  function addRect(x, y, w, h, fill, stroke, sw) {
+    const el = document.createElementNS(ns, 'rect');
+    el.setAttribute('x', x);
+    el.setAttribute('y', y);
+    el.setAttribute('width', Math.max(w, 0));
+    el.setAttribute('height', h);
+    el.setAttribute('fill', fill);
+    if (stroke) {
+      el.setAttribute('stroke', stroke);
+      el.setAttribute('stroke-width', sw || 1);
+    }
+    contentGroup.appendChild(el);
+  }
+
+  function addDashedLine(x1, y1, x2, y2, color, width, dash) {
+    const el = document.createElementNS(ns, 'line');
+    el.setAttribute('x1', x1);
+    el.setAttribute('y1', y1);
+    el.setAttribute('x2', x2);
+    el.setAttribute('y2', y2);
+    el.setAttribute('stroke', color);
+    el.setAttribute('stroke-width', width);
+    if (dash) el.setAttribute('stroke-dasharray', dash);
+    contentGroup.appendChild(el);
+  }
+
+  function addLine(x1, y1, x2, y2, color, width) {
+    const el = document.createElementNS(ns, 'line');
+    el.setAttribute('x1', x1);
+    el.setAttribute('y1', y1);
+    el.setAttribute('x2', x2);
+    el.setAttribute('y2', y2);
+    el.setAttribute('stroke', color);
+    el.setAttribute('stroke-width', width);
+    contentGroup.appendChild(el);
+  }
+
+  // --- Title ---
+  addTextOnTop(0, y_title, titleText, titleFontSize, 'black', 'start', 'hanging', titleBold);
+
+  // --- Error handling ---
+  if (typeof pmValue === 'string') {
+    addRect(0, y_line1_label, contentWidth, svgHeight - y_line1_label, errorBoxColor);
+    addText(10, (y_line1_label + svgHeight) / 2, pmValue, titleFontSize, 'black', 'start', 'central');
+    contentGroup.appendChild(textGroup);
+    svg.appendChild(contentGroup);
+    return;
+  }
+
+  // ============================
+  // Horizontal geometry
+  // ============================
+  // Line 1: 0.3*bit + 1 bit (stuff) + break + 1 bit (Bit 11) + 1 bit (stuff) = 3.3 bits + breakWidth = contentWidth
+  const bitPxL1 = (contentWidth - breakWidth) / (Line1PrecedingBitFraction + 3);
+  const bitPxL2 = bitPxL1 / (1 + 2 * df_used);
+  const tq_px = bitPxL2 / bt_d;
+
+  // --- Line 1 X coordinates ---
+  const x_falling_edge = Line1PrecedingBitFraction * bitPxL1;
+  const x_zero1_end = x_falling_edge + bitPxL1;
+  const x_break_end_L1 = x_zero1_end + breakWidth;
+  const x_zero11_end = x_break_end_L1 + bitPxL1;
+  const x_rising_edge = x_zero11_end;
+  const x_L1_end = x_rising_edge + bitPxL1;
+
+  // --- Line 2 X coordinates ---
+  const phase_error_px = bitPxL1 * S_Stuff * 2 * df_used;
+
+  // First stuff bit: shifted 1 tq left of first falling edge
+  const x_L2_stuff1_start = x_falling_edge - tq_px;
+  const x_L2_stuff1_end = x_L2_stuff1_start + bitPxL2;
+
+  // Second stuff bit: shifted left from rising edge by 1 tq + phase error
+  const x_L2_stuff2_start = x_rising_edge - tq_px - phase_error_px;
+  const x_L2_stuff2_end = x_L2_stuff2_start + bitPxL2;
+
+  // Bit 11 in Line 2 (immediately before second stuff bit)
+  const x_L2_bit11_start = x_L2_stuff2_start - bitPxL2;
+  const x_L2_bit11_end = x_L2_stuff2_start;
+
+  // SP positions in Line 2
+  const sp_stuff1_x = x_L2_stuff1_start + spFraction * bitPxL2;
+  const sp_bit11_x = x_L2_bit11_start + spFraction * bitPxL2;
+  const sp_stuff2_x = x_L2_stuff2_start + spFraction * bitPxL2;
+
+  // --- Computed values for labels ---
+  const tq_ns = BRP * clk_period;
+  const phase_error_ns = (bt_d - ps2_d - 1) * BRP * clk_period / (1 + df_used) - pmValue; // ps1 = bt - ps2 - 1
+
+  // --- Bar dimensions (clamped to min width) ---
+  const tq_bar_w = Math.max(tq_px, vertical_bar_min_width);
+  const pe_bar_x = x_L2_stuff2_start + tq_px;
+  const pe_bar_w = Math.max(phase_error_px, vertical_bar_min_width);
+  const pm1_bar_x = x_rising_edge;
+  const pm1_bar_w = Math.max(sp_stuff2_x - x_rising_edge, vertical_bar_min_width);
+
+  // ============================
+  // DRAWING (background → foreground)
+  // ============================
+
+  // --- 1. Vertical bars (background) ---
+  // TQ bar 1 (at first stuff bit start in Line 2)
+  addRect(x_L2_stuff1_start, y_bars_top, tq_bar_w, y_bars_height, tqBarColor);
+  // TQ bar 2 (at second stuff bit start in Line 2)
+  addRect(x_L2_stuff2_start, y_bars_top, tq_bar_w, y_bars_height, tqBarColor);
+  // Phase Error bar
+  addRect(pe_bar_x, y_bars_top, pe_bar_w, y_bars_height, phaseErrorBarColor);
+  // PM1 bar
+  addRect(pm1_bar_x, y_bars_top, pm1_bar_w, y_bars_height, pm1BarColor);
+
+  // --- 2. Line 1: RX Signal ---
+  addTextOnTop(0, y_line1_label, line1Label, labelFontSize, rowLabelColor, 'start', 'hanging', lineLabelBold);
+
+  // Waveform path (before break): preceding bit (high) → falling edge → first zero bit (low)
+  const pathBefore = document.createElementNS(ns, 'path');
+  pathBefore.setAttribute('d', `M 0,${y_high} H ${x_falling_edge} V ${y_low} H ${x_zero1_end}`);
+  pathBefore.setAttribute('stroke', waveLineColor);
+  pathBefore.setAttribute('stroke-width', waveLineWidth);
+  pathBefore.setAttribute('fill', 'none');
+  contentGroup.appendChild(pathBefore);
+
+  // Waveform path (after break): last zero bit (low) → rising edge → stuff bit (high)
+  const pathAfter = document.createElementNS(ns, 'path');
+  pathAfter.setAttribute('d', `M ${x_break_end_L1},${y_low} H ${x_zero11_end} V ${y_high} H ${x_L1_end}`);
+  pathAfter.setAttribute('stroke', waveLineColor);
+  pathAfter.setAttribute('stroke-width', waveLineWidth);
+  pathAfter.setAttribute('fill', 'none');
+  contentGroup.appendChild(pathAfter);
+
+  // Break indicator for Line 1 (two S-shaped waves with spacing)
+  const breakMidL1 = (x_zero1_end + x_break_end_L1) / 2;
+  const breakL1_top = y_line1_top - breakIndicatorExceedBit;
+  const breakL1_bottom = y_line1_bottom + breakIndicatorExceedBit;
+  const breakL1_midY = (breakL1_top + breakL1_bottom) / 2;
+  const breakL1_path1 = document.createElementNS(ns, 'path');
+  breakL1_path1.setAttribute('d', `M ${breakMidL1 - 2},${breakL1_bottom} C ${breakMidL1 - 2 + 6},${breakL1_midY} ${breakMidL1 - 2 - 6},${breakL1_midY} ${breakMidL1 - 2},${breakL1_top}`);
+  breakL1_path1.setAttribute('stroke', breakIndicatorColor);
+  breakL1_path1.setAttribute('stroke-width', breakIndicatorWidth);
+  breakL1_path1.setAttribute('fill', 'none');
+  contentGroup.appendChild(breakL1_path1);
+  const breakL1_path2 = document.createElementNS(ns, 'path');
+  breakL1_path2.setAttribute('d', `M ${breakMidL1 + 2},${breakL1_bottom} C ${breakMidL1 + 2 + 6},${breakL1_midY} ${breakMidL1 + 2 - 6},${breakL1_midY} ${breakMidL1 + 2},${breakL1_top}`);
+  breakL1_path2.setAttribute('stroke', breakIndicatorColor);
+  breakL1_path2.setAttribute('stroke-width', breakIndicatorWidth);
+  breakL1_path2.setAttribute('fill', 'none');
+  contentGroup.appendChild(breakL1_path2);
+
+  // Bit separators in Line 1 (at bit boundaries, exceeding top and bottom)
+  const L1_sep_top = y_line1_top - bitSeparatorExceedBit;
+  const L1_sep_bottom = y_line1_bottom + bitSeparatorExceedBit;
+  addDashedLine(x_falling_edge, L1_sep_top, x_falling_edge, L1_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+  addDashedLine(x_zero1_end, L1_sep_top, x_zero1_end, L1_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+  addDashedLine(x_break_end_L1, L1_sep_top, x_break_end_L1, L1_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+  addDashedLine(x_zero11_end, L1_sep_top, x_zero11_end, L1_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+  addDashedLine(x_L1_end, L1_sep_top, x_L1_end, L1_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+
+  // Bit name labels in Line 1 (centered in each full bit)
+  const bitTextY = y_line1_top + waveLineHeight / 2;
+  if (line1Bit1) addTextOnTop(x_falling_edge + bitPxL1 / 2, bitTextY, line1Bit1, labelFontSize - 1, waveLineColor, 'middle', 'central');
+  if (line1Bit2) addTextOnTop(x_break_end_L1 + bitPxL1 / 2, bitTextY, line1Bit2, labelFontSize - 1, waveLineColor, 'middle', 'central');
+  if (line1Bit3) addTextOnTop(x_rising_edge + bitPxL1 / 2, bitTextY, line1Bit3, labelFontSize - 1, waveLineColor, 'middle', 'central');
+
+  // --- 3. Line 2: Node internal view ---
+  addTextOnTop(0, y_line2_label, line2Label, labelFontSize, rowLabelColor, 'start', 'hanging', lineLabelBold);
+
+  // Three rectangles
+  addRect(x_L2_stuff1_start, y_line2_top, bitPxL2, waveLineHeight, bitFillColor, bitStrokeColor, 1);
+  addRect(x_L2_bit11_start, y_line2_top, bitPxL2, waveLineHeight, bitFillColor, bitStrokeColor, 1);
+  addRect(x_L2_stuff2_start, y_line2_top, bitPxL2, waveLineHeight, bitFillColor, bitStrokeColor, 1);
+
+  // Bit separators in Line 2 (at bit boundaries, exceeding top and bottom)
+  const L2_sep_top = y_line2_top - bitSeparatorExceedBit;
+  const L2_sep_bottom = y_line2_bottom + bitSeparatorExceedBit;
+  addDashedLine(x_L2_stuff1_start, L2_sep_top, x_L2_stuff1_start, L2_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+  addDashedLine(x_L2_stuff1_end, L2_sep_top, x_L2_stuff1_end, L2_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+  addDashedLine(x_L2_bit11_start, L2_sep_top, x_L2_bit11_start, L2_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+  addDashedLine(x_L2_bit11_end, L2_sep_top, x_L2_bit11_end, L2_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+  addDashedLine(x_L2_stuff2_end, L2_sep_top, x_L2_stuff2_end, L2_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+
+  // Connector lines between matching bit separators in Line 1 and Line 2
+  addDashedLine(x_falling_edge, L1_sep_bottom, x_L2_stuff1_start, L2_sep_top, bitSepConnectorColor, bitSepConnectorWidth, bitSepConnectorDash);
+  addDashedLine(x_zero1_end, L1_sep_bottom, x_L2_stuff1_end, L2_sep_top, bitSepConnectorColor, bitSepConnectorWidth, bitSepConnectorDash);
+  addDashedLine(x_break_end_L1, L1_sep_bottom, x_L2_bit11_start, L2_sep_top, bitSepConnectorColor, bitSepConnectorWidth, bitSepConnectorDash);
+  addDashedLine(x_zero11_end, L1_sep_bottom, x_L2_bit11_end, L2_sep_top, bitSepConnectorColor, bitSepConnectorWidth, bitSepConnectorDash);
+  addDashedLine(x_L1_end, L1_sep_bottom, x_L2_stuff2_end, L2_sep_top, bitSepConnectorColor, bitSepConnectorWidth, bitSepConnectorDash);
+
+  // Bit name labels in Line 2 (centered in each rectangle)
+  const bitTextY_L2 = y_line2_top + waveLineHeight / 2;
+  if (line2Bit1) addTextOnTop(x_L2_stuff1_start + bitPxL2 / 2, bitTextY_L2, line2Bit1, labelFontSize - 1, waveLineColor, 'middle', 'central');
+  if (line2Bit2) addTextOnTop(x_L2_bit11_start + bitPxL2 / 2, bitTextY_L2, line2Bit2, labelFontSize - 1, waveLineColor, 'middle', 'central');
+  if (line2Bit3) addTextOnTop(x_L2_stuff2_start + bitPxL2 / 2, bitTextY_L2, line2Bit3, labelFontSize - 1, waveLineColor, 'middle', 'central');
+
+  // SP lines (from bottom of bit, exceeding top by sp_exceed_top)
+  const sp_y_bottom = y_line2_bottom;
+  const sp_y_top = y_line2_top - sp_exceed_top;
+
+  addLine(sp_stuff1_x, sp_y_bottom, sp_stuff1_x, sp_y_top, spColor, spLineWidth);
+  addLine(sp_bit11_x, sp_y_bottom, sp_bit11_x, sp_y_top, spColor, spLineWidth);
+  addLine(sp_stuff2_x, sp_y_bottom, sp_stuff2_x, sp_y_top, spColor, spLineWidth);
+
+  // "SP" text above the rightmost stuff bit's SP line only
+  addTextOnTop(sp_stuff2_x, sp_y_top - SP_text_gap, 'SP', labelFontSize - 1, spColor, 'middle', 'auto');
+
+  // Break indicator for Line 2 (two S-shaped waves with spacing)
+  const breakMidL2 = (x_L2_stuff1_end + x_L2_bit11_start) / 2;
+  const breakL2_top = y_line2_top - breakIndicatorExceedBit;
+  const breakL2_bottom = y_line2_bottom + breakIndicatorExceedBit;
+  const breakL2_midY = (breakL2_top + breakL2_bottom) / 2;
+  const breakL2_path1 = document.createElementNS(ns, 'path');
+  breakL2_path1.setAttribute('d', `M ${breakMidL2 - 2},${breakL2_bottom} C ${breakMidL2 - 2 + 6},${breakL2_midY} ${breakMidL2 - 2 - 6},${breakL2_midY} ${breakMidL2 - 2},${breakL2_top}`);
+  breakL2_path1.setAttribute('stroke', breakIndicatorColor);
+  breakL2_path1.setAttribute('stroke-width', breakIndicatorWidth);
+  breakL2_path1.setAttribute('fill', 'none');
+  contentGroup.appendChild(breakL2_path1);
+  const breakL2_path2 = document.createElementNS(ns, 'path');
+  breakL2_path2.setAttribute('d', `M ${breakMidL2 + 2},${breakL2_bottom} C ${breakMidL2 + 2 + 6},${breakL2_midY} ${breakMidL2 + 2 - 6},${breakL2_midY} ${breakMidL2 + 2},${breakL2_top}`);
+  breakL2_path2.setAttribute('stroke', breakIndicatorColor);
+  breakL2_path2.setAttribute('stroke-width', breakIndicatorWidth);
+  breakL2_path2.setAttribute('fill', 'none');
+  contentGroup.appendChild(breakL2_path2);
+
+  // --- 4. Labels and connector lines ---
+  const tq_label_text = `tq = ${tq_ns.toFixed(2)} ns`;
+  const pe_label_text = `Phase Error = ${phase_error_ns.toFixed(2)} ns`;
+  const pm1_label_text = `PM1 = ${pmValue.toFixed(2)} ns`;
+
+  // Estimate character width (approx 0.45 * fontSize per character for sans-serif)
+  const charW = labelFontSize * 0.45;
+
+  addTextOnTop(0, y_labels_line, tq_label_text, labelFontSize, labelColor, 'start', 'hanging', valueLabelBold);
+  addTextOnTop(contentWidth / 2 - 10, y_labels_line, pe_label_text, labelFontSize, labelColor, 'middle', 'hanging', valueLabelBold);
+  addTextOnTop(contentWidth, y_labels_line, pm1_label_text, labelFontSize, labelColor, 'end', 'hanging', valueLabelBold);
+
+  // Connector lines: diagonal from bar center bottom to label target position
+  const tq1_cx = x_L2_stuff1_start + tq_bar_w / 2;
+  const tq2_cx = x_L2_stuff2_start + tq_bar_w / 2;
+  const pe_cx = pe_bar_x + pe_bar_w / 2;
+  const pm1_cx = pm1_bar_x + pm1_bar_w / 2;
+
+  const tq_label_w = tq_label_text.length * charW;
+  const pe_label_w = pe_label_text.length * charW;
+  const pm1_label_w = pm1_label_text.length * charW;
+
+  // TQ label starts at x=0 (anchor=start), middle = half width
+  const tq_label_mid = tq_label_w / 2;
+  // TQ bar 1: diagonal to middle of label
+  addLine(tq1_cx, y_bars_bottom, tq_label_mid, y_labels_line - gap_connector_to_label, connectorColor, connector_line_width);
+  // TQ bar 2: diagonal to 10px right of middle of label
+  addLine(tq2_cx, y_bars_bottom, tq_label_mid + 10, y_labels_line - gap_connector_to_label, connectorColor, connector_line_width);
+
+  // Phase Error label centered at contentWidth/2 - 10 (anchor=middle), end = center + half width
+  const pe_label_end = contentWidth / 2 - 10 + pe_label_w / 2;
+  addLine(pe_cx, y_bars_bottom, pe_label_end, y_labels_line - gap_connector_to_label, connectorColor, connector_line_width);
+
+  // PM1 label ends at contentWidth (anchor=end), middle = contentWidth - half width
+  const pm1_label_mid = contentWidth - pm1_label_w / 2;
+  addLine(pm1_cx, y_bars_bottom, pm1_label_mid, y_labels_line - gap_connector_to_label, connectorColor, connector_line_width);
+
+  // Append text group to content group, then content group to SVG
+  contentGroup.appendChild(textGroup);
+  svg.appendChild(contentGroup);
+}
+
+// ===================================================================================
+// Draw Phase Margin 2 (PM2) diagram
+// Similar to PM1 but:
+// - Line 2 bits are longer (slower clock): bitPxL2 = bitPxL1 * (1 + 2*df_used)
+// - No quantization error (no tq offset)
+// - SP label above Bit 11 in Line 2
+// - PM2 = SP of Bit 11 in Line 2 → rising edge in Line 1
+// - Phase Error = rising edge in Line 1 → bit 11 end in Line 2
+export function drawPM2(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_period, HTMLDrawingName, svgWidth) {
+  const S_Stuff = 11;
+
+  // --- Configurable layout constants ---
+  const svgPadding = 4;
+
+  const titleFontSize = 14;
+  const titleBold = true;
+  const labelFontSize = 14;
+  const lineLabelBold = false;
+  const valueLabelBold = false;
+
+  const waveLineHeight = 25;
+  const waveLineColor = '#333333';
+  const waveLineWidth = 3;
+
+  const spColor = '#2196F3';
+  const spLineWidth = 3;
+
+  const pm2BarColor = 'rgba(255, 100, 100, 0.3)';
+  const phaseErrorBarColor = 'rgba(100, 255, 100, 0.3)';
+
+  const bitFillColor = '#CCCCCC';
+  const bitStrokeColor = '#000000';
+  const breakIndicatorColor = '#888888';
+  const breakIndicatorWidth = 1.5;
+  const breakIndicatorExceedBit = 5;
+  const rowLabelColor = '#000000';
+  const errorBoxColor = '#DDDDDD';
+  const labelColor = 'black';
+  const connectorColor = 'black';
+
+  const gap_title_to_label = 10;
+  const gap_label_to_line = 8;
+  const gap_Line1_Line2 = 20;
+  const bar_exceed_top = 5;
+  const bar_exceed_bottom = 20;
+  const gap_bars_to_labels = 13;
+  const SP_text_gap = 3;
+  const sp_exceed_top = 10;
+  const connector_line_width = 1;
+  const gap_connector_to_label = 4;
+  const vertical_bar_min_width = 1;
+  const breakWidth = 30;
+  const Line1PrecedingBitFraction = 0.3;
+
+  // Bit separator parameters
+  const bitSeparatorExceedBit = 5;
+  const bitSeparatorDash = '4,2';
+  const bitSeparatorColor = 'red';
+  const bitSeparatorWidth = 1;
+
+  // Bit separator connector line parameters
+  const bitSepConnectorDash = '4,2';
+  const bitSepConnectorColor = '#CCCCCC';
+  const bitSepConnectorWidth = 1;
+
+  // Title and row label texts
+  const titleText = 'Phase Margin 2 (PM2)';
+  const line1Label = 'RX Signal';
+  const line2Label = 'Node internal view';
+
+  // Bit label texts
+  const line1Bit1 = 'Stuff Bit';
+  const line1Bit2 = 'Bit 11';
+  const line1Bit3 = 'Stuff Bit';
+  const line2Bit1 = 'Stuff Bit';
+  const line2Bit2 = 'Bit 11';
+  const line2Bit3 = 'Stuff Bit';
+
+  // --- Vertical layout ---
+  const y_title = 0;
+  const y_line1_label = titleFontSize + gap_title_to_label;
+  const y_line1_top = y_line1_label + labelFontSize + gap_label_to_line;
+  const y_line1_bottom = y_line1_top + waveLineHeight;
+  const y_line2_label = y_line1_bottom + gap_Line1_Line2;
+  const y_line2_top = y_line2_label + labelFontSize + gap_label_to_line;
+  const y_line2_bottom = y_line2_top + waveLineHeight;
+  const y_bars_top = y_line1_top - bar_exceed_top;
+  const y_bars_bottom = y_line2_bottom + bar_exceed_bottom;
+  const y_bars_height = y_bars_bottom - y_bars_top;
+  const y_labels_line = y_bars_bottom + gap_bars_to_labels;
+  const svgHeight = y_labels_line + labelFontSize + 4;
+
+  const contentWidth = svgWidth - 2 * svgPadding;
+
+  // Waveform levels (Line 1)
+  const y_high = y_line1_top;
+  const y_low = y_line1_bottom;
+
+  // --- SVG setup ---
+  const svg = document.getElementById(HTMLDrawingName);
+  svg.setAttribute('width', svgWidth);
+  svg.setAttribute('height', svgHeight + 2 * svgPadding);
+  svg.innerHTML = '';
+  svg.style.backgroundColor = 'white';
+
+  const ns = 'http://www.w3.org/2000/svg';
+
+  const contentGroup = document.createElementNS(ns, 'g');
+  contentGroup.setAttribute('transform', `translate(${svgPadding},${svgPadding})`);
+
+  const textGroup = document.createElementNS(ns, 'g');
+
+  function addText(x, y, text, size, color, anchor, baseline, bold) {
+    const el = document.createElementNS(ns, 'text');
+    el.setAttribute('x', x);
+    el.setAttribute('y', y);
+    el.setAttribute('fill', color);
+    el.setAttribute('font-size', size);
+    el.setAttribute('font-family', 'sans-serif');
+    el.setAttribute('text-anchor', anchor || 'start');
+    el.setAttribute('dominant-baseline', baseline || 'hanging');
+    if (bold) el.setAttribute('font-weight', 'bold');
+    el.textContent = text;
+    contentGroup.appendChild(el);
+    return el;
+  }
+
+  function addTextOnTop(x, y, text, size, color, anchor, baseline, bold) {
+    const el = document.createElementNS(ns, 'text');
+    el.setAttribute('x', x);
+    el.setAttribute('y', y);
+    el.setAttribute('fill', color);
+    el.setAttribute('font-size', size);
+    el.setAttribute('font-family', 'sans-serif');
+    el.setAttribute('text-anchor', anchor || 'start');
+    el.setAttribute('dominant-baseline', baseline || 'hanging');
+    if (bold) el.setAttribute('font-weight', 'bold');
+    el.textContent = text;
+    textGroup.appendChild(el);
+    return el;
+  }
+
+  function addRect(x, y, w, h, fill, stroke, sw) {
+    const el = document.createElementNS(ns, 'rect');
+    el.setAttribute('x', x);
+    el.setAttribute('y', y);
+    el.setAttribute('width', Math.max(w, 0));
+    el.setAttribute('height', h);
+    el.setAttribute('fill', fill);
+    if (stroke) {
+      el.setAttribute('stroke', stroke);
+      el.setAttribute('stroke-width', sw || 1);
+    }
+    contentGroup.appendChild(el);
+  }
+
+  function addDashedLine(x1, y1, x2, y2, color, width, dash) {
+    const el = document.createElementNS(ns, 'line');
+    el.setAttribute('x1', x1);
+    el.setAttribute('y1', y1);
+    el.setAttribute('x2', x2);
+    el.setAttribute('y2', y2);
+    el.setAttribute('stroke', color);
+    el.setAttribute('stroke-width', width);
+    if (dash) el.setAttribute('stroke-dasharray', dash);
+    contentGroup.appendChild(el);
+  }
+
+  function addLine(x1, y1, x2, y2, color, width) {
+    const el = document.createElementNS(ns, 'line');
+    el.setAttribute('x1', x1);
+    el.setAttribute('y1', y1);
+    el.setAttribute('x2', x2);
+    el.setAttribute('y2', y2);
+    el.setAttribute('stroke', color);
+    el.setAttribute('stroke-width', width);
+    contentGroup.appendChild(el);
+  }
+
+  // --- Title ---
+  addTextOnTop(0, y_title, titleText, titleFontSize, 'black', 'start', 'hanging', titleBold);
+
+  // --- Error handling ---
+  if (typeof pmValue === 'string') {
+    addRect(0, y_line1_label, contentWidth, svgHeight - y_line1_label, errorBoxColor);
+    addText(10, (y_line1_label + svgHeight) / 2, pmValue, titleFontSize, 'black', 'start', 'central');
+    contentGroup.appendChild(textGroup);
+    svg.appendChild(contentGroup);
+    return;
+  }
+
+  // ============================
+  // Horizontal geometry
+  // ============================
+  // Line 1 scaled to leave room for Line 2 (longer bits + phase error of 12 bits: stuff + 10 + stuff)
+  const extraSpaceL2 = 12 * 2 * df_used; // additional horizontal fraction needed for Line 2
+  const bitPxL1 = (contentWidth - breakWidth) / (Line1PrecedingBitFraction + 3 + extraSpaceL2);
+  // Line 2: bits are LONGER (slower clock)
+  const bitPxL2 = bitPxL1 * (1 + 2 * df_used);
+
+  // --- Line 1 X coordinates ---
+  const x_falling_edge = Line1PrecedingBitFraction * bitPxL1;
+  const x_zero1_end = x_falling_edge + bitPxL1;
+  const x_break_end_L1 = x_zero1_end + breakWidth;
+  const x_zero11_end = x_break_end_L1 + bitPxL1;
+  const x_rising_edge = x_zero11_end;
+  const x_L1_end = x_rising_edge + bitPxL1;
+
+  // --- Line 2 X coordinates ---
+  const phase_error_px = bitPxL1 * S_Stuff * 2 * df_used;
+
+  // First stuff bit: starts exactly at falling edge (no tq offset in PM2)
+  const x_L2_stuff1_start = x_falling_edge;
+  const x_L2_stuff1_end = x_L2_stuff1_start + bitPxL2;
+
+  // Bit 11 end is shifted right of rising edge by phase error
+  const x_L2_bit11_end = x_rising_edge + phase_error_px;
+  const x_L2_bit11_start = x_L2_bit11_end - bitPxL2;
+
+  // Second stuff bit: immediately after Bit 11
+  const x_L2_stuff2_start = x_L2_bit11_end;
+  const x_L2_stuff2_end = x_L2_stuff2_start + bitPxL2;
+
+  // SP positions in Line 2
+  const sp_stuff1_x = x_L2_stuff1_start + spFraction * bitPxL2;
+  const sp_bit11_x = x_L2_bit11_start + spFraction * bitPxL2;
+  const sp_stuff2_x = x_L2_stuff2_start + spFraction * bitPxL2;
+
+  // --- Computed values for labels ---
+  const phase_error_ns = ps2_d * BRP * clk_period / (1 - df_used) - pmValue;
+
+  // --- Bar dimensions (clamped to min width) ---
+  // PM2 bar: from SP of Bit 11 to rising edge
+  const pm2_bar_x = sp_bit11_x;
+  const pm2_bar_w = Math.max(x_rising_edge - sp_bit11_x, vertical_bar_min_width);
+  // Phase Error bar: from rising edge to Bit 11 end in Line 2
+  const pe_bar_x = x_rising_edge;
+  const pe_bar_w = Math.max(phase_error_px, vertical_bar_min_width);
+
+  // ============================
+  // DRAWING (background → foreground)
+  // ============================
+
+  // --- 1. Vertical bars (background) ---
+  // Phase Error bar
+  addRect(pe_bar_x, y_bars_top, pe_bar_w, y_bars_height, phaseErrorBarColor);
+  // PM2 bar
+  addRect(pm2_bar_x, y_bars_top, pm2_bar_w, y_bars_height, pm2BarColor);
+
+  // --- 2. Line 1: RX Signal ---
+  addTextOnTop(0, y_line1_label, line1Label, labelFontSize, rowLabelColor, 'start', 'hanging', lineLabelBold);
+
+  // Waveform path (before break)
+  const pathBefore = document.createElementNS(ns, 'path');
+  pathBefore.setAttribute('d', `M 0,${y_high} H ${x_falling_edge} V ${y_low} H ${x_zero1_end}`);
+  pathBefore.setAttribute('stroke', waveLineColor);
+  pathBefore.setAttribute('stroke-width', waveLineWidth);
+  pathBefore.setAttribute('fill', 'none');
+  contentGroup.appendChild(pathBefore);
+
+  // Waveform path (after break)
+  const pathAfter = document.createElementNS(ns, 'path');
+  pathAfter.setAttribute('d', `M ${x_break_end_L1},${y_low} H ${x_zero11_end} V ${y_high} H ${x_L1_end}`);
+  pathAfter.setAttribute('stroke', waveLineColor);
+  pathAfter.setAttribute('stroke-width', waveLineWidth);
+  pathAfter.setAttribute('fill', 'none');
+  contentGroup.appendChild(pathAfter);
+
+  // Break indicator for Line 1
+  const breakMidL1 = (x_zero1_end + x_break_end_L1) / 2;
+  const breakL1_top = y_line1_top - breakIndicatorExceedBit;
+  const breakL1_bottom = y_line1_bottom + breakIndicatorExceedBit;
+  const breakL1_midY = (breakL1_top + breakL1_bottom) / 2;
+  const breakL1_path1 = document.createElementNS(ns, 'path');
+  breakL1_path1.setAttribute('d', `M ${breakMidL1 - 2},${breakL1_bottom} C ${breakMidL1 - 2 + 6},${breakL1_midY} ${breakMidL1 - 2 - 6},${breakL1_midY} ${breakMidL1 - 2},${breakL1_top}`);
+  breakL1_path1.setAttribute('stroke', breakIndicatorColor);
+  breakL1_path1.setAttribute('stroke-width', breakIndicatorWidth);
+  breakL1_path1.setAttribute('fill', 'none');
+  contentGroup.appendChild(breakL1_path1);
+  const breakL1_path2 = document.createElementNS(ns, 'path');
+  breakL1_path2.setAttribute('d', `M ${breakMidL1 + 2},${breakL1_bottom} C ${breakMidL1 + 2 + 6},${breakL1_midY} ${breakMidL1 + 2 - 6},${breakL1_midY} ${breakMidL1 + 2},${breakL1_top}`);
+  breakL1_path2.setAttribute('stroke', breakIndicatorColor);
+  breakL1_path2.setAttribute('stroke-width', breakIndicatorWidth);
+  breakL1_path2.setAttribute('fill', 'none');
+  contentGroup.appendChild(breakL1_path2);
+
+  // Bit separators in Line 1
+  const L1_sep_top = y_line1_top - bitSeparatorExceedBit;
+  const L1_sep_bottom = y_line1_bottom + bitSeparatorExceedBit;
+  addDashedLine(x_falling_edge, L1_sep_top, x_falling_edge, L1_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+  addDashedLine(x_zero1_end, L1_sep_top, x_zero1_end, L1_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+  addDashedLine(x_break_end_L1, L1_sep_top, x_break_end_L1, L1_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+  addDashedLine(x_zero11_end, L1_sep_top, x_zero11_end, L1_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+  addDashedLine(x_L1_end, L1_sep_top, x_L1_end, L1_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+
+  // Bit name labels in Line 1
+  const bitTextY = y_line1_top + waveLineHeight / 2;
+  if (line1Bit1) addTextOnTop(x_falling_edge + bitPxL1 / 2, bitTextY, line1Bit1, labelFontSize - 1, waveLineColor, 'middle', 'central');
+  if (line1Bit2) addTextOnTop(x_break_end_L1 + bitPxL1 / 2, bitTextY, line1Bit2, labelFontSize - 1, waveLineColor, 'middle', 'central');
+  if (line1Bit3) addTextOnTop(x_rising_edge + bitPxL1 / 2, bitTextY, line1Bit3, labelFontSize - 1, waveLineColor, 'middle', 'central');
+
+  // --- 3. Line 2: Node internal view ---
+  addTextOnTop(0, y_line2_label, line2Label, labelFontSize, rowLabelColor, 'start', 'hanging', lineLabelBold);
+
+  // Three rectangles
+  addRect(x_L2_stuff1_start, y_line2_top, bitPxL2, waveLineHeight, bitFillColor, bitStrokeColor, 1);
+  addRect(x_L2_bit11_start, y_line2_top, bitPxL2, waveLineHeight, bitFillColor, bitStrokeColor, 1);
+  addRect(x_L2_stuff2_start, y_line2_top, bitPxL2, waveLineHeight, bitFillColor, bitStrokeColor, 1);
+
+  // Bit separators in Line 2
+  const L2_sep_top = y_line2_top - bitSeparatorExceedBit;
+  const L2_sep_bottom = y_line2_bottom + bitSeparatorExceedBit;
+  addDashedLine(x_L2_stuff1_start, L2_sep_top, x_L2_stuff1_start, L2_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+  addDashedLine(x_L2_stuff1_end, L2_sep_top, x_L2_stuff1_end, L2_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+  addDashedLine(x_L2_bit11_start, L2_sep_top, x_L2_bit11_start, L2_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+  addDashedLine(x_L2_bit11_end, L2_sep_top, x_L2_bit11_end, L2_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+  addDashedLine(x_L2_stuff2_end, L2_sep_top, x_L2_stuff2_end, L2_sep_bottom, bitSeparatorColor, bitSeparatorWidth, bitSeparatorDash);
+
+  // Connector lines between matching bit separators in Line 1 and Line 2
+  addDashedLine(x_falling_edge, L1_sep_bottom, x_L2_stuff1_start, L2_sep_top, bitSepConnectorColor, bitSepConnectorWidth, bitSepConnectorDash);
+  addDashedLine(x_zero1_end, L1_sep_bottom, x_L2_stuff1_end, L2_sep_top, bitSepConnectorColor, bitSepConnectorWidth, bitSepConnectorDash);
+  addDashedLine(x_break_end_L1, L1_sep_bottom, x_L2_bit11_start, L2_sep_top, bitSepConnectorColor, bitSepConnectorWidth, bitSepConnectorDash);
+  addDashedLine(x_zero11_end, L1_sep_bottom, x_L2_bit11_end, L2_sep_top, bitSepConnectorColor, bitSepConnectorWidth, bitSepConnectorDash);
+  addDashedLine(x_L1_end, L1_sep_bottom, x_L2_stuff2_end, L2_sep_top, bitSepConnectorColor, bitSepConnectorWidth, bitSepConnectorDash);
+
+  // Bit name labels in Line 2
+  const bitTextY_L2 = y_line2_top + waveLineHeight / 2;
+  if (line2Bit1) addTextOnTop(x_L2_stuff1_start + bitPxL2 / 2, bitTextY_L2, line2Bit1, labelFontSize - 1, waveLineColor, 'middle', 'central');
+  if (line2Bit2) addTextOnTop(x_L2_bit11_start + bitPxL2 / 2, bitTextY_L2, line2Bit2, labelFontSize - 1, waveLineColor, 'middle', 'central');
+  if (line2Bit3) addTextOnTop(x_L2_stuff2_start + bitPxL2 / 2, bitTextY_L2, line2Bit3, labelFontSize - 1, waveLineColor, 'middle', 'central');
+
+  // SP lines
+  const sp_y_bottom = y_line2_bottom;
+  const sp_y_top = y_line2_top - sp_exceed_top;
+
+  addLine(sp_stuff1_x, sp_y_bottom, sp_stuff1_x, sp_y_top, spColor, spLineWidth);
+  addLine(sp_bit11_x, sp_y_bottom, sp_bit11_x, sp_y_top, spColor, spLineWidth);
+  addLine(sp_stuff2_x, sp_y_bottom, sp_stuff2_x, sp_y_top, spColor, spLineWidth);
+
+  // "SP" text above Bit 11's SP line (differs from PM1)
+  addTextOnTop(sp_bit11_x, sp_y_top - SP_text_gap, 'SP', labelFontSize - 1, spColor, 'middle', 'auto');
+
+  // Break indicator for Line 2
+  const breakMidL2 = (x_L2_stuff1_end + x_L2_bit11_start) / 2;
+  const breakL2_top = y_line2_top - breakIndicatorExceedBit;
+  const breakL2_bottom = y_line2_bottom + breakIndicatorExceedBit;
+  const breakL2_midY = (breakL2_top + breakL2_bottom) / 2;
+  const breakL2_path1 = document.createElementNS(ns, 'path');
+  breakL2_path1.setAttribute('d', `M ${breakMidL2 - 2},${breakL2_bottom} C ${breakMidL2 - 2 + 6},${breakL2_midY} ${breakMidL2 - 2 - 6},${breakL2_midY} ${breakMidL2 - 2},${breakL2_top}`);
+  breakL2_path1.setAttribute('stroke', breakIndicatorColor);
+  breakL2_path1.setAttribute('stroke-width', breakIndicatorWidth);
+  breakL2_path1.setAttribute('fill', 'none');
+  contentGroup.appendChild(breakL2_path1);
+  const breakL2_path2 = document.createElementNS(ns, 'path');
+  breakL2_path2.setAttribute('d', `M ${breakMidL2 + 2},${breakL2_bottom} C ${breakMidL2 + 2 + 6},${breakL2_midY} ${breakMidL2 + 2 - 6},${breakL2_midY} ${breakMidL2 + 2},${breakL2_top}`);
+  breakL2_path2.setAttribute('stroke', breakIndicatorColor);
+  breakL2_path2.setAttribute('stroke-width', breakIndicatorWidth);
+  breakL2_path2.setAttribute('fill', 'none');
+  contentGroup.appendChild(breakL2_path2);
+
+  // --- 4. Labels and connector lines ---
+  const pe_label_text = `Phase Error = ${phase_error_ns.toFixed(2)} ns`;
+  const pm2_label_text = `PM2 = ${pmValue.toFixed(2)} ns`;
+
+  const charW = labelFontSize * 0.45;
+
+  addTextOnTop(0, y_labels_line, pm2_label_text, labelFontSize, labelColor, 'start', 'hanging', valueLabelBold);
+  addTextOnTop(contentWidth, y_labels_line, pe_label_text, labelFontSize, labelColor, 'end', 'hanging', valueLabelBold);
+
+  // Connector lines
+  const pe_cx = pe_bar_x + pe_bar_w / 2;
+  const pm2_cx = pm2_bar_x + pm2_bar_w / 2;
+
+  const pe_label_w = pe_label_text.length * charW;
+  const pm2_label_w = pm2_label_text.length * charW;
+
+  // PM2 label at x=0 (anchor=start), middle = half width
+  const pm2_label_mid = pm2_label_w / 2;
+  addLine(pm2_cx, y_bars_bottom, pm2_label_mid, y_labels_line - gap_connector_to_label, connectorColor, connector_line_width);
+
+  // Phase Error label ends at contentWidth (anchor=end), middle = contentWidth - half width
+  const pe_label_mid = contentWidth - pe_label_w / 2;
+  addLine(pe_cx, y_bars_bottom, pe_label_mid, y_labels_line - gap_connector_to_label, connectorColor, connector_line_width);
+
+  // Append text group to content group, then content group to SVG
+  contentGroup.appendChild(textGroup);
+  svg.appendChild(contentGroup);
 }
