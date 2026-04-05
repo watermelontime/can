@@ -382,7 +382,7 @@ export function drawPM1(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   const S_Stuff = 11;
 
   // --- Configurable layout constants ---
-  const svgPadding = 4; // padding inside the SVG around the figure
+  const svgPadding = 5; // padding inside the SVG around the figure
 
   const titleFontSize = 14;
   const titleBold = true;
@@ -791,7 +791,7 @@ export function drawPM2(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   const S_Stuff = 11;
 
   // --- Configurable layout constants ---
-  const svgPadding = 4;
+  const svgPadding = 5;
 
   const titleFontSize = 14;
   const titleBold = true;

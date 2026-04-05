@@ -20,8 +20,8 @@
 
     <div class="page-header">
       <h1>CAN XL Bit Timing Configurator</h1>
+      <label class="switch-label" style="margin-right:auto; margin-left:2em;"><input type="checkbox" id="chkExpertMode" /><span class="switch-slider"></span> Expert Mode</label>
       <h1><a href="#" id="openHelp" class="help-link" aria-haspopup="dialog" aria-controls="helpModal">Help</a></h1>
-
     </div>
     <!-- Responsive container for 4-column layout -->
     <div class="responsive-container">
@@ -269,8 +269,8 @@
       </div>
 
       <!-- Content 5: Robustness Info -->
-      <div class="column settings-column">
-        <h3>Output 3: Robustness Info</h3>
+      <div class="column settings-column expert-mode" style="display:none;">
+        <h3>Output 3: Robustness Data Phase</h3>
         <table>
           <thead>
             <tr>
@@ -317,13 +317,21 @@
       </div>
 
       <!-- Content 6: Register Values -->
-      <div class="column settings-column">
+      <div class="column settings-column expert-mode" style="display:none;">
         <h3>Output 4: Register Values</h3>
         <div id="canModuleConfig" class="my-textarea" style="white-space: pre-line;">register values will appear here.</div>
       </div>
 
     </div>
 
+
+    <!-- Expert mode toggle -->
+    <script>
+      document.getElementById('chkExpertMode').addEventListener('change', function () {
+        const panels = document.querySelectorAll('.expert-mode');
+        panels.forEach(function (el) { el.style.display = this.checked ? '' : 'none'; }.bind(this));
+      });
+    </script>
 
     <!-- load JavaScript file(s); type=module means loading is possible in .js files itself -->
     <script type="module" src="script_main.js"></script>
