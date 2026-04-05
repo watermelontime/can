@@ -441,7 +441,6 @@ svg {
 
 .switch-label input:checked + .switch-slider::after {
   transform: translateX(16px);
-}
   text-decoration: none;
   font-weight: bold;
 }
