@@ -4,6 +4,7 @@
 import { CanFrame } from './frame_builder.js';
 import { drawFrame } from './frame_draw.js';
 import { exportSVG, exportPNG, exportCSV, exportVHDL } from './frame_export.js';
+import { EXAMPLE_CONFIGS } from './frame_definitions.js';
 
 var myFrame = null;
 
@@ -14,6 +15,7 @@ function frameInit() {
   // Attach event listeners
   document.getElementById("frameTypeSelect").addEventListener("change", onFrameTypeChange);
   document.getElementById("showFrameBtn").addEventListener("click", onShowFrame);
+  document.getElementById("loadExampleBtn").addEventListener("click", onLoadExample);
 
   document.getElementById("btnExportSVG").addEventListener("click", function() {
     if (myFrame) exportSVG(myFrame, document.getElementById("svgContainer"));
@@ -92,6 +94,83 @@ function onFrameTypeChange() {
     dlcInput.max = 15;
     document.getElementById("dlcRangeHint").textContent = "(0–15)";
   }
+
+  // Update example dropdown for selected frame type
+  _populateExampleDropdown();
+}
+
+// =============================================================================
+// Populate example dropdown based on selected frame type
+// =============================================================================
+function _populateExampleDropdown() {
+  var ft = document.getElementById("frameTypeSelect").value;
+  var sel = document.getElementById("exampleSelect");
+  sel.innerHTML = "";
+  var examples = EXAMPLE_CONFIGS[ft] || [];
+  for (var i = 0; i < examples.length; i++) {
+    var opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = examples[i].name;
+    sel.appendChild(opt);
+  }
+}
+
+// =============================================================================
+// "Load" button pressed → populate input fields from selected example
+// =============================================================================
+function onLoadExample() {
+  var ft = document.getElementById("frameTypeSelect").value;
+  var sel = document.getElementById("exampleSelect");
+  var examples = EXAMPLE_CONFIGS[ft] || [];
+  var idx = parseInt(sel.value, 10);
+  if (isNaN(idx) || idx < 0 || idx >= examples.length) return;
+  var ex = examples[idx];
+
+  // ID
+  if ("id" in ex) {
+    document.getElementById("inputID").value = "0x" + ex.id.toString(16).toUpperCase();
+  }
+  // DLC
+  if ("dlc" in ex) {
+    document.getElementById("inputDLC").value = ex.dlc;
+  }
+  // BRS
+  if ("brs" in ex) {
+    document.getElementById("inputBRS").checked = !!ex.brs;
+  }
+  // ESI
+  if ("esi" in ex) {
+    document.getElementById("inputESI").checked = !!ex.esi;
+  }
+  // SEC
+  if ("sec" in ex) {
+    document.getElementById("inputSEC").checked = !!ex.sec;
+  }
+  // SDT
+  if ("sdt" in ex) {
+    document.getElementById("inputSDT").value = "0x" + ("0" + ex.sdt.toString(16).toUpperCase()).slice(-2);
+  }
+  // VCID
+  if ("vcid" in ex) {
+    document.getElementById("inputVCID").value = "0x" + ("0" + ex.vcid.toString(16).toUpperCase()).slice(-2);
+  }
+  // AF
+  if ("af" in ex) {
+    document.getElementById("inputAF").value = "0x" + ("0000000" + ex.af.toString(16).toUpperCase()).slice(-8);
+  }
+  // RRS
+  if ("rrs" in ex) {
+    document.getElementById("inputRRS").checked = !!ex.rrs;
+  }
+  // Data (last)
+  if ("data" in ex) {
+    document.getElementById("inputData").value = ex.data.map(function(b) {
+      return ("0" + b.toString(16).toUpperCase()).slice(-2);
+    }).join(" ");
+  }
+
+  // Auto-trigger "Show Frame"
+  onShowFrame();
 }
 
 // =============================================================================

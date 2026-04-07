@@ -546,6 +546,45 @@ function getDefinition_XL_XBFF(input) {
   };
 }
 
+// =============================================================================
+// Example configurations per frame type
+// =============================================================================
+// Each frame type has an array of example presets.
+// Fields not relevant for a frame type are set to null.
+// Fields: name, id, dlc, data, brs, esi, sec, sdt, vcid, af, rrs
+// =============================================================================
+export var EXAMPLE_CONFIGS = {
+  CC_CBFF: [
+    { name: "min. dyn stuff bits",        id: 0x555, dlc: 4,  data: [0xAA,0xAA,0xAA,0xAA] },
+    { name: "max. dyn stuff bits",        id: 0x078, dlc: 4,  data: [0x1E,0x1E,0x1E,0x1E] },
+  ],
+  CC_CBFF_RTR: [
+    { name: "min. dyn stuff bits",        id: 0x555, dlc: 8  },
+    { name: "max. dyn stuff bits",        id: 0x078, dlc: 8  },
+  ],
+  CC_CEFF: [
+    { name: "min. dyn stuff bits",        id: 0x15555555, dlc: 4,  data: [0xAA,0xAA,0xAA,0xAA] },
+    { name: "max. dyn stuff bits",        id: 0x01FC3C3C, dlc: 3,  data: [0xE1,0xE1,0xE1] }
+  ],
+  CC_CEFF_RTR: [
+    { name: "min. dyn stuff bits",        id: 0x15555555, dlc: 4  },
+    { name: "max. dyn stuff bits",        id: 0x01FC3C3C, dlc: 1  },
+  ],
+  FD_FBFF: [
+    { name: "min. dyn stuff bits",        id: 0x555, dlc: 4,  brs: false, esi: false, data: [0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA] },
+    { name: "max. dyn stuff bits",        id: 0x078, dlc: 3,  brs: false, esi: false, data: [0xC3,0xC3,0xC3] }
+  ],
+  FD_FEFF: [
+    { name: "min. dyn stuff bits",        id: 0x15555555, dlc: 4,  brs: false, esi: false, data: [0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA] },
+    { name: "max. dyn stuff bits",        id: 0x01FC3C3C, dlc: 3,  brs: false, esi: false, data: [0xC3,0xC3,0xC3] }
+  ],
+  XL_XBFF: [
+    { name: "min. edges data",            id: 0x078, dlc: 5,  sec: false, sdt: 0x00, vcid: 0x00, af: 0x00000000, rrs: false, data: [0x1F,0xF8,0x01,0xFF,0x80,0x1F] },
+    { name: "max. edges data",            id: 0x555, dlc: 3,  sec: false, sdt: 0x55, vcid: 0x55, af: 0x55555555, rrs: false, data: [0x4A,0xAD,0x54,0xAA] },
+    { name: "max. dyn stuff bits",        id: 0x078, dlc: 1,  sec: false, sdt: 0xFF, vcid: 0xFF, af: 0xFFFFFFFF, rrs: false, data: [0x1F,0xF8,0x01,0xFF,0x80,0x1F] }
+  ]
+};
+
 /**
  * Master function: get field definition for any frame type.
  */

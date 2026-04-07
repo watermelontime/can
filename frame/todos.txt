@@ -1,0 +1,18 @@
+Ideas for new features
+========================
+- New feature to be implemented: Load example configurations
+  * below Frame Type a row with following content: "Example: [DropDown Field] [Load Button]
+  * style of the DropDown Field shall be like of the inputACK field
+  * load changes only the fields thar are relevant
+  * drop down content depends on the frame type selected
+  * drop down content exmample
+    * min. edges (DLC=8)
+    * max. edges (DLC=8)
+    * min. stuff bits
+    * max. stuff bits
+    * spezial constellations
+  * drop down content shall be defined in frame_definitions.js as
+    - one data structure (addressable by frame type)
+    - with one array per frame type
+    - each array element shall contain all configurable fields
+    - fields not relevant for this frame type shall containt "null" as value

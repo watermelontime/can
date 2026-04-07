@@ -1,0 +1,5 @@
+Ideas for new features
+========================
+- Download images as SVG, PNG
+- add legend to SVG (so it is also downloaded with the figure)
+- Optimize layout: color output areas differently

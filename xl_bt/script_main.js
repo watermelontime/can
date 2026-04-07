@@ -365,7 +365,7 @@ function generateHardwareRegisters(results, params) {
     return '0x' + val.toString(16).toUpperCase().padStart(8, '0');
   }
   var configText = '### Bit Timing configuration ###\n';
-  configText +=    '### X_CAN, XS_CAN, X_CANB    ###\n\n';
+  configText +=    '### for X_CAN, XS_CAN, X_CANB    ###\n\n';
   configText +=    'PRT.MODE: ' + regToHex(boschRegisters.res_reg_MODE) + '\n';
   configText +=    'PRT.NBTP: ' + regToHex(boschRegisters.res_reg_NBTP) + '\n';
   configText +=    'PRT.XBTP: ' + regToHex(boschRegisters.res_reg_XBTP) + '\n';
