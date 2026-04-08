@@ -19,10 +19,17 @@
   <main>
 
     <div class="page-header">
-      <h1>CAN XL Bit Timing Configurator</h1>
+      <h1>CAN XL Bit Timing Configurator <a href="versionhistory.html" class="version-label" target="_blank" rel="noopener noreferrer">V1.0.0</a></h1>
       <label class="switch-label" style="margin-right:auto; margin-left:2em;"><input type="checkbox" id="chkExpertMode" /><span class="switch-slider"></span> Expert Mode</label>
       <h1><a href="#" id="openHelp" class="help-link" aria-haspopup="dialog" aria-controls="helpModal">Help</a></h1>
     </div>
+
+    <!-- Error container -->
+    <div id="errorReportContainer" class="column report-column" style="background-color: #ff7070; display:none;">
+      <h3>Error Report</h3>
+      <ol id="errorDisplayArea" style="background-color: white; margin:0; padding:0.5em 0.5em 0.5em 2em;"></ol>
+    </div>  
+
     <!-- Responsive container for 4-column layout -->
     <div class="responsive-container">
 
@@ -39,20 +46,20 @@
 
         <h3>Example Configurations</h3>
         <label for="btConfigSelect"></label>
-        <select id="btConfigSelect" class="styled-select">
-          <option value="cfg01M">&nbsp;1 Mbit/s</option>
-          <option value="cfg02M">&nbsp;2 Mbit/s</option>
-          <option value="cfg05M">&nbsp;5 Mbit/s</option>
-          <option value="cfg08M">&nbsp;8 Mbit/s</option>
-          <option value="cfg10M">10 Mbit/s</option>
-          <option value="cfg12M">12 Mbit/s</option>
-          <option value="cfg13M">13 Mbit/s</option>
-          <option value="cfg14M">14 Mbit/s</option>
-          <option value="cfg16M">16 Mbit/s</option>
-          <option value="cfg17M">17 Mbit/s</option>
-          <option value="cfg20M">20 Mbit/s</option>
-        </select>
-        <button type="button" id="btnSetBTConfig" class="styled-button">load example config</button>
+          <select id="btConfigSelect" class="styled-select">
+            <option value="cfg01M">&nbsp;1 Mbit/s</option>
+            <option value="cfg02M">&nbsp;2 Mbit/s</option>
+            <option value="cfg05M">&nbsp;5 Mbit/s</option>
+            <option value="cfg08M">&nbsp;8 Mbit/s</option>
+            <option value="cfg10M">10 Mbit/s</option>
+            <option value="cfg12M">12 Mbit/s</option>
+            <option value="cfg13M">13 Mbit/s</option>
+            <option value="cfg14M">14 Mbit/s</option>
+            <option value="cfg16M">16 Mbit/s</option>
+            <option value="cfg17M">17 Mbit/s</option>
+            <option value="cfg20M">20 Mbit/s</option>
+          </select>
+          <button type="button" id="btnSetBTConfig" class="styled-button">Load Example</button>
 
         <h3>CAN Clock settings</h3>
         <table>
@@ -71,7 +78,7 @@
             </tr>
             <tr>
               <td>df_used</td>
-              <td><input type="number" id="par_dfused" class="input-field" /></td>
+              <td><input type="number" id="par_dfused" class="input-field" step="0.1" /></td>
               <td>%</td>
             </tr>
             <tr>

@@ -192,6 +192,9 @@ function onRealBitRatioToggle() {
 
   // Update VHDL button visibility
   _updateVHDLButtonVisibility();
+
+  // Auto-trigger "Show Frame" if a frame was already generated
+  if (myFrame) onShowFrame();
 }
 
 // =============================================================================

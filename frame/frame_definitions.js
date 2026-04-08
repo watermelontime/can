@@ -571,11 +571,11 @@ export var EXAMPLE_CONFIGS = {
     { name: "max. dyn stuff bits",        id: 0x01FC3C3C, dlc: 1  },
   ],
   FD_FBFF: [
-    { name: "min. dyn stuff bits",        id: 0x555, dlc: 4,  brs: false, esi: false, data: [0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA] },
+    { name: "min. dyn stuff bits",        id: 0x555, dlc: 4,  brs: true,  esi: false, data: [0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA] },
     { name: "max. dyn stuff bits",        id: 0x078, dlc: 3,  brs: false, esi: false, data: [0xC3,0xC3,0xC3] }
   ],
   FD_FEFF: [
-    { name: "min. dyn stuff bits",        id: 0x15555555, dlc: 4,  brs: false, esi: false, data: [0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA] },
+    { name: "min. dyn stuff bits",        id: 0x15555555, dlc: 4,  brs: true,  esi: false, data: [0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA] },
     { name: "max. dyn stuff bits",        id: 0x01FC3C3C, dlc: 3,  brs: false, esi: false, data: [0xC3,0xC3,0xC3] }
   ],
   XL_XBFF: [

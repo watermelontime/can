@@ -3,3 +3,12 @@ Ideas for new features
 - Download images as SVG, PNG
 - add legend to SVG (so it is also downloaded with the figure)
 - Optimize layout: color output areas differently
+x pop-up messages shall be replaced with a field that shows the messages
+x error message are shall be added at the top, full page width.
+x output 3: register values: error figure shall be shown (currently the last figure remains with PM=0 values)
+- add tool-tips
+- add tdc visualization
+- transceiver type: make figures more realistic, draw as SVG?
+- favicon.ico not visible in version history files
+- Goatcounter: correctly bind in all files
+- optimize styles: e.g. button has big margin below button, but drop down not!

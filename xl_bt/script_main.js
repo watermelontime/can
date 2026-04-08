@@ -264,14 +264,15 @@ function paramsValidate(params) {
     }
   }
 
-  // Mark HTLM-fields that have invalid entries
+  // Mark HTLM-fields that have invalid entries and collect error messages
+  var errorMessages = [];
   for (const id in params) {
     const entry = params[id];
     const field = document.getElementById(id);
     if (field) {
       if (!entry.valid || !entry.range_valid) {
         field.classList.add("input-error");
-        alert(`ERROR in "${id}":\n${entry.range_msg}`);
+        errorMessages.push(`${id}: ${entry.range_msg}`);
       } else {
         field.classList.remove("input-error");
       }
@@ -288,11 +289,19 @@ function paramsValidate(params) {
   }
 
   // Print error messages
-  for (const id in params) {
-    const entry = params[id];
-    if (!entry.range_valid) {
-      console.log(id, ': ', entry.range_msg);
-    }
+  const errorContainer = document.getElementById('errorReportContainer');
+  const errorList = document.getElementById('errorDisplayArea');
+  if (errorMessages.length > 0) {
+    errorList.innerHTML = '';
+    errorMessages.forEach(msg => {
+      const li = document.createElement('li');
+      li.textContent = msg;
+      errorList.appendChild(li);
+    });
+    errorContainer.style.display = '';
+  } else {
+    errorList.innerHTML = '';
+    errorContainer.style.display = 'none';
   }
   
   return allValid;
@@ -563,6 +572,7 @@ function processChanges() {
   if (allParamsValid === false) {
     // write ERROR into all result fields
     resultFields.forEach(field => (field.value = 'err'));
+    document.getElementById('canModuleConfig').textContent = 'Register values not generated.';
     return; // STOP further processing
   }
 
@@ -635,7 +645,7 @@ function processChanges() {
   const df_used_frac = params.par_dfused.value / 100; // convert from % to fraction
 
   draw_svg.drawPM1(
-    results.res_pm1,
+    results.res_pm1, // if PM1 is a string, the string will be displayed in the diagram, e.g. "df_used too large"
     results.res_tqperbit_dat,
     params.par_phaseseg2_dat.value,
     spFraction_dat,
@@ -648,7 +658,7 @@ function processChanges() {
 
   // Draw Phase Margin diagram (PM2)
   draw_svg.drawPM2(
-    results.res_pm2,
+    results.res_pm2, // if PM2 is a string, the string will be displayed in the diagram, e.g. "df_used too large"
     results.res_tqperbit_dat,
     params.par_phaseseg2_dat.value,
     spFraction_dat,
