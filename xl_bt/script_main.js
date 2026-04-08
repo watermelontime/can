@@ -5,6 +5,7 @@
 
 // import functions
 import * as draw_svg from '../draw_bits_svg.js'; // SVG drawing functions for bit timing
+import { createSO8svg } from '../draw_transceiver_svg.js';
 
 // global variable definitions
 // ns
@@ -51,6 +52,11 @@ document.addEventListener('DOMContentLoaded', init);
 // ===================================================================================
 // Initialisation when website is loaded
 function init() {
+  // Create transceiver SVG icons
+  document.getElementById('btnTFD').appendChild(createSO8svg('FD'));
+  document.getElementById('btnTSIC').appendChild(createSO8svg('SIC'));
+  document.getElementById('btnTSICXL').appendChild(createSO8svg('SIC XL'));
+
   // set eventlistener: when parameter changes => calculate
   initEventListeners();
 
@@ -58,6 +64,12 @@ function init() {
   const myBtn = document.getElementById('btnTSICXL');
   myBtn.classList.add('active');
   transceiverType = myBtn.dataset.value;
+
+  // Expert mode toggle
+  document.getElementById('chkExpertMode').addEventListener('change', function () {
+    const panels = document.querySelectorAll('.expert-mode');
+    panels.forEach(function (el) { el.style.display = this.checked ? '' : 'none'; }.bind(this));
+  });
 
   // set default value (based on preconfigured list
   setDefaultBTconfig('cfg08M');
@@ -72,7 +84,7 @@ function initEventListeners() {
   });
 
   // Transceiver button
-  document.querySelectorAll('.select-btn[data-group="transceiverType"]').forEach(btn => {
+  document.querySelectorAll('.transceiver-btn[data-group="transceiverType"]').forEach(btn => {
     btn.addEventListener('click', () => {
       const selectedTransceiverType = btn.dataset.value;
       adjustBTconfigOptions(selectedTransceiverType);
@@ -81,7 +93,7 @@ function initEventListeners() {
 
       // Optical switch of Button-Selected
       // step 1: deactivate all
-      document.querySelectorAll('.select-btn[data-group="transceiverType"]').forEach(b => {
+      document.querySelectorAll('.transceiver-btn[data-group="transceiverType"]').forEach(b => {
         b.classList.remove('active');
       });
       // activate the one clicked
@@ -150,7 +162,7 @@ function paramsCollect() {
   const params = {};
   
   // Read Select Button values (CAN Type + Transceiver)
-   document.querySelectorAll('.select-btn.active').forEach(btn => {
+   document.querySelectorAll('.transceiver-btn.active').forEach(btn => {
      const group = btn.dataset.group;
      const btnValue = btn.dataset.value;
      params[group] = { value_raw: btnValue };
