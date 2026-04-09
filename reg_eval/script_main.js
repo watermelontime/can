@@ -52,7 +52,7 @@ let par_clk_freq_g = 160; // Global variable for CAN clock frequency in MHz
 let reg = {};
 
 // Application version shown next to the page title
-const APP_VERSION = 'V1.0.1';
+const APP_VERSION = 'V1.0.2';
 
 // initialize report verbosity object
 const reportVerbosity = {
@@ -145,6 +145,10 @@ function initEventListeners() {
   } else {
     console.warn('[Warning] Load example register button not found in HTML');
   }
+
+  // Download combined BT diagram links
+  document.getElementById('downloadBTsvg').addEventListener('click', (e) => { e.preventDefault(); downloadBTcombined('svg'); });
+  document.getElementById('downloadBTpng').addEventListener('click', (e) => { e.preventDefault(); downloadBTcombined('png'); });
 
   // HTML CLK_FREQ INPUT: Add event listener for the CAN clock frequency input field
   const clkFreqHtmlField = document.getElementById('par_clk_freq');
@@ -807,8 +811,27 @@ function displaySVGs(reg) {
     );
   }
 
-  // Legend for Bit Timing Drawings: adapt width to table width
-  document.getElementById("DrawingBTLegend").style.width =   document.getElementById("BitTimingTable").offsetWidth + "px";
+  // Legend for Bit Timing Drawings
+  draw_svg.drawBTLegend('DrawingBTLegend', document.getElementById('BitTimingTable').offsetWidth);
+}
+
+// ===================================================================================
+// Download combined BT visualization as SVG or PNG
+function downloadBTcombined(imageFormat) {
+  const ids = ['DrawingBTArb', 'DrawingBTFDdata', 'DrawingBTXLdata', 'DrawingBTXLdataPWM', 'DrawingBTLegend'];
+  const gap = 16;
+  const margin = 5;
+
+  // Build filename: bt_brarb<arb>_brfd<fd>_brxl<xl>
+  const brArbField = document.getElementById('res_bitrate_arb');
+  const brFdField = document.getElementById('res_bitrate_datfd');
+  const brXlField = document.getElementById('res_bitrate_datxl');
+  const brArb = brArbField ? brArbField.value.replace('.', 'p') : '0';
+  const brFd = brFdField ? brFdField.value.replace('.', 'p') : '0';
+  const brXl = brXlField ? brXlField.value.replace('.', 'p') : '0';
+  const baseName = 'bt_brarb' + brArb + '_brfddata' + brFd + '_brxldata' + brXl;
+
+  draw_svg.downloadCombinedSVGs(ids, baseName, imageFormat, gap, margin);
 }
 
 // ===================================================================================

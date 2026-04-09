@@ -183,11 +183,15 @@ th, td {
 
 svg {
   display: block;
-  margin-bottom: 1em; /* Abstand zwischen den Diagrammen */
+  margin-bottom: 0em; /* Abstand zwischen den Diagrammen */
+}
+
+.inter-svg-spacing {
+  height: 1em;
 }
 
 .legend {
-  margin-top: 1em;
+  margin-top: 0em;
   font-family: sans-serif;
   font-size: 0.9em;
 }
@@ -208,8 +212,8 @@ svg {
   /*display: flex;*/
   flex-wrap: wrap;
   gap: 0.5em 0em; /* row-gap, column-gap */
-  margin-top: 1em;
-  margin-bottom: 1em;
+  margin-top: 0em;
+  margin-bottom: 0em;
   width: 100%;
   max-width: 100%;
 }
@@ -460,5 +464,22 @@ svg {
 /* Figure image shadow only */
 figure img {
   box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.download-links {
+  color: #999;
+  font-size: 0.85em;
+}
+
+.download-links a {
+  color: #999;
+  text-decoration: none;
+  margin-right: 1em;
+  cursor: pointer;
+}
+
+.download-links a:hover {
+  color: #555;
+  text-decoration: underline;
 }
 

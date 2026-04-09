@@ -1,5 +1,4 @@
 // TODOs
-// - Report Parameter errors: e.g. with box mit fehlermeldungen hinzufügen
 // - show additional parameters like: retransmission count in register settings
 // - Calculation should be done only if focus is left (reduces number of errors)
 
@@ -8,7 +7,10 @@ import * as draw_svg from '../draw_bits_svg.js'; // SVG drawing functions for bi
 import { createSO8svg } from '../draw_transceiver_svg.js';
 
 // global variable definitions
-// ns
+
+// Application version shown next to the page title
+const APP_VERSION = 'V1.0.1';
+
 const floatParams = [
   'par_clk_freq',
   'par_dfused'
@@ -52,6 +54,12 @@ document.addEventListener('DOMContentLoaded', init);
 // ===================================================================================
 // Initialisation when website is loaded
 function init() {
+  // Show application version next to title
+  const versionEl = document.getElementById('appVersion');
+  if (versionEl) {
+    versionEl.textContent = APP_VERSION;
+  }
+
   // Create transceiver SVG icons
   document.getElementById('btnTFD').appendChild(createSO8svg('FD'));
   document.getElementById('btnTSIC').appendChild(createSO8svg('SIC'));
@@ -109,6 +117,16 @@ function initEventListeners() {
   if (setConfigBtn) {
     setConfigBtn.addEventListener('click', setExampleBTconfig);
   }
+
+  // Download PM diagram links
+  document.getElementById('downloadPM1svg').addEventListener('click', (e) => { e.preventDefault(); downloadSingleSVG('DrawingPM1', 'pm1', 'svg'); });
+  document.getElementById('downloadPM1png').addEventListener('click', (e) => { e.preventDefault(); downloadSingleSVG('DrawingPM1', 'pm1', 'png'); });
+  document.getElementById('downloadPM2svg').addEventListener('click', (e) => { e.preventDefault(); downloadSingleSVG('DrawingPM2', 'pm2', 'svg'); });
+  document.getElementById('downloadPM2png').addEventListener('click', (e) => { e.preventDefault(); downloadSingleSVG('DrawingPM2', 'pm2', 'png'); });
+
+  // Download combined BT diagram links
+  document.getElementById('downloadBTsvg').addEventListener('click', (e) => { e.preventDefault(); downloadBTcombined('svg'); });
+  document.getElementById('downloadBTpng').addEventListener('click', (e) => { e.preventDefault(); downloadBTcombined('png'); });
 }
 
 // ===================================================================================
@@ -648,8 +666,8 @@ function processChanges() {
     draw_svg.drawErrorMessage('DrawingBTXLdataPWM', 'XL Data Phase PWM symbols', 'TMS = off, means no PWM used', svgWidth, svgHeight);
   }
 
-  // Legend for Bit Timing Drawings: adapt width to column width
-  document.getElementById("DrawingBTLegend").style.width =  svgWidth + "px";
+  // Legend for Bit Timing Drawings
+  draw_svg.drawBTLegend('DrawingBTLegend', svgWidth);
 
   // Draw Phase Margin diagram (PM1)
   const pmSvgWidth = 360;//document.getElementById('res_pm1').closest('table').offsetWidth;
@@ -764,4 +782,71 @@ function setExampleBTconfig() {
   
   // calculate results
   processChanges();
+}
+
+// ===================================================================================
+// Download a single SVG element as SVG or PNG
+function downloadSingleSVG(svgId, prefix, imageFormat) {
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const srcSvg = document.getElementById(svgId);
+  const w = parseFloat(srcSvg.getAttribute('width'));
+  const h = parseFloat(srcSvg.getAttribute('height'));
+  const pngScaleFactor = 3; // scale factor for PNG export to improve resolution
+
+  // Clone into a standalone SVG
+  const clone = document.createElementNS(svgNS, 'svg');
+  clone.setAttribute('xmlns', svgNS);
+  clone.setAttribute('width', w);
+  clone.setAttribute('height', h);
+  clone.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+  clone.style.backgroundColor = 'white';
+  Array.from(srcSvg.childNodes).forEach(n => clone.appendChild(n.cloneNode(true)));
+
+  // Build filename: <prefix>_xl_br<bitrate>_df<dfused>
+  const brField = document.getElementById('res_bitrate_dat');
+  const dfField = document.getElementById('par_dfused');
+  const br = brField ? brField.value.replace('.', 'p') : '0';
+  const df = dfField ? dfField.value.replace('.', 'p') : '0';
+  const baseName = prefix + '_xl_brdata' + br + '_df' + df;
+
+  const serializer = new XMLSerializer();
+  const svgString = serializer.serializeToString(clone);
+
+  if (imageFormat === 'svg') {
+    const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    draw_svg.triggerDownload(blob, baseName + '.svg');
+  } else if (imageFormat === 'png') {
+    const img = new Image();
+    img.onload = function () {
+      const canvas = document.createElement('canvas');
+      canvas.width = w * pngScaleFactor;
+      canvas.height = h * pngScaleFactor;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.scale(pngScaleFactor, pngScaleFactor);
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(function (blob) {
+        draw_svg.triggerDownload(blob, baseName + '.png');
+      }, 'image/png');
+    };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
+  }
+}
+
+// ===================================================================================
+// Download combined BT visualization (SVGs stacked vertically) as SVG or PNG
+function downloadBTcombined(imageFormat) {
+  const ids = ['DrawingBTArb', 'DrawingBTXLdata', 'DrawingBTXLdataPWM', 'DrawingBTLegend'];
+  const gap = 16;
+  const margin = 5;
+
+  // Build filename: bt_xl_brarb<bitrate_arb>_brdata<bitrate_dat>
+  const brArbField = document.getElementById('res_bitrate_arb');
+  const brDatField = document.getElementById('res_bitrate_dat');
+  const brArb = brArbField ? brArbField.value.replace('.', 'p') : '0';
+  const brDat = brDatField ? brDatField.value.replace('.', 'p') : '0';
+  const baseName = 'bt_xl_brarb' + brArb + '_brdata' + brDat;
+
+  draw_svg.downloadCombinedSVGs(ids, baseName, imageFormat, gap, margin);
 }

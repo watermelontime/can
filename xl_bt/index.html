@@ -20,7 +20,7 @@
   <main>
 
     <div class="page-header">
-      <h1>CAN XL Bit Timing Configurator <a href="versionhistory.html" class="version-label" target="_blank" rel="noopener noreferrer">V1.0.0</a></h1>
+      <h1>CAN XL Bit Timing Configurator <a href="versionhistory.html" id="appVersion" class="version-label" target="_blank" rel="noopener noreferrer" aria-label="Version"></a></h1>
       <label class="switch-label" style="margin-right:auto; margin-left:2em;"><input type="checkbox" id="chkExpertMode" /><span class="switch-slider"></span> Expert Mode</label>
       <h1><a href="#" id="openHelp" class="help-link" aria-haspopup="dialog" aria-controls="helpModal">Help</a></h1>
     </div>
@@ -261,17 +261,16 @@
       <div class="column output-column">
         <h3>Output 2: Bit Timing Visualization</h3>
         <svg id="DrawingBTArb" width="350" height="60"></svg>
+        <div class="inter-svg-spacing"></div>
         <svg id="DrawingBTXLdata" width="350" height="60"></svg>
+        <div class="inter-svg-spacing"></div>
         <svg id="DrawingBTXLdataPWM" width="350" height="60"></svg>
-
-        <div id="DrawingBTLegend" class="legend">
-          <div class="legend-item"><span class="legend-color" style="background:#555555"></span>SyncSeg</div>
-          <div class="legend-item"><span class="legend-color" style="background:#FFD000"></span>PropSeg</div>
-          <div class="legend-item"><span class="legend-color" style="background:#4CAF50"></span>PhaseSeg1</div>
-          <div class="legend-item"><span class="legend-color" style="background:#FF0000"></span>SP</div>
-          <div class="legend-item"><span class="legend-color" style="background:#2196F3"></span>PhaseSeg2</div>
-          <div class="legend-item"><span class="legend-color" style="background:#800080"></span>SSP Offset</div>
-          <div class="legend-item"><span class="legend-color" style="background:#999999"></span>SJW</div>
+        <div class="inter-svg-spacing"></div>
+        <svg id="DrawingBTLegend" width="350" height="20"></svg>
+        <div class="inter-svg-spacing"></div>
+        <div class="download-links">
+          <a href="#" id="downloadBTsvg">&#x21E9; SVG</a>
+          <a href="#" id="downloadBTpng">&#x21E9; PNG</a>
         </div>
       </div>
 
@@ -319,8 +318,16 @@
           </tbody>
         </table>
         <svg id="DrawingPM1" width="350" height="120"></svg>
-        <div style="height: 1em;"></div>
+        <div class="download-links">
+          <a href="#" id="downloadPM1svg">&#x21E9; SVG</a>
+          <a href="#" id="downloadPM1png">&#x21E9; PNG</a>
+        </div>
+        <div class="inter-svg-spacing"></div>
         <svg id="DrawingPM2" width="350" height="120"></svg>
+        <div class="download-links">
+          <a href="#" id="downloadPM2svg">&#x21E9; SVG</a>
+          <a href="#" id="downloadPM2png">&#x21E9; PNG</a>
+        </div>
       </div>
 
       <!-- Content 6: Register Values -->

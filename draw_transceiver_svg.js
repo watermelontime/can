@@ -6,9 +6,9 @@
  */
 export function createSO8svg(label) {
   // --- User parameters ---
-  const svgWidth   = 65;     // SVG width in pixels (x dimension)
-  const svgHeight  = 50;     // SVG height in pixels (y dimension)
-  const fontSize   = 15;     // Font size for the label text
+  const svgWidth   = 60;     // SVG width in pixels (x dimension)
+  const svgHeight  = 45;     // SVG height in pixels (y dimension)
+  const fontSize   = 14;     // Font size for the label text
   const fontWeight = 'bold'; // Font weight: 'normal' or 'bold'
 
   // --- Fixed pin dimensions (do not scale) ---

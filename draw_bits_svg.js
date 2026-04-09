@@ -24,7 +24,7 @@ export function drawBitTiming(PropSeg, PhaseSeg1, PhaseSeg2, spPercent, sjwLen, 
 
   // define colors
   const sjwColor = '#999999'; // Color of the SJW line
-  const spColor = 'red'; // Color of the Sample Point line
+  const spColor = '#FF0000'; // Color of the Sample Point line
   const sspColor = '#800080'; // Color of the SSP line (TDC)
   const textColor = 'black'; // Color of the labels
   const syncSegColor = '#555555'; // Color of the SyncSeg bar
@@ -371,6 +371,94 @@ export function drawErrorMessage(HTMLDrawingName, NameToPrint, ErrorMsgToPrint, 
 }
 
 // ===================================================================================
+// Draw Bit Timing Legend as SVG
+// Items are placed left-to-right and wrap to the next row when exceeding svgWidth.
+export function drawBTLegend(HTMLDrawingName, svgWidth) {
+
+  // define colors (same as in drawBitTiming)
+  const syncSegColor = '#555555';
+  const PropSegColor = '#FFD000';
+  const PhaseSeg1Color = '#4CAF50';
+  const spColor = '#FF0000';
+  const PhaseSeg2Color = '#2196F3';
+  const sspColor = '#800080';
+  const sjwColor = '#999999';
+  const textColor = 'black';
+
+  // Legend items: color swatch + label
+  const items = [
+    { color: syncSegColor, label: 'SyncSeg' },
+    { color: PropSegColor, label: 'PropSeg' },
+    { color: PhaseSeg1Color, label: 'PhaseSeg1' },
+    { color: spColor, label: 'SP' },
+    { color: PhaseSeg2Color, label: 'PhaseSeg2' },
+    { color: sspColor, label: 'SSP Offset' },
+    { color: sjwColor, label: 'SJW' },
+  ];
+
+  // Layout constants
+  const fontSize = 14;
+  const itemGap = 12; // gap between legend items
+  const swatchTextGap = 4; // gap between swatch and label text
+  const rowHeight = fontSize + 6; // vertical spacing per row
+  const charWidth = fontSize * 0.6; // estimated character width
+  const swatchSize = fontSize; // color swatch width & height
+
+  // Measure items and lay them out with wrapping
+  let x = 0;
+  let y = 0;
+  const positions = []; // {x, y, color, label} for each item
+
+  for (const item of items) {
+    const labelWidth = item.label.length * charWidth;
+    const totalItemWidth = swatchSize + swatchTextGap + labelWidth;
+
+    // Wrap to next row if this item would exceed svgWidth (unless it's the first item on the row)
+    if (x > 0 && x + totalItemWidth > svgWidth) {
+      x = 0;
+      y += rowHeight;
+    }
+
+    positions.push({ x, y, color: item.color, label: item.label });
+    x += totalItemWidth + itemGap;
+  }
+
+  const svgHeight = y + rowHeight;
+
+  // SVG setup
+  const svg = document.getElementById(HTMLDrawingName);
+  svg.setAttribute('width', svgWidth);
+  svg.setAttribute('height', svgHeight);
+  svg.innerHTML = '';
+
+  const ns = 'http://www.w3.org/2000/svg';
+
+  // Draw each legend item
+  for (const pos of positions) {
+    // Color swatch
+    const rect = document.createElementNS(ns, 'rect');
+    rect.setAttribute('x', pos.x);
+    rect.setAttribute('y', pos.y + (rowHeight - swatchSize) / 2);
+    rect.setAttribute('width', swatchSize);
+    rect.setAttribute('height', swatchSize);
+    rect.setAttribute('fill', pos.color);
+    svg.appendChild(rect);
+
+    // Label text
+    const text = document.createElementNS(ns, 'text');
+    text.setAttribute('x', pos.x + swatchSize + swatchTextGap);
+    text.setAttribute('y', pos.y + rowHeight / 2);
+    text.setAttribute('fill', textColor);
+    text.setAttribute('font-size', fontSize);
+    text.setAttribute('font-family', 'sans-serif');
+    text.setAttribute('dominant-baseline', 'central');
+    text.textContent = pos.label;
+    svg.appendChild(text);
+  }
+}
+
+
+// ===================================================================================
 // Draw Phase Margin 1 (PM1) diagram
 // See SPECIFICATION_PM1_DRAWING.md for detailed specification.
 //
@@ -382,6 +470,7 @@ export function drawPM1(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   const S_Stuff = 11;
 
   // --- Configurable layout constants ---
+  const showSPvalue = true; // true: display "SP xx%" label, false: display "SP" only
   const svgPadding = 5; // padding inside the SVG around the figure
 
   const titleFontSize = 14;
@@ -394,10 +483,10 @@ export function drawPM1(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   const waveLineColor = '#333333';
   const waveLineWidth = 3;
   
-  const spColor = '#2196F3';
+  const spColor = '#FF0000'; //'#2196F3';
   const spLineWidth = 3;
   
-  const pm1BarColor = 'rgba(255, 100, 100, 0.3)';
+  const pm1BarColor = 'rgba(255, 156, 35, 0.4)'; // rosa: 'rgba(255, 100, 100, 0.3)'
   const phaseErrorBarColor = 'rgba(100, 255, 100, 0.3)';
   const tqBarColor = 'rgba(82, 146, 255, 0.3)';
 
@@ -717,7 +806,8 @@ export function drawPM1(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   addLine(sp_stuff2_x, sp_y_bottom, sp_stuff2_x, sp_y_top, spColor, spLineWidth);
 
   // "SP" text above the rightmost stuff bit's SP line only
-  addTextOnTop(sp_stuff2_x, sp_y_top - SP_text_gap, 'SP', labelFontSize - 1, spColor, 'middle', 'auto');
+  const spText_PM1 = showSPvalue ? `SP ${Math.round(spFraction * 100)}%` : 'SP';
+  addTextOnTop(sp_stuff2_x, sp_y_top - SP_text_gap, spText_PM1, labelFontSize - 1, spColor, 'middle', 'auto');
 
   // Break indicator for Line 2 (two S-shaped waves with spacing)
   const breakMidL2 = (x_L2_stuff1_end + x_L2_bit11_start) / 2;
@@ -791,6 +881,7 @@ export function drawPM2(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   const S_Stuff = 11;
 
   // --- Configurable layout constants ---
+  const showSPvalue = true; // true: display "SP xx%" label, false: display "SP" only
   const svgPadding = 5;
 
   const titleFontSize = 14;
@@ -803,10 +894,10 @@ export function drawPM2(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   const waveLineColor = '#333333';
   const waveLineWidth = 3;
 
-  const spColor = '#2196F3';
+  const spColor = '#FF0000'; //'#2196F3';
   const spLineWidth = 3;
 
-  const pm2BarColor = 'rgba(255, 100, 100, 0.3)';
+  const pm2BarColor = 'rgba(255, 156, 35, 0.4)'; // rosa: 'rgba(255, 100, 100, 0.3)';
   const phaseErrorBarColor = 'rgba(100, 255, 100, 0.3)';
 
   const bitFillColor = '#CCCCCC';
@@ -1119,7 +1210,8 @@ export function drawPM2(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   addLine(sp_stuff2_x, sp_y_bottom, sp_stuff2_x, sp_y_top, spColor, spLineWidth);
 
   // "SP" text above Bit 11's SP line (differs from PM1)
-  addTextOnTop(sp_bit11_x, sp_y_top - SP_text_gap, 'SP', labelFontSize - 1, spColor, 'middle', 'auto');
+  const spText_PM2 = showSPvalue ? `SP ${Math.round(spFraction * 100)}%` : 'SP';
+  addTextOnTop(sp_bit11_x, sp_y_top - SP_text_gap, spText_PM2, labelFontSize - 1, spColor, 'middle', 'auto');
 
   // Break indicator for Line 2
   const breakMidL2 = (x_L2_stuff1_end + x_L2_bit11_start) / 2;
@@ -1166,4 +1258,88 @@ export function drawPM2(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   // Append text group to content group, then content group to SVG
   contentGroup.appendChild(textGroup);
   svg.appendChild(contentGroup);
+}
+
+// ===================================================================================
+// Trigger a file download from a Blob
+export function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ===================================================================================
+// Download multiple SVGs combined into a single stacked image (SVG or PNG)
+// @param {string[]} svgIds - Array of SVG element IDs to stack vertically
+// @param {string} baseName - Base filename (without extension)
+// @param {string} imageFormat - 'svg' or 'png'
+// @param {number} gap - Vertical gap between stacked SVGs in px
+// @param {number} margin - Margin around the entire combined image in px
+export function downloadCombinedSVGs(svgIds, baseName, imageFormat, gap, margin) {
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const pngScaleFactor = 3;
+
+  // Measure total height and max width
+  let totalHeight = 0;
+  let maxWidth = 0;
+  const sources = [];
+  for (const id of svgIds) {
+    const src = document.getElementById(id);
+    const w = parseFloat(src.getAttribute('width'));
+    const h = parseFloat(src.getAttribute('height'));
+    sources.push({ src, w, h });
+    maxWidth = Math.max(maxWidth, w);
+    totalHeight += h;
+  }
+  totalHeight += gap * (svgIds.length - 1);
+
+  // Add margin to total dimensions
+  const outerWidth = maxWidth + 2 * margin;
+  const outerHeight = totalHeight + 2 * margin;
+
+  // Build a single combined SVG
+  const combined = document.createElementNS(svgNS, 'svg');
+  combined.setAttribute('xmlns', svgNS);
+  combined.setAttribute('width', outerWidth);
+  combined.setAttribute('height', outerHeight);
+  combined.setAttribute('viewBox', '0 0 ' + outerWidth + ' ' + outerHeight);
+  combined.style.backgroundColor = 'white';
+
+  let yOffset = margin;
+  for (const { src, w, h } of sources) {
+    const g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('transform', 'translate(' + margin + ',' + yOffset + ')');
+    Array.from(src.childNodes).forEach(n => g.appendChild(n.cloneNode(true)));
+    combined.appendChild(g);
+    yOffset += h + gap;
+  }
+
+  const serializer = new XMLSerializer();
+  const svgString = serializer.serializeToString(combined);
+
+  if (imageFormat === 'svg') {
+    const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    triggerDownload(blob, baseName + '.svg');
+  } else if (imageFormat === 'png') {
+    const img = new Image();
+    img.onload = function () {
+      const canvas = document.createElement('canvas');
+      canvas.width = outerWidth * pngScaleFactor;
+      canvas.height = outerHeight * pngScaleFactor;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.scale(pngScaleFactor, pngScaleFactor);
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(function (blob) {
+        triggerDownload(blob, baseName + '.png');
+      }, 'image/png');
+    };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
+  }
 }
