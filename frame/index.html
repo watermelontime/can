@@ -21,7 +21,7 @@
   <main>
 
     <div class="page-header">
-      <h1>CAN Frame Generator <a href="versionhistory.html" class="version-label" target="_blank" rel="noopener noreferrer">V1.1.2</a></h1>
+      <h1>CAN Frame Generator <a href="versionhistory.html" id="appVersion" class="version-label" target="_blank" rel="noopener noreferrer" aria-label="Version"></a></h1>
     </div>
 
     <div class="responsive-container">
@@ -147,6 +147,7 @@
           <span style="margin-left:0.5em;">SP</span>
           <input type="number" id="inputArbSP" class="input-field" value="80" min="1" max="99" style="width:8ch; margin:0 6px; vertical-align:middle;" />
           <span>%</span>
+          <span id="dataPhaseInputs">
           <span style="margin-left:1.2em;"><b>Data Phase:</b></span>
           <span style="margin-left:0.5em;">Bit-rate</span>
           <input type="number" id="inputDataBitrate" class="input-field" value="1000" min="100" max="20000" style="width:10ch; margin:0 6px; vertical-align:middle;" />
@@ -154,6 +155,7 @@
           <span  style="margin-left:0.5em;">SP</span>
           <input type="number" id="inputDataSP" class="input-field" value="70" min="1" max="99" style="width:8ch; margin:0 6px; vertical-align:middle;" />
           <span>%</span>
+          </span>
         </div>
 
         <!-- SVG container -->

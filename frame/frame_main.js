@@ -6,6 +6,9 @@ import { drawFrame } from './frame_draw.js';
 import { exportSVG, exportPNG, exportCSV, exportVHDL } from './frame_export.js';
 import { EXAMPLE_CONFIGS } from './frame_definitions.js';
 
+// Application version shown next to the page title
+const APP_VERSION = 'V1.1.3';
+
 var myFrame = null;
 
 // =============================================================================
@@ -44,6 +47,12 @@ function frameInit() {
 
   // Set initial field enable/disable state
   onFrameTypeChange();
+
+  // Show application version next to title
+  const versionEl = document.getElementById('appVersion');
+  if (versionEl) {
+    versionEl.textContent = APP_VERSION;
+  }
 }
 
 // =============================================================================
@@ -71,6 +80,9 @@ function onFrameTypeChange() {
 
   // RRS: XL only (user input)
   document.getElementById("inputRRS").disabled = !isXL;
+
+  // Hide/show Data Phase inputs (only for FD/XL)
+  _updateDataPhaseVisibility();
 
   // Hide/show rows based on frame type
   document.getElementById("rowBRS").style.display  = isFD ? "" : "none";
@@ -174,6 +186,18 @@ function onLoadExample() {
 }
 
 // =============================================================================
+// Show/hide Data Phase inputs based on frame type
+// =============================================================================
+function _updateDataPhaseVisibility() {
+  var ft = document.getElementById("frameTypeSelect").value;
+  var isCC = ft.startsWith("CC_");
+  var dataPhase = document.getElementById("dataPhaseInputs");
+  if (dataPhase) {
+    dataPhase.style.display = isCC ? "none" : "";
+  }
+}
+
+// =============================================================================
 // Real Arb/Data bit ratio switch toggled
 // =============================================================================
 function onRealBitRatioToggle() {
@@ -182,6 +206,7 @@ function onRealBitRatioToggle() {
   var arbLongerChk = document.getElementById("chkArbPhaseBitsLonger");
 
   inputsDiv.style.display = isOn ? "flex" : "none";
+  _updateDataPhaseVisibility();
 
   if (isOn) {
     arbLongerChk.checked = false;
@@ -248,9 +273,15 @@ function onShowFrame() {
   var realBitRatioOn = document.getElementById("chkRealArbDataBitRatio").checked;
   if (realBitRatioOn) {
     var arbBR  = _clampInput("inputArbBitrate",  100, 20000);
-    var dataBR = _clampInput("inputDataBitrate", 100, 20000);
     var arbSP  = _clampInput("inputArbSP",  1, 99);
-    var dataSP = _clampInput("inputDataSP", 1, 99);
+    var isCC   = ft.startsWith("CC_");
+    // Hint: Currently, for CC frames the larger arbitration bits are not possible. This is because there is just 1 bit rate, not ratio.
+    // TODO/Question: To enable the same larger visual bit lenghts
+    //   Option a) show the data phase bit rate anyway => so due to the ratio, the arb bits get visually larger
+    //   Option b) add a "visual bit ratio" setting that only affects the drawing, not the actual bit time calculations
+    //   Option c) leave as is, do not provide feature
+    var dataBR = isCC ? arbBR : _clampInput("inputDataBitrate", 100, 20000);
+    var dataSP = isCC ? arbSP : _clampInput("inputDataSP", 1, 99);
 
     myFrame.bitTimeInfo.realBitRatio = true;
     myFrame.bitTimeInfo.realArbDataBitLenRatio = dataBR / arbBR;
