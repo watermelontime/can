@@ -473,10 +473,11 @@ export function drawPM1(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   const showSPvalue = true; // true: display "SP xx%" label, false: display "SP" only
   const svgPadding = 5; // padding inside the SVG around the figure
 
-  const titleFontSize = 14;
+  const titleFontSize = 15; // font size for the title of the diagram (e.g. "Phase Margin 1 (PM1)")
   const titleBold = true;
+  const lineLabelFontSize = 14; // font size for "RX Signal" and "Node internal view" labels
   const labelFontSize = 14;
-  const lineLabelBold = false;
+  const lineLabelBold = true;
   const valueLabelBold = false;
 
   const waveLineHeight = 25;
@@ -500,17 +501,20 @@ export function drawPM1(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   const labelColor = 'black';
   const connectorColor = 'black';
   
-  const gap_title_to_label = 10;
-  const gap_label_to_line = 8;
+  const gap_title_to_label = 10; // title of the diagram to first line label
+  const gap_line_label_to_line = 8; // gap of the line-label to the bits; old value 8
   const gap_Line1_Line2 = 20;
   const bar_exceed_top = 5;
   const bar_exceed_bottom = 20;
   const gap_bars_to_labels = 13;
-  const SP_text_gap = 3;
+  const gap_SP_label_to_line = 8; // gap from bottom of SP label to top of bit in Line 2
   const sp_exceed_top = 10; // how many pixels the SP line exceeds above the top of the bit in Line 2
   const connector_line_width = 1; // width of the connector lines from bars to labels
   const gap_connector_to_label = 4; // gap in px between connector line end and value label
   const vertical_bar_min_width = 1;
+  const bit_length_arrow_line_width = 1; // width of the bit length marking lines (with arrows)
+  const gap_bit_length_arrow_line_to_line = 10; // gap from bit length arrow line to top of bit
+  const gap_bit_length_label_to_bitline = 8; // gap from bottom of bit length label to the arrow line
   const breakWidth = 30;
   const Line1PrecedingBitFraction = 0.3;
 
@@ -541,10 +545,10 @@ export function drawPM1(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   // --- Vertical layout ---
   const y_title = 0;
   const y_line1_label = titleFontSize + gap_title_to_label;
-  const y_line1_top = y_line1_label + labelFontSize + gap_label_to_line;
+  const y_line1_top = y_line1_label + lineLabelFontSize + gap_line_label_to_line;
   const y_line1_bottom = y_line1_top + waveLineHeight;
   const y_line2_label = y_line1_bottom + gap_Line1_Line2;
-  const y_line2_top = y_line2_label + labelFontSize + gap_label_to_line;
+  const y_line2_top = y_line2_label + lineLabelFontSize + gap_line_label_to_line;
   const y_line2_bottom = y_line2_top + waveLineHeight;
   const y_bars_top = y_line1_top - bar_exceed_top;
   const y_bars_bottom = y_line2_bottom + bar_exceed_bottom;
@@ -574,6 +578,23 @@ export function drawPM1(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
 
   // Text group: appended to content group last so all labels render on top of lines/shapes
   const textGroup = document.createElementNS(ns, 'g');
+
+  // Arrow marker definition for bit length lines
+  const defs = document.createElementNS(ns, 'defs');
+  const arrowMarkerId = `bitLenArrow_${HTMLDrawingName}`;
+  const arrowMarker = document.createElementNS(ns, 'marker');
+  arrowMarker.setAttribute('id', arrowMarkerId);
+  arrowMarker.setAttribute('markerWidth', '8');
+  arrowMarker.setAttribute('markerHeight', '6');
+  arrowMarker.setAttribute('refX', '8');
+  arrowMarker.setAttribute('refY', '3');
+  arrowMarker.setAttribute('orient', 'auto-start-reverse');
+  const arrowPoly = document.createElementNS(ns, 'polygon');
+  arrowPoly.setAttribute('points', '0 0, 8 3, 0 6');
+  arrowPoly.setAttribute('fill', labelColor);
+  arrowMarker.appendChild(arrowPoly);
+  defs.appendChild(arrowMarker);
+  contentGroup.appendChild(defs);
 
   function addText(x, y, text, size, color, anchor, baseline, bold) {
     const el = document.createElementNS(ns, 'text');
@@ -671,7 +692,7 @@ export function drawPM1(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   const x_L1_end = x_rising_edge + bitPxL1;
 
   // --- Line 2 X coordinates ---
-  const phase_error_px = bitPxL1 * S_Stuff * 2 * df_used;
+  const phase_error_px = bitPxL1 * S_Stuff * 2 * df_used; // this is an approximation of the phase error, but the error is very small
 
   // First stuff bit: shifted 1 tq left of first falling edge
   const x_L2_stuff1_start = x_falling_edge - tq_px;
@@ -691,8 +712,12 @@ export function drawPM1(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   const sp_stuff2_x = x_L2_stuff2_start + spFraction * bitPxL2;
 
   // --- Computed values for labels ---
-  const tq_ns = BRP * clk_period;
+  const tq_ns = BRP * clk_period / (1 + df_used); // duration of 1 TQ (bit line 2 = node internal view)
+  // Phase error calculation: in PM1, the phase error is defined according to the figure ase the phase error after 11 bits
+  //    In other words: the Phase Error shown in the figure is independedt of the additional "half" bit (ps1_d of the last stuff bit)
   const phase_error_ns = (bt_d - ps2_d - 1) * BRP * clk_period / (1 + df_used) - pmValue; // ps1 = bt - ps2 - 1
+  const bt_L1_ns = bt_d * BRP * clk_period / (1 - df_used); // bit length in Line 1, exact calculation
+  const bt_L2_ns = bt_d * BRP * clk_period / (1 + df_used); // bit length in Line 2, exact calculation
 
   // --- Bar dimensions (clamped to min width) ---
   const tq_bar_w = Math.max(tq_px, vertical_bar_min_width);
@@ -716,7 +741,7 @@ export function drawPM1(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   addRect(pm1_bar_x, y_bars_top, pm1_bar_w, y_bars_height, pm1BarColor);
 
   // --- 2. Line 1: RX Signal ---
-  addTextOnTop(0, y_line1_label, line1Label, labelFontSize, rowLabelColor, 'start', 'hanging', lineLabelBold);
+  addTextOnTop(0, y_line1_label, line1Label, lineLabelFontSize, rowLabelColor, 'start', 'hanging', lineLabelBold);
 
   // Waveform path (before break): preceding bit (high) → falling edge → first zero bit (low)
   const pathBefore = document.createElementNS(ns, 'path');
@@ -763,12 +788,26 @@ export function drawPM1(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
 
   // Bit name labels in Line 1 (centered in each full bit)
   const bitTextY = y_line1_top + waveLineHeight / 2;
-  if (line1Bit1) addTextOnTop(x_falling_edge + bitPxL1 / 2, bitTextY, line1Bit1, labelFontSize - 1, waveLineColor, 'middle', 'central');
-  if (line1Bit2) addTextOnTop(x_break_end_L1 + bitPxL1 / 2, bitTextY, line1Bit2, labelFontSize - 1, waveLineColor, 'middle', 'central');
-  if (line1Bit3) addTextOnTop(x_rising_edge + bitPxL1 / 2, bitTextY, line1Bit3, labelFontSize - 1, waveLineColor, 'middle', 'central');
+  if (line1Bit1) addTextOnTop(x_falling_edge + bitPxL1 / 2, bitTextY, line1Bit1, labelFontSize, waveLineColor, 'middle', 'central');
+  if (line1Bit2) addTextOnTop(x_break_end_L1 + bitPxL1 / 2, bitTextY, line1Bit2, labelFontSize, waveLineColor, 'middle', 'central');
+  if (line1Bit3) addTextOnTop(x_rising_edge + bitPxL1 / 2, bitTextY, line1Bit3, labelFontSize, waveLineColor, 'middle', 'central');
+
+  // Bit length marking for Line 1 (above Bit 11)
+  const y_bit_length_line_L1 = y_line1_top - gap_bit_length_arrow_line_to_line;
+  const bitLenLineL1 = document.createElementNS(ns, 'line');
+  bitLenLineL1.setAttribute('x1', x_break_end_L1);
+  bitLenLineL1.setAttribute('y1', y_bit_length_line_L1);
+  bitLenLineL1.setAttribute('x2', x_zero11_end);
+  bitLenLineL1.setAttribute('y2', y_bit_length_line_L1);
+  bitLenLineL1.setAttribute('stroke', labelColor);
+  bitLenLineL1.setAttribute('stroke-width', bit_length_arrow_line_width);
+  bitLenLineL1.setAttribute('marker-start', `url(#${arrowMarkerId})`);
+  bitLenLineL1.setAttribute('marker-end', `url(#${arrowMarkerId})`);
+  contentGroup.appendChild(bitLenLineL1);
+  addTextOnTop((x_break_end_L1 + x_zero11_end) / 2, y_line1_top - gap_bit_length_label_to_bitline - labelFontSize, `${bt_L1_ns.toFixed(2)} ns`, labelFontSize, labelColor, 'middle', 'hanging');
 
   // --- 3. Line 2: Node internal view ---
-  addTextOnTop(0, y_line2_label, line2Label, labelFontSize, rowLabelColor, 'start', 'hanging', lineLabelBold);
+  addTextOnTop(0, y_line2_label, line2Label, lineLabelFontSize, rowLabelColor, 'start', 'hanging', lineLabelBold);
 
   // Three rectangles
   addRect(x_L2_stuff1_start, y_line2_top, bitPxL2, waveLineHeight, bitFillColor, bitStrokeColor, 1);
@@ -793,21 +832,33 @@ export function drawPM1(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
 
   // Bit name labels in Line 2 (centered in each rectangle)
   const bitTextY_L2 = y_line2_top + waveLineHeight / 2;
-  if (line2Bit1) addTextOnTop(x_L2_stuff1_start + bitPxL2 / 2, bitTextY_L2, line2Bit1, labelFontSize - 1, waveLineColor, 'middle', 'central');
-  if (line2Bit2) addTextOnTop(x_L2_bit11_start + bitPxL2 / 2, bitTextY_L2, line2Bit2, labelFontSize - 1, waveLineColor, 'middle', 'central');
-  if (line2Bit3) addTextOnTop(x_L2_stuff2_start + bitPxL2 / 2, bitTextY_L2, line2Bit3, labelFontSize - 1, waveLineColor, 'middle', 'central');
+  if (line2Bit1) addTextOnTop(x_L2_stuff1_start + bitPxL2 / 2, bitTextY_L2, line2Bit1, labelFontSize, waveLineColor, 'middle', 'central');
+  if (line2Bit2) addTextOnTop(x_L2_bit11_start + bitPxL2 / 2, bitTextY_L2, line2Bit2, labelFontSize, waveLineColor, 'middle', 'central');
+  if (line2Bit3) addTextOnTop(x_L2_stuff2_start + bitPxL2 / 2, bitTextY_L2, line2Bit3, labelFontSize, waveLineColor, 'middle', 'central');
+
+  // Bit length marking for Line 2 (above Bit 11)
+  const y_bit_length_line_L2 = y_line2_top - gap_bit_length_arrow_line_to_line;
+  const bitLenLineL2 = document.createElementNS(ns, 'line');
+  bitLenLineL2.setAttribute('x1', x_L2_bit11_start);
+  bitLenLineL2.setAttribute('y1', y_bit_length_line_L2);
+  bitLenLineL2.setAttribute('x2', x_L2_bit11_end);
+  bitLenLineL2.setAttribute('y2', y_bit_length_line_L2);
+  bitLenLineL2.setAttribute('stroke', labelColor);
+  bitLenLineL2.setAttribute('stroke-width', bit_length_arrow_line_width);
+  bitLenLineL2.setAttribute('marker-start', `url(#${arrowMarkerId})`);
+  bitLenLineL2.setAttribute('marker-end', `url(#${arrowMarkerId})`);
+  contentGroup.appendChild(bitLenLineL2);
+  addTextOnTop((x_L2_bit11_start + x_L2_bit11_end) / 2, y_line2_top - gap_bit_length_label_to_bitline - labelFontSize, `${bt_L2_ns.toFixed(2)} ns`, labelFontSize, labelColor, 'middle', 'hanging');
 
   // SP lines (from bottom of bit, exceeding top by sp_exceed_top)
   const sp_y_bottom = y_line2_bottom;
   const sp_y_top = y_line2_top - sp_exceed_top;
 
-  addLine(sp_stuff1_x, sp_y_bottom, sp_stuff1_x, sp_y_top, spColor, spLineWidth);
-  addLine(sp_bit11_x, sp_y_bottom, sp_bit11_x, sp_y_top, spColor, spLineWidth);
   addLine(sp_stuff2_x, sp_y_bottom, sp_stuff2_x, sp_y_top, spColor, spLineWidth);
 
   // "SP" text above the rightmost stuff bit's SP line only
   const spText_PM1 = showSPvalue ? `SP ${Math.round(spFraction * 100)}%` : 'SP';
-  addTextOnTop(sp_stuff2_x, sp_y_top - SP_text_gap, spText_PM1, labelFontSize - 1, spColor, 'middle', 'auto');
+  addTextOnTop(sp_stuff2_x, y_line2_top - labelFontSize - gap_SP_label_to_line, spText_PM1, labelFontSize, spColor, 'middle', 'hanging');
 
   // Break indicator for Line 2 (two S-shaped waves with spacing)
   const breakMidL2 = (x_L2_stuff1_end + x_L2_bit11_start) / 2;
@@ -884,10 +935,11 @@ export function drawPM2(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   const showSPvalue = true; // true: display "SP xx%" label, false: display "SP" only
   const svgPadding = 5;
 
-  const titleFontSize = 14;
+  const titleFontSize = 15;
   const titleBold = true;
+  const lineLabelFontSize = 14; // font size for "RX Signal" and "Node internal view" labels
   const labelFontSize = 14;
-  const lineLabelBold = false;
+  const lineLabelBold = true;
   const valueLabelBold = false;
 
   const waveLineHeight = 25;
@@ -916,11 +968,14 @@ export function drawPM2(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   const bar_exceed_top = 5;
   const bar_exceed_bottom = 20;
   const gap_bars_to_labels = 13;
-  const SP_text_gap = 3;
+  const gap_SP_label_to_line = 8; // gap from bottom of SP label to top of bit in Line 2
   const sp_exceed_top = 10;
   const connector_line_width = 1;
   const gap_connector_to_label = 4;
   const vertical_bar_min_width = 1;
+  const bit_length_arrow_line_width = 1; // width of the bit length marking lines (with arrows)
+  const gap_bit_length_arrow_line_to_line = 10; // gap from bit length arrow line to top of bit
+  const gap_bit_length_label_to_bitline = 8; // gap from bottom of bit length label to top of bit
   const breakWidth = 30;
   const Line1PrecedingBitFraction = 0.3;
 
@@ -951,10 +1006,10 @@ export function drawPM2(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   // --- Vertical layout ---
   const y_title = 0;
   const y_line1_label = titleFontSize + gap_title_to_label;
-  const y_line1_top = y_line1_label + labelFontSize + gap_label_to_line;
+  const y_line1_top = y_line1_label + lineLabelFontSize + gap_label_to_line;
   const y_line1_bottom = y_line1_top + waveLineHeight;
   const y_line2_label = y_line1_bottom + gap_Line1_Line2;
-  const y_line2_top = y_line2_label + labelFontSize + gap_label_to_line;
+  const y_line2_top = y_line2_label + lineLabelFontSize + gap_label_to_line;
   const y_line2_bottom = y_line2_top + waveLineHeight;
   const y_bars_top = y_line1_top - bar_exceed_top;
   const y_bars_bottom = y_line2_bottom + bar_exceed_bottom;
@@ -981,6 +1036,23 @@ export function drawPM2(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   contentGroup.setAttribute('transform', `translate(${svgPadding},${svgPadding})`);
 
   const textGroup = document.createElementNS(ns, 'g');
+
+  // Arrow marker definition for bit length lines
+  const defs = document.createElementNS(ns, 'defs');
+  const arrowMarkerId = `bitLenArrow_${HTMLDrawingName}`;
+  const arrowMarker = document.createElementNS(ns, 'marker');
+  arrowMarker.setAttribute('id', arrowMarkerId);
+  arrowMarker.setAttribute('markerWidth', '8');
+  arrowMarker.setAttribute('markerHeight', '6');
+  arrowMarker.setAttribute('refX', '8');
+  arrowMarker.setAttribute('refY', '3');
+  arrowMarker.setAttribute('orient', 'auto-start-reverse');
+  const arrowPoly = document.createElementNS(ns, 'polygon');
+  arrowPoly.setAttribute('points', '0 0, 8 3, 0 6');
+  arrowPoly.setAttribute('fill', labelColor);
+  arrowMarker.appendChild(arrowPoly);
+  defs.appendChild(arrowMarker);
+  contentGroup.appendChild(defs);
 
   function addText(x, y, text, size, color, anchor, baseline, bold) {
     const el = document.createElementNS(ns, 'text');
@@ -1099,7 +1171,11 @@ export function drawPM2(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   const sp_stuff2_x = x_L2_stuff2_start + spFraction * bitPxL2;
 
   // --- Computed values for labels ---
+  // Phase error calculation: in PM2, the phase error is defined according to the figure ase the phase error after 11 bits
+  //   In other words: the Phase Error shown in the figure is independedt of the missing "half" bit (ps2_d of the last stuff bit)
   const phase_error_ns = ps2_d * BRP * clk_period / (1 - df_used) - pmValue;
+  const bt_L1_ns = bt_d * BRP * clk_period / (1 + df_used); // bit length in Line 1, exact calculation
+  const bt_L2_ns = bt_d * BRP * clk_period / (1 - df_used); // bit length in Line 2, exact calculation
 
   // --- Bar dimensions (clamped to min width) ---
   // PM2 bar: from SP of Bit 11 to rising edge
@@ -1120,7 +1196,7 @@ export function drawPM2(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
   addRect(pm2_bar_x, y_bars_top, pm2_bar_w, y_bars_height, pm2BarColor);
 
   // --- 2. Line 1: RX Signal ---
-  addTextOnTop(0, y_line1_label, line1Label, labelFontSize, rowLabelColor, 'start', 'hanging', lineLabelBold);
+  addTextOnTop(0, y_line1_label, line1Label, lineLabelFontSize, rowLabelColor, 'start', 'hanging', lineLabelBold);
 
   // Waveform path (before break)
   const pathBefore = document.createElementNS(ns, 'path');
@@ -1167,12 +1243,26 @@ export function drawPM2(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
 
   // Bit name labels in Line 1
   const bitTextY = y_line1_top + waveLineHeight / 2;
-  if (line1Bit1) addTextOnTop(x_falling_edge + bitPxL1 / 2, bitTextY, line1Bit1, labelFontSize - 1, waveLineColor, 'middle', 'central');
-  if (line1Bit2) addTextOnTop(x_break_end_L1 + bitPxL1 / 2, bitTextY, line1Bit2, labelFontSize - 1, waveLineColor, 'middle', 'central');
-  if (line1Bit3) addTextOnTop(x_rising_edge + bitPxL1 / 2, bitTextY, line1Bit3, labelFontSize - 1, waveLineColor, 'middle', 'central');
+  if (line1Bit1) addTextOnTop(x_falling_edge + bitPxL1 / 2, bitTextY, line1Bit1, labelFontSize, waveLineColor, 'middle', 'central');
+  if (line1Bit2) addTextOnTop(x_break_end_L1 + bitPxL1 / 2, bitTextY, line1Bit2, labelFontSize, waveLineColor, 'middle', 'central');
+  if (line1Bit3) addTextOnTop(x_rising_edge + bitPxL1 / 2, bitTextY, line1Bit3, labelFontSize, waveLineColor, 'middle', 'central');
+
+  // Bit length marking for Line 1 (above last Stuff Bit)
+  const y_bit_length_line_L1 = y_line1_top - gap_bit_length_arrow_line_to_line;
+  const bitLenLineL1 = document.createElementNS(ns, 'line');
+  bitLenLineL1.setAttribute('x1', x_rising_edge);
+  bitLenLineL1.setAttribute('y1', y_bit_length_line_L1);
+  bitLenLineL1.setAttribute('x2', x_L1_end);
+  bitLenLineL1.setAttribute('y2', y_bit_length_line_L1);
+  bitLenLineL1.setAttribute('stroke', labelColor);
+  bitLenLineL1.setAttribute('stroke-width', bit_length_arrow_line_width);
+  bitLenLineL1.setAttribute('marker-start', `url(#${arrowMarkerId})`);
+  bitLenLineL1.setAttribute('marker-end', `url(#${arrowMarkerId})`);
+  contentGroup.appendChild(bitLenLineL1);
+  addTextOnTop((x_rising_edge + x_L1_end) / 2, y_line1_top - gap_bit_length_label_to_bitline - labelFontSize, `${bt_L1_ns.toFixed(2)} ns`, labelFontSize, labelColor, 'middle', 'hanging');
 
   // --- 3. Line 2: Node internal view ---
-  addTextOnTop(0, y_line2_label, line2Label, labelFontSize, rowLabelColor, 'start', 'hanging', lineLabelBold);
+  addTextOnTop(0, y_line2_label, line2Label, lineLabelFontSize, rowLabelColor, 'start', 'hanging', lineLabelBold);
 
   // Three rectangles
   addRect(x_L2_stuff1_start, y_line2_top, bitPxL2, waveLineHeight, bitFillColor, bitStrokeColor, 1);
@@ -1197,21 +1287,33 @@ export function drawPM2(pmValue, bt_d, ps2_d, spFraction, df_used, BRP, clk_peri
 
   // Bit name labels in Line 2
   const bitTextY_L2 = y_line2_top + waveLineHeight / 2;
-  if (line2Bit1) addTextOnTop(x_L2_stuff1_start + bitPxL2 / 2, bitTextY_L2, line2Bit1, labelFontSize - 1, waveLineColor, 'middle', 'central');
-  if (line2Bit2) addTextOnTop(x_L2_bit11_start + bitPxL2 / 2, bitTextY_L2, line2Bit2, labelFontSize - 1, waveLineColor, 'middle', 'central');
-  if (line2Bit3) addTextOnTop(x_L2_stuff2_start + bitPxL2 / 2, bitTextY_L2, line2Bit3, labelFontSize - 1, waveLineColor, 'middle', 'central');
+  if (line2Bit1) addTextOnTop(x_L2_stuff1_start + bitPxL2 / 2, bitTextY_L2, line2Bit1, labelFontSize, waveLineColor, 'middle', 'central');
+  if (line2Bit2) addTextOnTop(x_L2_bit11_start + bitPxL2 / 2, bitTextY_L2, line2Bit2, labelFontSize, waveLineColor, 'middle', 'central');
+  if (line2Bit3) addTextOnTop(x_L2_stuff2_start + bitPxL2 / 2, bitTextY_L2, line2Bit3, labelFontSize, waveLineColor, 'middle', 'central');
+
+  // Bit length marking for Line 2 (above last Stuff Bit)
+  const y_bit_length_line_L2 = y_line2_top - gap_bit_length_arrow_line_to_line;
+  const bitLenLineL2 = document.createElementNS(ns, 'line');
+  bitLenLineL2.setAttribute('x1', x_L2_stuff2_start);
+  bitLenLineL2.setAttribute('y1', y_bit_length_line_L2);
+  bitLenLineL2.setAttribute('x2', x_L2_stuff2_end);
+  bitLenLineL2.setAttribute('y2', y_bit_length_line_L2);
+  bitLenLineL2.setAttribute('stroke', labelColor);
+  bitLenLineL2.setAttribute('stroke-width', bit_length_arrow_line_width);
+  bitLenLineL2.setAttribute('marker-start', `url(#${arrowMarkerId})`);
+  bitLenLineL2.setAttribute('marker-end', `url(#${arrowMarkerId})`);
+  contentGroup.appendChild(bitLenLineL2);
+  addTextOnTop((x_L2_stuff2_start + x_L2_stuff2_end) / 2, y_line2_top - gap_bit_length_label_to_bitline - labelFontSize, `${bt_L2_ns.toFixed(2)} ns`, labelFontSize, labelColor, 'middle', 'hanging');
 
   // SP lines
   const sp_y_bottom = y_line2_bottom;
   const sp_y_top = y_line2_top - sp_exceed_top;
 
-  addLine(sp_stuff1_x, sp_y_bottom, sp_stuff1_x, sp_y_top, spColor, spLineWidth);
   addLine(sp_bit11_x, sp_y_bottom, sp_bit11_x, sp_y_top, spColor, spLineWidth);
-  addLine(sp_stuff2_x, sp_y_bottom, sp_stuff2_x, sp_y_top, spColor, spLineWidth);
 
   // "SP" text above Bit 11's SP line (differs from PM1)
   const spText_PM2 = showSPvalue ? `SP ${Math.round(spFraction * 100)}%` : 'SP';
-  addTextOnTop(sp_bit11_x, sp_y_top - SP_text_gap, spText_PM2, labelFontSize - 1, spColor, 'middle', 'auto');
+  addTextOnTop(sp_bit11_x, y_line2_top - labelFontSize - gap_SP_label_to_line, spText_PM2, labelFontSize, spColor, 'middle', 'hanging');
 
   // Break indicator for Line 2
   const breakMidL2 = (x_L2_stuff1_end + x_L2_bit11_start) / 2;

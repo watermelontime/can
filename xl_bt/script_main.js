@@ -9,7 +9,7 @@ import { createSO8svg } from '../draw_transceiver_svg.js';
 // global variable definitions
 
 // Application version shown next to the page title
-const APP_VERSION = 'V1.0.1';
+const APP_VERSION = 'V1.0.2';
 
 const floatParams = [
   'par_clk_freq',
