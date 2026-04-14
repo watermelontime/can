@@ -1,0 +1,852 @@
+// TODOs
+// - show additional parameters like: retransmission count in register settings
+// - Calculation should be done only if focus is left (reduces number of errors)
+
+// import functions
+import * as draw_svg from '../draw_bits_svg.js'; // SVG drawing functions for bit timing
+import { createSO8svg } from '../draw_transceiver_svg.js';
+
+// global variable definitions
+
+// Application version shown next to the page title
+const APP_VERSION = 'V1.0.2';
+
+const floatParams = [
+  'par_clk_freq',
+  'par_dfused'
+];
+
+const buttonParams = [
+  'canType',
+  'transceiverType'
+];
+
+const checkboxParams = [
+  'par_tms',
+  'par_tdc_dat'
+];
+
+const floatResults = [
+  'res_clk_period',
+  'res_bitrate_arb',
+  'res_bitrate_dat',
+  'res_sp_arb',
+  'res_sp_dat',
+  'res_ssp_dat',
+  'res_tqlen',
+  'res_pwm_symbol_len_ns',
+  'res_df_cond1',
+  'res_df_cond2',
+  'res_df_cond3',
+  'res_df_allowed',
+  'res_pm1',
+  'res_pm2'
+];
+
+const paramFields  = Array.from(document.querySelectorAll('input[id^="par_"], select[id^="par_"]'));
+const resultFields = Array.from(document.querySelectorAll('input[id^="res_"]'));
+
+let transceiverType = 'not set';
+
+// when document is loaded: initialize page
+document.addEventListener('DOMContentLoaded', init);
+
+// ===================================================================================
+// Initialisation when website is loaded
+function init() {
+  // Show application version next to title
+  const versionEl = document.getElementById('appVersion');
+  if (versionEl) {
+    versionEl.textContent = APP_VERSION;
+  }
+
+  // Create transceiver SVG icons
+  document.getElementById('btnTFD').appendChild(createSO8svg('FD'));
+  document.getElementById('btnTSIC').appendChild(createSO8svg('SIC'));
+  document.getElementById('btnTSICXL').appendChild(createSO8svg('SIC XL'));
+
+  // set eventlistener: when parameter changes => calculate
+  initEventListeners();
+
+  // set default transceiverType
+  const myBtn = document.getElementById('btnTSICXL');
+  myBtn.classList.add('active');
+  transceiverType = myBtn.dataset.value;
+
+  // Expert mode toggle
+  document.getElementById('chkExpertMode').addEventListener('change', function () {
+    const panels = document.querySelectorAll('.expert-mode');
+    panels.forEach(function (el) { el.style.display = this.checked ? '' : 'none'; }.bind(this));
+  });
+
+  // set default value (based on preconfigured list
+  setDefaultBTconfig('cfg08M');
+}
+
+// ===================================================================================
+// Event-Listener activation
+function initEventListeners() {
+  // param fields
+  paramFields.forEach(input => {
+    input.addEventListener('input', processChanges);
+  });
+
+  // Transceiver button
+  document.querySelectorAll('.transceiver-btn[data-group="transceiverType"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const selectedTransceiverType = btn.dataset.value;
+      adjustBTconfigOptions(selectedTransceiverType);
+      adjustForTransceiverSelection(selectedTransceiverType);
+      transceiverType = selectedTransceiverType;
+
+      // Optical switch of Button-Selected
+      // step 1: deactivate all
+      document.querySelectorAll('.transceiver-btn[data-group="transceiverType"]').forEach(b => {
+        b.classList.remove('active');
+      });
+      // activate the one clicked
+      btn.classList.add('active');
+
+      // calculate results
+      processChanges();
+   });
+  });
+
+  // "set configuration" button
+  const setConfigBtn = document.getElementById('btnSetBTConfig');
+  if (setConfigBtn) {
+    setConfigBtn.addEventListener('click', setExampleBTconfig);
+  }
+
+  // Download PM diagram links
+  document.getElementById('downloadPM1svg').addEventListener('click', (e) => { e.preventDefault(); downloadSingleSVG('DrawingPM1', 'pm1', 'svg'); });
+  document.getElementById('downloadPM1png').addEventListener('click', (e) => { e.preventDefault(); downloadSingleSVG('DrawingPM1', 'pm1', 'png'); });
+  document.getElementById('downloadPM2svg').addEventListener('click', (e) => { e.preventDefault(); downloadSingleSVG('DrawingPM2', 'pm2', 'svg'); });
+  document.getElementById('downloadPM2png').addEventListener('click', (e) => { e.preventDefault(); downloadSingleSVG('DrawingPM2', 'pm2', 'png'); });
+
+  // Download combined BT diagram links
+  document.getElementById('downloadBTsvg').addEventListener('click', (e) => { e.preventDefault(); downloadBTcombined('svg'); });
+  document.getElementById('downloadBTpng').addEventListener('click', (e) => { e.preventDefault(); downloadBTcombined('png'); });
+}
+
+// ===================================================================================
+function setDefaultBTconfig(targetValue) {
+  // Set deaufault value in Dropdown field
+  const configSelect = document.getElementById('btConfigSelect');
+  configSelect.value = targetValue; // e.g. "cfg08M" ist der Key im configMatrix
+  
+  // set default config to all param fields
+  setExampleBTconfig(); // setzt default Parameter
+}
+
+// Buttons for transceiverType ========================================================
+function adjustBTconfigOptions(selectedTransceiver) {
+  const btConfigSelect = document.getElementById('btConfigSelect');
+  
+  Array.from(btConfigSelect.options).forEach(option => {
+    // extract integer from option-name
+    const match = option.value.match(/\d+/);
+    const bitrate = match ? parseInt(match[0], 10) : null;
+    if (((selectedTransceiver === 'TFD') && (bitrate > 2)) || ((selectedTransceiver === 'TSIC') && (bitrate > 8))) {
+      option.style.display = 'none'; // Unsichtbar machen
+    } else {
+      option.style.display = 'block'; // Wieder sichtbar
+    }
+  });
+
+  btConfigSelect.value = 'cfg02M';
+}
+
+function adjustForTransceiverSelection(selectedTransceiver) {
+  // deisable TMS field: not usable without SIC XL transceivers
+  const tmsField = document.getElementById('par_tms');
+  // TODO: check this function, just copied into file up to now
+  if (selectedTransceiver != 'TSICXL') {
+    // Deselect und readonly setzen
+  	tmsField.checked = false;
+    tmsField.disabled = true;
+    tmsField.classList.add('input-disabled');
+  } else {
+    // wieder aktivieren
+    tmsField.disabled = false;
+    tmsField.classList.remove('input-disabled');
+  }
+}
+
+// ===================================================================================
+// Parameter: Read from HTML (raw)
+function paramsCollect() {
+  // gib ein Objekt `params` zurück
+  const params = {};
+  
+  // Read Select Button values (CAN Type + Transceiver)
+   document.querySelectorAll('.transceiver-btn.active').forEach(btn => {
+     const group = btn.dataset.group;
+     const btnValue = btn.dataset.value;
+     params[group] = { value_raw: btnValue };
+   });
+ 
+  // Read input values
+  paramFields.forEach(input => {
+    const id = input.id;
+
+    // Checkbox Parameter
+    if (checkboxParams.includes(id)) {
+        params[id] = {value_raw: input.checked};
+	// Other Parameter
+	} else {
+	    params[id] = {value_raw: input.value};
+	}
+  });
+  
+  // return Object
+  return params;
+}
+
+// Prüft, ob der Wert gültige Zahl ist (isFloat=0 => Integer, isFloat=1 => Float)
+function isValidNumber(value, isFloat) {
+  if (value.trim() === '') return false;
+  if (isFloat) {
+    // Erlaubt Dezimalzahlen (mit Punkt) und Integer
+    if (/^-?\d+(\.\d+)?$/.test(value)) return true;
+  } else {
+    // Erlaubt Integer
+    if (/^-?\d+$/.test(value)) return true;
+  }
+  return false;
+}
+
+// ===================================================================================
+// Parameter: Validate
+function paramsValidate(params) {
+  let allValid = true;
+ 
+  // Check validity of parameters (format)
+  for (const id in params) {
+    const entry = params[id];
+
+    // Checkbox Parameter
+    if (checkboxParams.includes(id)) {
+	  entry.value = entry.value_raw;
+	  entry.valid = true;
+    // Button Parameter (e.g. CAN Type, Transceiver Type)
+    } else if (buttonParams.includes(id)) {
+      entry.value = entry.value_raw;
+      entry.valid = true;
+  	// Number Parameter
+  	} else {
+      entry.valid = isValidNumber(entry.value_raw, floatParams.includes(id));
+  	  entry.value = entry.valid ? parseFloat(entry.value_raw) : null;
+  	}
+  }
+  
+  // check value range of parameters (value range)
+  for (const id in params) {
+    const entry = params[id];
+    if (entry.valid === true) {
+  		if (id == 'par_brp') {
+  			  if (!((entry.value >= 1) && (entry.value <= 32))) { entry.range_valid = false; entry.range_msg = 'BRP is not in ISO11898-1:2024 range.\nValid range: 1..32';}
+  			  else {entry.range_valid = true;}
+  		} else if (id == 'par_propseg_arb') {
+  			  if (!((entry.value >= 1) && (entry.value <= 384))) { entry.range_valid = false; entry.range_msg = 'Arb. PropSeg is not in ISO11898-1:2024 range.\nValid range: 1..384';}
+  			  else {entry.range_valid = true;}
+  		} else if (id == 'par_phaseseg1_arb') {
+  			  if (!((entry.value >= 1) && (entry.value <= 128))) { entry.range_valid = false; entry.range_msg = 'Arb. PhaseSeg1 is not in ISO11898-1:2024 range.\nValid range: 1..128';}
+  			  else {entry.range_valid = true;}
+  		} else if (id == 'par_phaseseg2_arb') {
+  			  if (!((entry.value >= 2) && (entry.value <= 128))) { entry.range_valid = false; entry.range_msg = 'Arb. PhaseSeg2 is not in ISO11898-1:2024 range.\nValid range: 2..128';}
+  			  else {entry.range_valid = true;}
+  		} else if (id == 'par_sjw_arb') {
+  			  if      (params.par_phaseseg1_arb.valid && !((entry.value <= params.par_phaseseg1_arb.value))) { entry.range_valid = false; entry.range_msg = 'Arb. SJW > Arb. PhaseSeg1;\nValid range: SJW <= min(PhaseSeg1, PhaseSeg2)';}
+          else if (params.par_phaseseg2_arb.valid && !((entry.value <= params.par_phaseseg2_arb.value))) { entry.range_valid = false; entry.range_msg = 'Arb. SJW > Arb. PhaseSeg2;\nValid range: SJW <= min(PhaseSeg1, PhaseSeg2)';}
+  			  else {entry.range_valid = true;}
+  		} else if (id == 'par_propseg_dat') {
+  			  if (!((entry.value >= 0) && (entry.value <= 128))) { entry.range_valid = false; entry.range_msg = 'Data PropSeg is not in ISO11898-1:2024 range.\nValid range: 0..128';}
+  			  else {entry.range_valid = true;}
+  		} else if (id == 'par_phaseseg1_dat') {
+  			  if (!((entry.value >= 1) && (entry.value <= 128))) { entry.range_valid = false; entry.range_msg = 'Data PhaseSeg1 is not in ISO11898-1:2024 range.\nValid range: 1..128';}
+  			  else {entry.range_valid = true;}
+  		} else if (id == 'par_phaseseg2_dat') {
+  			  if (!((entry.value >= 2) && (entry.value <= 128))) { entry.range_valid = false; entry.range_msg = 'Data PhaseSeg2 is not in ISO11898-1:2024 range.\nValid range: 2..128';}
+  			  else {entry.range_valid = true;}
+  		} else if (id == 'par_sjw_dat') {
+  			  if      (params.par_phaseseg1_dat.valid && !((entry.value <= params.par_phaseseg1_dat.value))) { entry.range_valid = false; entry.range_msg = 'Data SJW > Data PhaseSeg1;\nValid range: SJW <= min(PhaseSeg1, PhaseSeg2)';}
+          else if (params.par_phaseseg2_dat.valid && !((entry.value <= params.par_phaseseg2_dat.value))) { entry.range_valid = false; entry.range_msg = 'Data SJW > Data PhaseSeg2;\nValid range: SJW <= min(PhaseSeg1, PhaseSeg2)';}
+  			  else {entry.range_valid = true;}
+  		} else { // (entry.valid === false)
+        // default check for positive values
+        if (buttonParams.includes(id)) {
+          // set by default to valid, since there is no range check for buttons
+          entry.range_valid = true;
+        } else {
+          if (entry.value >= 0) {
+            entry.range_valid = true; // valid range
+          } else {
+            entry.range_valid = false; // invalid range
+            entry.range_msg = 'Value must be a positive number';
+          }
+        }
+      }
+	  } else {
+      // if parameter is invalid, then the range is also invalid
+      entry.range_valid = false; 
+      entry.range_msg = 'Invalid parameter detected. Numeric value required.';
+    }
+  }
+
+  // Mark HTLM-fields that have invalid entries and collect error messages
+  var errorMessages = [];
+  for (const id in params) {
+    const entry = params[id];
+    const field = document.getElementById(id);
+    if (field) {
+      if (!entry.valid || !entry.range_valid) {
+        field.classList.add("input-error");
+        errorMessages.push(`${id}: ${entry.range_msg}`);
+      } else {
+        field.classList.remove("input-error");
+      }
+    } 
+  }
+
+  // Generate allValid
+  allValid = true; // init: assume all valid
+  for (const id in params) {
+    const entry = params[id];
+    if (!entry.valid || !entry.range_valid) {
+      allValid = false;
+    }
+  }
+
+  // Print error messages
+  const errorContainer = document.getElementById('errorReportContainer');
+  const errorList = document.getElementById('errorDisplayArea');
+  if (errorMessages.length > 0) {
+    errorList.innerHTML = '';
+    errorMessages.forEach(msg => {
+      const li = document.createElement('li');
+      li.textContent = msg;
+      errorList.appendChild(li);
+    });
+    errorContainer.style.display = '';
+  } else {
+    errorList.innerHTML = '';
+    errorContainer.style.display = 'none';
+  }
+  
+  return allValid;
+} // func paramValidate
+
+// ===================================================================================
+// Generate HW Register Values
+function generateHardwareRegisters(results, params) {
+  // add Register Values to results object
+  const boschRegisters = {
+    res_reg_MODE: 0x00000000,
+    res_reg_NBTP: 0x00000000,
+    res_reg_XBTP: 0x00000000,
+    res_reg_PCFG: 0x00000000,
+  };
+
+  // Help-Function: Writes numeric value to specific bit position
+  function setBits(regVal, value, endBit, startBit) {
+    // regVal: current register value
+    // value: value to set in the register
+    // endBit: last bit position to set (0-31), endBit must be >= startBit
+    // startBit: first bit position to set (0-31), endBit must be >= startBit
+    // example: setBits(0x00000000, 32, 0, 7) sets bit 7 to 0 in the register => 0x0000002F
+	  const length = endBit - startBit + 1;
+    const mask = ((1 << length) - 1) << startBit;
+    return (regVal & ~mask) | ((value << startBit) & mask);
+  }
+
+  // ### Bosch Registers of X_CAN, XS_CAN, X_CANB ###
+  // MODE.EFDI
+  boschRegisters.res_reg_MODE = params.par_tms.value ? setBits(boschRegisters.res_reg_MODE, 1, 10, 10) : setBits(boschRegisters.res_reg_MODE, 0, 10, 10);
+  // MODE.XLTR
+  boschRegisters.res_reg_MODE = params.par_tms.value ? setBits(boschRegisters.res_reg_MODE, 1, 9, 9) : setBits(boschRegisters.res_reg_MODE, 0, 9, 9);
+  // MODE.TDCE
+  boschRegisters.res_reg_MODE = params.par_tdc_dat.value ? setBits(boschRegisters.res_reg_MODE, 1, 2, 2) : setBits(boschRegisters.res_reg_MODE, 0, 2, 2);
+  // MODE.XLOE
+  boschRegisters.res_reg_MODE = setBits(boschRegisters.res_reg_MODE, 1, 1, 1);
+  // MODE.FDOE
+  boschRegisters.res_reg_MODE = setBits(boschRegisters.res_reg_MODE, 1, 0, 0);
+
+  // NBTP.BRP
+  boschRegisters.res_reg_NBTP = setBits(boschRegisters.res_reg_NBTP, params.par_brp.value -1, 29, 25);
+  // NBTP.NTSEG1
+  boschRegisters.res_reg_NBTP = setBits(boschRegisters.res_reg_NBTP, params.par_propseg_arb.value + params.par_phaseseg1_arb.value -1, 24, 16);
+  // NBTP.NTSEG2
+  boschRegisters.res_reg_NBTP = setBits(boschRegisters.res_reg_NBTP, params.par_phaseseg2_arb.value -1, 14, 8);
+  // NBTP.SJW
+  boschRegisters.res_reg_NBTP = setBits(boschRegisters.res_reg_NBTP, params.par_sjw_arb.value -1, 6, 0);
+
+  // XBTP.XTDCO
+  boschRegisters.res_reg_XBTP = (params.par_tdc_dat.value && !params.par_tms.value) ? setBits(boschRegisters.res_reg_XBTP, results.res_sspoffset_dat, 31, 24) : setBits(boschRegisters.res_reg_XBTP, 0, 31, 24);
+  // XBTP.XTSEG1
+  boschRegisters.res_reg_XBTP = setBits(boschRegisters.res_reg_XBTP, params.par_propseg_dat.value + params.par_phaseseg1_dat.value -1, 23, 16);
+  // XBTP.XTSEG2
+  boschRegisters.res_reg_XBTP = setBits(boschRegisters.res_reg_XBTP, params.par_phaseseg2_dat.value -1, 14, 8);
+  // XBTP.XSJW
+  boschRegisters.res_reg_XBTP = setBits(boschRegisters.res_reg_XBTP, params.par_sjw_dat.value -1, 6, 0);
+
+  if (params.par_tms.value === true) {
+    // PCFG.PWMO
+    boschRegisters.res_reg_PCFG = setBits(boschRegisters.res_reg_PCFG, results.res_pwmo, 21, 16);
+    // PCFG.PWML
+    boschRegisters.res_reg_PCFG = setBits(boschRegisters.res_reg_PCFG, results.res_pwml-1, 13, 8);
+    // PCFG.PWMS
+    boschRegisters.res_reg_PCFG = setBits(boschRegisters.res_reg_PCFG, results.res_pwms-1, 5, 0);
+  }
+
+  // Convert Register-Values into Hex-Strings and write to textarea
+  function regToHex(val) {
+    return '0x' + val.toString(16).toUpperCase().padStart(8, '0');
+  }
+  var configText = '### Bit Timing configuration ###\n';
+  configText +=    '### for X_CAN, XS_CAN, X_CANB    ###\n\n';
+  configText +=    'PRT.MODE: ' + regToHex(boschRegisters.res_reg_MODE) + '\n';
+  configText +=    'PRT.NBTP: ' + regToHex(boschRegisters.res_reg_NBTP) + '\n';
+  configText +=    'PRT.XBTP: ' + regToHex(boschRegisters.res_reg_XBTP) + '\n';
+  configText +=    'PRT.PCFG: ' + regToHex(boschRegisters.res_reg_PCFG);
+  document.getElementById('canModuleConfig').textContent = configText;
+}
+
+// ===================================================================================
+// calculate results from params
+function calculate(params) {
+  // input: params object with all parameters
+  // output: results object with all calculated results
+  
+  const results = {};
+
+  // --- define local function ----------------------------
+  // Calculates the number of PWM symbols per Bit (local function)
+  function getPWMsymbolsPerBit(bit_len_in_clk_periods, clk_period_ns) {
+    let result_PWMsymbolsPerBit =   0; // return value
+    const min_pwm_symbol_len_ns =  50; // ns
+    const max_pwm_symbol_len_ns = 200; // ns
+   
+    // check if search is necessary, or 1 PWM symbol is fine
+    if ((bit_len_in_clk_periods * clk_period_ns) <= max_pwm_symbol_len_ns) {
+ 	    // check if search is necessary, or bit rate is too high
+ 	    if ((bit_len_in_clk_periods * clk_period_ns) < min_pwm_symbol_len_ns) {
+ 	    	return 0; // NO PWM POSSIBLE (Error case)
+ 	    } else {	
+ 	    	return 1; // 1 PWM symbol per bit
+ 	    }
+    }
+    
+    // Here it is clear: >1 PWM symbols needed.
+    // Search for the biggest PWM symbol usable; stop when smallest allowed PWM symbol reached
+    // HINT: There is no valid result (solution), if bit_len_in_clk_periods is no integer multiple of any valid PWM symbol length
+    
+    // determine the minimum devisor to start with (min value should be at least 2)
+    let min_pwm_symbols_per_bit = Math.ceil((bit_len_in_clk_periods * clk_period_ns) / max_pwm_symbol_len_ns);
+    
+    for (let i = min_pwm_symbols_per_bit; i < 100; i++) {
+    if ((bit_len_in_clk_periods % i) === 0) {
+      // integer divisor found
+      // no we need to check if the PWM symbol is long enough, > min PWM symbol length
+      const pwm_symbol_len_in_clk_periods = bit_len_in_clk_periods / i;
+      const pwm_symbol_len_in_ns = pwm_symbol_len_in_clk_periods * clk_period_ns;
+      if (pwm_symbol_len_in_ns >= min_pwm_symbol_len_ns) {
+ 	    // valid PWM symbol length found
+ 	    result_PWMsymbolsPerBit = i;
+      } else { // NO valid PWM symbol length found
+ 	    result_PWMsymbolsPerBit = 0; // error feedback
+      }
+ 		break; // Schleife wird hier beendet
+      }
+    }
+    
+    return result_PWMsymbolsPerBit;
+  }
+
+  // Calculate results
+  results['res_clk_period']   = 1000/params.par_clk_freq.value;
+  results['res_tqperbit_arb'] = 1 + params.par_propseg_arb.value + params.par_phaseseg1_arb.value + params.par_phaseseg2_arb.value;
+  results['res_tqperbit_dat'] = 1 + params.par_propseg_dat.value + params.par_phaseseg1_dat.value + params.par_phaseseg2_dat.value;
+  results['res_bitrate_arb']  = params.par_clk_freq.value / (params.par_brp.value * results.res_tqperbit_arb);
+  results['res_bitrate_dat']  = params.par_clk_freq.value / (params.par_brp.value * results.res_tqperbit_dat);
+  results['res_sp_arb']       = (1 - params.par_phaseseg2_arb.value/results.res_tqperbit_arb) * 100;
+  results['res_sp_dat']       = (1 - params.par_phaseseg2_dat.value/results.res_tqperbit_dat) * 100;
+
+  if (params.par_tdc_dat.value === true) {
+	  if (params.par_tms.value === false) {
+	    results['res_sspoffset_dat']= (params.par_propseg_dat.value + params.par_phaseseg1_dat.value + 1)* params.par_brp.value - 1;
+    } else { // true
+	    results['res_sspoffset_dat']= 'TMS on';
+    }
+  } else { // tdc=false
+	  results['res_sspoffset_dat']= 'TDC off';
+	}
+	
+  if (typeof results.res_sspoffset_dat === "number") {
+    results['res_ssp_dat'] = results.res_sspoffset_dat/(results.res_tqperbit_dat*params.par_brp.value) * 100;
+  } else if (typeof results.res_sspoffset_dat === "string") {
+	  results['res_ssp_dat'] = results.res_sspoffset_dat;
+  }
+  
+  results['res_bitlength_arb'] = 1000 / results.res_bitrate_arb;
+  results['res_bitlength_dat'] = 1000 / results.res_bitrate_dat;
+	
+  results['res_tqlen'] = results.res_clk_period * params.par_brp.value;
+
+  // PWM Ergenisse
+  // derive the number of PWM symbols per bit
+  let pwm_symbols_per_bit = getPWMsymbolsPerBit(results.res_tqperbit_dat * params.par_brp.value, results.res_clk_period);
+
+	if (pwm_symbols_per_bit > 0) {
+		// result found
+		let pwm_symbol_length_in_clk_periods = (results.res_tqperbit_dat * params.par_brp.value)/pwm_symbols_per_bit;
+		
+		results['res_pwms'] = Math.ceil(pwm_symbol_length_in_clk_periods/4);
+		results['res_pwml'] = pwm_symbol_length_in_clk_periods - results.res_pwms;
+		results['res_pwmo'] = (results.res_tqperbit_arb * params.par_brp.value) % pwm_symbol_length_in_clk_periods;
+		
+		results['res_pwm_symbol_len_ns']         = pwm_symbol_length_in_clk_periods * results.res_clk_period;
+		results['res_pwm_symbol_len_clk_cycles'] = pwm_symbol_length_in_clk_periods;
+		results['res_pwm_symbols_per_bit_time']  = pwm_symbols_per_bit;
+		
+	} else { // no result found for PWM settings for this bit rate
+		results['res_pwmo'] = 'no PWM';
+		results['res_pwms'] = "config";
+		results['res_pwml'] = 'exists';
+
+		results['res_pwm_symbol_len_ns']         = "no PWM";
+		results['res_pwm_symbol_len_clk_cycles'] = 'config';
+		results['res_pwm_symbols_per_bit_time']  = 'exists';
+	}
+	
+	// check if TMS disabled
+	if (params.par_tms.value === false) {
+	  results['res_pwms'] = 'TMS off';
+	  results['res_pwml'] = 'TMS off';
+	  results['res_pwmo'] = 'TMS off';
+	  
+	  results['res_pwm_symbol_len_ns']         = 'TMS off';
+	  results['res_pwm_symbol_len_clk_cycles'] = 'TMS off';
+	  results['res_pwm_symbols_per_bit_time']  = 'TMS off';
+	}
+
+	// --- Robustness: df (clock tolerance) and Phase Margin ---
+	const S_Stuff = 11; // each S-th bit is a fixed stuff bit in data phase
+	const bt_a = results.res_tqperbit_arb;
+	const bt_d = results.res_tqperbit_dat;
+	const sjw_a = params.par_sjw_arb.value;
+	const sjw_d = params.par_sjw_dat.value;
+	const ps1_a = params.par_phaseseg1_arb.value;
+	const ps2_a = params.par_phaseseg2_arb.value;
+	const ps2_d = params.par_phaseseg2_dat.value;
+	const BRP   = params.par_brp.value;
+	const clk_period = results.res_clk_period;
+	const df_used = params.par_dfused.value / 100; // convert from % to fraction
+
+	// 3 conditions for df_allowed (all fractional)
+	const df_cond1 = sjw_a / (10 * bt_a) / 2;                          // condition 1: resync arbitration
+	const df_cond2 = Math.min(ps1_a, ps2_a) / (13 * bt_a - ps2_a) / 2; // condition 2: error flag
+	const df_cond3 = sjw_d / (2 * (2 * S_Stuff + 1) * bt_d);           // condition 3: resync data
+	const df_allowed = Math.min(df_cond1, df_cond2, df_cond3);
+
+	results['res_df_cond1']   = df_cond1 * 100;   // display as %
+	results['res_df_cond2']   = df_cond2 * 100;
+	results['res_df_cond3']   = df_cond3 * 100;
+	results['res_df_allowed'] = df_allowed * 100;
+
+	// Phase Margin
+	if (df_used <= df_allowed) {
+	  results['res_pm1'] = (((S_Stuff + 1) * bt_d - ps2_d - 1) / (1 + df_used) - S_Stuff * bt_d / (1 - df_used)) * BRP * clk_period;
+	  results['res_pm2'] = (S_Stuff * bt_d / (1 + df_used) - (S_Stuff * bt_d - ps2_d) / (1 - df_used)) * BRP * clk_period;
+	} else {
+	  results['res_pm1'] = 'df_used too large';
+	  results['res_pm2'] = 'df_used too large';
+	}
+
+  return results; // return results object
+}
+
+// ===================================================================================
+// Print Results to HTML fields
+function printResults(results) {
+
+  for (const [id, val] of Object.entries(results)) {
+    const field = document.getElementById(id);
+    if (typeof val === "string") {
+		// val is a String, e.g. "err"
+		field.value = val;
+	  field.classList.remove("input-error");
+	  } else if (typeof val === 'number' && !isNaN(val)) { // number assumed
+		  field.value = floatResults.includes(id) ? val.toFixed(2) : Math.round(val);
+		  field.classList.remove("input-error");
+      // console.log(`[Info] printResults(): ${id} = ${field.value}`); // debug output
+    } else { // value == null
+	    // this line should never be used
+		  field.value = 'ERR2';
+      field.classList.add("input-error");
+    }
+  }
+
+}
+
+// ===================================================================================
+// ProcessChanges(): Collect input values, Calculate results, Draw Figures
+function processChanges() {
+  // Collect parameters from HTML (raw values)
+  const params = paramsCollect();
+
+  // Validate parameters (also enriches params object with valid/invalid flags and error messages)
+  let allParamsValid = paramsValidate(params);
+
+  // react on invalid parameters
+  if (allParamsValid === false) {
+    // write ERROR into all result fields
+    resultFields.forEach(field => (field.value = 'err'));
+    document.getElementById('canModuleConfig').textContent = 'Register values not generated.';
+    return; // STOP further processing
+  }
+
+  // Valid parameters at this point: continue with calculations
+
+  // calcualte results
+  const results = calculate(params); // returns results object
+
+  // generate Register Contents: Bosch X_CAN, XS_CAN, X_CANB
+  generateHardwareRegisters(results, params);
+
+  // Print results to HTML fields
+  printResults(results);
+
+  // Draw Bit Timing: Arbitration Phase
+  const svgWidth = document.getElementById('BitTimingTable').offsetWidth; // here: 322 px, reg_eval = 393 px
+  const svgHeight = 60;
+
+  draw_svg.drawBitTiming(
+    params.par_propseg_arb.value,
+    params.par_phaseseg1_arb.value,
+    params.par_phaseseg2_arb.value,
+    results.res_sp_arb, // Sample Point in % of Bit Time
+    params.par_sjw_arb.value, // SJW Length in TQ
+    10, // SSP in % of Bit Time => not used because TDC = false
+    false, // TDC disabled (false)
+    'DrawingBTArb', // name of SVG element in HTML
+    'Arbitration Phase', // label in Drawing
+    svgWidth,
+    svgHeight
+  ); 
+  
+  // Draw Bit Timing: XL Data Phase
+  draw_svg.drawBitTiming(
+    params.par_propseg_dat.value, 
+    params.par_phaseseg1_dat.value,
+    params.par_phaseseg2_dat.value,
+    results.res_sp_dat, // Sample Point in % of Bit Time
+    params.par_sjw_dat.value, // SJW Length in TQ
+    results.res_ssp_dat, // SSP in % of Bit Time
+    params.par_tdc_dat.value, // TDC enabled (true) or disabled (false)
+    'DrawingBTXLdata', // name of SVG element in HTML
+    'XL Data Phase', // label in Drawing
+    svgWidth,
+    svgHeight
+  ); 
+
+  // Draw PWM symbols for XL Data Phase
+  if (params.par_tms.value === true) {
+    // Check if PWM symbols exist
+    if (results.res_pwm_symbols_per_bit_time > 0) {
+      // Draw PWM symbols
+      draw_svg.drawPWMsymbols(results.res_pwms, results.res_pwml, results.res_pwm_symbols_per_bit_time, 'DrawingBTXLdataPWM', 'XL Data Phase PWM symbols', svgWidth, svgHeight);
+    } else { // no PWM symbols exist
+      // Draw error message
+      draw_svg.drawErrorMessage('DrawingBTXLdataPWM', 'XL Data Phase PWM symbols', 'no PWM config exists for this bit rate', svgWidth, svgHeight);
+    }
+  } else {
+    // Draw error message
+    //draw_svg.drawPWMsymbols(0, 0, 0, 'DrawingBTXLdataPWM', 'XL Data Phase: TMS = off');
+    draw_svg.drawErrorMessage('DrawingBTXLdataPWM', 'XL Data Phase PWM symbols', 'TMS = off, means no PWM used', svgWidth, svgHeight);
+  }
+
+  // Legend for Bit Timing Drawings
+  draw_svg.drawBTLegend('DrawingBTLegend', svgWidth);
+
+  // Draw Phase Margin diagram (PM1)
+  const pmSvgWidth = 360;//document.getElementById('res_pm1').closest('table').offsetWidth;
+  const spFraction_dat = results.res_sp_dat / 100; // convert from % to fraction 0..1
+  const df_used_frac = params.par_dfused.value / 100; // convert from % to fraction
+
+  draw_svg.drawPM1(
+    results.res_pm1, // if PM1 is a string, the string will be displayed in the diagram, e.g. "df_used too large"
+    results.res_tqperbit_dat,
+    params.par_phaseseg2_dat.value,
+    spFraction_dat,
+    df_used_frac,
+    params.par_brp.value,
+    results.res_clk_period,
+    'DrawingPM1',
+    pmSvgWidth
+  );
+
+  // Draw Phase Margin diagram (PM2)
+  draw_svg.drawPM2(
+    results.res_pm2, // if PM2 is a string, the string will be displayed in the diagram, e.g. "df_used too large"
+    results.res_tqperbit_dat,
+    params.par_phaseseg2_dat.value,
+    spFraction_dat,
+    df_used_frac,
+    params.par_brp.value,
+    results.res_clk_period,
+    'DrawingPM2',
+    pmSvgWidth
+  );
+}
+
+// ===================================================================================
+// Set Example Bit Timing Configurations from CiA 612-1
+function setExampleBTconfig() {
+  const selected = document.getElementById('btConfigSelect').value;
+  let bt_cfg_preset = null; // default value
+
+  // Order of parameter-ids (columns of the config matrix)
+  const paramIds = [
+    'par_clk_freq',
+    'par_dfused',
+    'par_clk_jitter',
+
+    'par_brp',
+    'par_propseg_arb',
+    'par_phaseseg1_arb',
+    'par_phaseseg2_arb',
+    'par_sjw_arb',
+
+    'par_propseg_dat',
+    'par_phaseseg1_dat',
+    'par_phaseseg2_dat',
+    'par_sjw_dat',
+    'par_tdc_dat',
+	  'par_tms',
+  ];
+
+  // Konfigurationsmatrix: Jede Zeile enthält alle Werte der oben definierten IDs
+  const configMatrixSICXL = {
+    cfg01M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 80, 79, 79, true, true],
+    cfg02M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 40, 39, 39, true, true],
+    cfg05M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 16, 15, 15, true, true],
+    cfg08M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 10,  9,  9, true, true],
+	  cfg10M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  8,  7,  7, true, true],
+    cfg12M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  6,  6,  6, true, true],
+    cfg13M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  6,  5,  5, true, true],
+    cfg14M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  5,  5,  5, true, true],
+    cfg16M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  5,  4,  4, true, true],
+	  cfg17M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  4,  4,  4, true, true],
+	  cfg20M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  4,  3,  3, true, true]	
+  };
+  // TODO: adapt values for SIC transceivers
+  const configMatrixSIC = {
+    cfg01M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 80, 79, 79, true, false],
+    cfg02M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 40, 39, 39, true, false],
+    cfg05M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 16, 15, 15, true, false],
+    cfg08M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 10,  9,  9, true, false]
+  };
+// TODO: adapt values for FD transceivers
+  const configMatrixFD = {
+    cfg01M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 80, 79, 79, true, false],
+    cfg02M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 40, 39, 39, true, false]
+  };
+
+  // select BTconfigData from matrix based on transceiverType
+  if ((transceiverType === 'TSICXL')) {
+    bt_cfg_preset = configMatrixSICXL[selected];
+  } else if (transceiverType === 'TSIC') {
+    bt_cfg_preset = configMatrixSIC[selected];
+  } else if (transceiverType === 'TFD') {
+    bt_cfg_preset = configMatrixFD[selected];
+  }
+  
+  if (!bt_cfg_preset) {
+	  console.log('[Error] setExampleBTconfig(): bt_cfg_preset variable has no content!');
+	  return;
+  }
+  
+  // copy values from array to the document
+  bt_cfg_preset.forEach((val, index) => {
+    const id = paramIds[index];
+    const input = document.getElementById(id);
+    if (input) {
+		if (checkboxParams.includes(id)) {
+			input.checked = val;
+		} else {
+			input.value = val;
+		}
+	}
+  });
+  
+  // calculate results
+  processChanges();
+}
+
+// ===================================================================================
+// Download a single SVG element as SVG or PNG
+function downloadSingleSVG(svgId, prefix, imageFormat) {
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const srcSvg = document.getElementById(svgId);
+  const w = parseFloat(srcSvg.getAttribute('width'));
+  const h = parseFloat(srcSvg.getAttribute('height'));
+  const pngScaleFactor = 3; // scale factor for PNG export to improve resolution
+
+  // Clone into a standalone SVG
+  const clone = document.createElementNS(svgNS, 'svg');
+  clone.setAttribute('xmlns', svgNS);
+  clone.setAttribute('width', w);
+  clone.setAttribute('height', h);
+  clone.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+  clone.style.backgroundColor = 'white';
+  Array.from(srcSvg.childNodes).forEach(n => clone.appendChild(n.cloneNode(true)));
+
+  // Build filename: <prefix>_xl_br<bitrate>_df<dfused>
+  const brField = document.getElementById('res_bitrate_dat');
+  const dfField = document.getElementById('par_dfused');
+  const br = brField ? brField.value.replace('.', 'p') : '0';
+  const df = dfField ? dfField.value.replace('.', 'p') : '0';
+  const baseName = prefix + '_xl_brdata' + br + '_df' + df;
+
+  const serializer = new XMLSerializer();
+  const svgString = serializer.serializeToString(clone);
+
+  if (imageFormat === 'svg') {
+    const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    draw_svg.triggerDownload(blob, baseName + '.svg');
+  } else if (imageFormat === 'png') {
+    const img = new Image();
+    img.onload = function () {
+      const canvas = document.createElement('canvas');
+      canvas.width = w * pngScaleFactor;
+      canvas.height = h * pngScaleFactor;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.scale(pngScaleFactor, pngScaleFactor);
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(function (blob) {
+        draw_svg.triggerDownload(blob, baseName + '.png');
+      }, 'image/png');
+    };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
+  }
+}
+
+// ===================================================================================
+// Download combined BT visualization (SVGs stacked vertically) as SVG or PNG
+function downloadBTcombined(imageFormat) {
+  const ids = ['DrawingBTArb', 'DrawingBTXLdata', 'DrawingBTXLdataPWM', 'DrawingBTLegend'];
+  const gap = 16;
+  const margin = 5;
+
+  // Build filename: bt_xl_brarb<bitrate_arb>_brdata<bitrate_dat>
+  const brArbField = document.getElementById('res_bitrate_arb');
+  const brDatField = document.getElementById('res_bitrate_dat');
+  const brArb = brArbField ? brArbField.value.replace('.', 'p') : '0';
+  const brDat = brDatField ? brDatField.value.replace('.', 'p') : '0';
+  const baseName = 'bt_xl_brarb' + brArb + '_brdata' + brDat;
+
+  draw_svg.downloadCombinedSVGs(ids, baseName, imageFormat, gap, margin);
+}
