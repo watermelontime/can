@@ -1213,14 +1213,16 @@ function procRegsPrtOther(reg) {
     reg.GFC.fields.RRFS = getBits(regValue, 1, 1); // Reject Remote Frames Standard
     reg.GFC.fields.RRFE = getBits(regValue, 0, 0); // Reject Remote Frames Extended
 
+    const decode = (v) => ['Accept in Rx FIFO 0','Accept in Rx FIFO 1','Reject','Reject'][v];
+
     // 2. Generate human-readable register report
     reg.GFC.report.push({
       severityLevel: sevC.info,
       msg: `GFC: ${reg.GFC.name_long} (0x${reg.GFC.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[ANFS] Accept Non-matching Frames Standard   = ${reg.GFC.fields.ANFS}\n` +
-           `[ANFE] Accept Non-matching Frames Extended   = ${reg.GFC.fields.ANFE}\n` +
-           `[RRFS] Reject Remote Frames Standard         = ${reg.GFC.fields.RRFS}\n` +
-           `[RRFE] Reject Remote Frames Extended         = ${reg.GFC.fields.RRFE}`
+           `[ANFS] Accept Non-matching Frames Standard   = ${reg.GFC.fields.ANFS} (${decode(reg.GFC.fields.ANFS)})\n` +
+           `[ANFE] Accept Non-matching Frames Extended   = ${reg.GFC.fields.ANFE} (${decode(reg.GFC.fields.ANFE)})\n` +
+           `[RRFS] Reject Remote Frames Standard         = ${reg.GFC.fields.RRFS} (${reg.GFC.fields.RRFS ? 'Reject' : 'Filter remote frames'})\n` +
+           `[RRFE] Reject Remote Frames Extended         = ${reg.GFC.fields.RRFE} (${reg.GFC.fields.RRFE ? 'Reject' : 'Filter remote frames'})`
           });
   } // GFC
 
