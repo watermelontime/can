@@ -653,14 +653,14 @@ export function procRegsPrtOther(reg) {
     reg.EVNT.report.push({
       severityLevel: sevC.info,
       msg: `EVNT: ${reg.EVNT.name_long} (0x${reg.EVNT.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[ABO] TX stopped by user                  = ${reg.EVNT.fields.ABO}\n` +
+           `[ABO] TX stopped by user (MH/PRT TX IF)   = ${reg.EVNT.fields.ABO}\n` +
            `[IFR] Invalid Frame Format (TX message)   = ${reg.EVNT.fields.IFR}\n` +
            `[USO] Unexpected Seq Start (MH/PRT TX IF) = ${reg.EVNT.fields.USO}\n` +
-           `[DU ] Data Underrun (MH/PRT TX Interface) = ${reg.EVNT.fields.DU}\n` +
+           `[DU ] Data Underrun (MH/PRT TX IF)        = ${reg.EVNT.fields.DU}\n` +
            `[PXE] Protocol Exception Event            = ${reg.EVNT.fields.PXE}\n` +
            `[TXF] TX Frame successfully               = ${reg.EVNT.fields.TXF}\n` +
            `[RXF] RX Frame successfully               = ${reg.EVNT.fields.RXF}\n` +
-           `[DO ] Data Overflow (MH/PRT RX Interface) = ${reg.EVNT.fields.DO}\n` +
+           `[DO ] Data Overflow (MH/PRT RX IF)        = ${reg.EVNT.fields.DO}\n` +
            `[STE] Stuff Error                         = ${reg.EVNT.fields.STE}\n` +
            `[FRE] Form Error                          = ${reg.EVNT.fields.FRE}\n` +
            `[AKE] Acknowledge Error                   = ${reg.EVNT.fields.AKE}\n` +

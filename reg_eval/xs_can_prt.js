@@ -1,3 +1,5 @@
+// add TSSE bit for XS_CAN 1.1.0
+
 // XS_CAN: PRT register decoding
 import { getBits } from './help_functions.js';
 import { sevC } from './help_functions.js';
@@ -44,7 +46,7 @@ export function procRegsPrtExtraXsCan(reg) {
     reg.MODE.report.push({
       severityLevel: sevC.info, // info
           msg: `MODE part 2: ${reg.MODE.name_long} (0x${reg.MODE.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-               `[TSSE] Transceiver Sharing Switch Enable           = ${reg.MODE.fields.TSSE} (only in XS_CAN V1.0.0)\n` +
+               `[TSSE] Transceiver Sharing Switch Enable           = ${reg.MODE.fields.TSSE} (only present in XS_CAN V1.0.0)\n` +
                `[LCHB] FD light Commander High Bit Rate mode       = ${reg.MODE.fields.LCHB} (0=disabled, 1=enabled)`
       });
 
@@ -55,7 +57,7 @@ export function procRegsPrtExtraXsCan(reg) {
     // X_CAN:  STAT
     // XS_CAN: STAT0
 
-    // Renamin the register is not possible, only copying it to a new register is possible. But this changes the print order.
+    // Renaming the register is not possible, only copying it to a new register is possible. But this changes the print order.
     // Decision: keep register with wrong name for the moment
 
   // === STAT1: PRT Status 1 Register =========================================
@@ -110,14 +112,14 @@ export function procRegsPrtExtraXsCan(reg) {
   if ('EVNT' in reg && reg.EVNT.int32 !== undefined && reg.EVNT.fields !== undefined) {
     // Entry Condition: Checks if main PRT Decoding was already processed
 
-    const regValue = reg.MODE.int32;
+    const regValue = reg.EVNT.int32;
 
     // 0. Extend existing register structure
-    if (reg.MODE.fields === undefined) {
-      reg.MODE.fields = {}; 
+    if (reg.EVNT.fields === undefined) {
+      reg.EVNT.fields = {}; 
     }
-    if (reg.MODE.report === undefined) {
-      reg.MODE.report = []; // Initialize report array
+    if (reg.EVNT.report === undefined) {
+      reg.EVNT.report = []; // Initialize report array
     }
 
     // 1. Decode all individual bits of EVNT register (MSB -> LSB)
@@ -127,12 +129,11 @@ export function procRegsPrtExtraXsCan(reg) {
     // 2. Generate human-readable register report (MSB -> LSB)
     reg.EVNT.report.push({
       severityLevel: sevC.info,
-       msg: `EVNT part 2: ${reg.EVNT.name_long} (0x${reg.EVNT.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
+       msg: `EVNT: ${reg.EVNT.name_long} (0x${reg.EVNT.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
+         `Part 2 of EVNT decoding. These bits are additional to ones in X_CAN.PRT.EVNT. Bits are reported separately to enable code reuse.\n` +
          `[TX_PARITY_ERR_TS] Parity Error in TS of Tx MSG = ${reg.EVNT.fields.TX_PARITY_ERR_TS}\n` +
          `[RX_PARITY_ERR_TS] Parity Error in TS of Rx MSG = ${reg.EVNT.fields.RX_PARITY_ERR_TS}`
     });
-
-    // 3. Additional summary/reporting
   } // EVNT
 
 } // PRT
