@@ -1,3 +1,5 @@
+// All rights reserved. (c) 2026 //
+
 /**
  * Draws the CAN Bit Timing as a bar chart with SVG.
  * @param {string} HTMLDrawingName - Name of the SVG element to draw into.

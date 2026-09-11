@@ -1,3 +1,4 @@
+// All rights reserved. (c) 2026 //
 // ===================================================================================
 // X_CANB - Basic Implementation
 // Main script for processing registers.

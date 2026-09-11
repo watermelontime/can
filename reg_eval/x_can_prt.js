@@ -1,3 +1,5 @@
+// All rights reserved. (c) 2026 //
+
 // X_CAN: PRT register decoding
 import { getBits } from './help_functions.js';
 import { sevC } from './help_functions.js';

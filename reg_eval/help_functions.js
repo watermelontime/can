@@ -1,3 +1,5 @@
+// All rights reserved. (c) 2026 //
+
 // Severity level constants as an object
 export const sevC = {
   info: 0,

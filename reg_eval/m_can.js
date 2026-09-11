@@ -1,3 +1,4 @@
+// All rights reserved. (c) 2026 //
 // ===================================================================================
 // M_CAN
 // Main script for processing registers.

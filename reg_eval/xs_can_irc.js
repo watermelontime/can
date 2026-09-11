@@ -1,3 +1,5 @@
+// All rights reserved. (c) 2026 //
+
 // XS_CAN: IRC register decoding
 import { getBits } from './help_functions.js';
 import { sevC } from './help_functions.js';

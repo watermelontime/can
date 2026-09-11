@@ -1,3 +1,5 @@
+// All rights reserved. (c) 2026 //
+
 /**
  * Creates an SO8 IC top-view SVG element, rotated 90° anti-clockwise.
  * Pins are on top and bottom, pin-1 dot at bottom-left. 3D appearance.

@@ -1,4 +1,6 @@
-// add TSSE bit for XS_CAN 1.1.0
+// TODO: add TSSE bit for XS_CAN 1.1.0
+
+// All rights reserved. (c) 2026 //
 
 // XS_CAN: PRT register decoding
 import { getBits } from './help_functions.js';

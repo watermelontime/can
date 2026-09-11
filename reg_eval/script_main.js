@@ -4,6 +4,7 @@
 // TODO: better structure reg-object: problem/ugly: non-register fields are mixed with registers (flat) => non-reg stuff should be separted
 // TODO: donate button
 
+// All rights reserved. (c) 2026 //
 // ===================================================================
 // === HOW TO ADD NEW CAN IP MODULE? =================================
 // This is how to add a new CAN IP Module to the register evaluation tool.

@@ -2,6 +2,8 @@
 // - show additional parameters like: retransmission count in register settings
 // - Calculation should be done only if focus is left (reduces number of errors)
 
+// All rights reserved. (c) 2026 //
+
 // import functions
 import * as draw_svg from '../draw_bits_svg.js'; // SVG drawing functions for bit timing
 import { createSO8svg } from '../draw_transceiver_svg.js';
