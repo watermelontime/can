@@ -218,6 +218,11 @@ svg {
   max-width: 100%;
 }
 
+.text-highlight {
+  color: orange;
+  font-weight: bold;
+}
+
 .my-textarea,
 .register-textarea,
 .report-textarea{
