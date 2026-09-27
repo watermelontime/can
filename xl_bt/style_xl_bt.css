@@ -1,0 +1,26 @@
+.transceiver-group {
+  display: flex;
+  justify-content: space-evenly;
+  padding: 0.3em;
+  margin-bottom: 1.2em;
+  background-color: #FFFFFF;
+  border-radius: 6px;
+}
+
+.transceiver-btn {
+  padding: 0;
+  border: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+  font-size: 0;
+}
+
+.transceiver-btn:hover {
+  /*border-color: #2e7d32;*/
+  background-color: #acd5ff;
+}
+
+.transceiver-btn.active .ic-body {
+  fill: #007acc /*Green #2e7d32;*/
+}

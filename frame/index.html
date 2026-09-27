@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAN Frame Generator</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="styles_frame.css" />
+  <link rel="icon" href="../favicon.ico" type="image/x-icon" />
+</head>
+
+<body>
+
+  <div id="site-menu"></div>
+  <script type="module" src="/can/menu.js"></script>
+
+  <!-- Load scripts: ES module, imports resolved by frame_main.js -->
+  <script type="module" src="frame_main.js"></script>
+
+  <main>
+
+    <div class="page-header">
+      <h1>CAN Frame Generator <a href="versionhistory.html" id="appVersion" class="version-label" target="_blank" rel="noopener noreferrer" aria-label="Version"></a></h1>
+    </div>
+
+    <div class="responsive-container">
+
+      <!-- ════════════════ Column 1: Input ════════════════ -->
+      <div class="column settings-column">
+        <h3>Input</h3>
+
+        <table class="input-table">
+          <tr>
+            <td>Frame Type</td>
+            <td>
+              <select id="frameTypeSelect" class="styled-select" style="margin:0">
+                <option value="XL_XBFF">CAN XL: XBFF (ID11)</option>
+                <option value="FD_FBFF">CAN FD: FBFF (ID11)</option>
+                <option value="FD_FEFF">CAN FD: FEFF (ID29)</option>
+                <option value="CC_CBFF">CAN CC: CBFF (ID11)</option>
+                <option value="CC_CEFF">CAN CC: CEFF (ID29)</option>
+                <option value="CC_CEFF_RTR">CAN CC: CEFF (ID29, remote)</option>
+                <option value="CC_CBFF_RTR">CAN CC: CBFF (ID11, remote)</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>Example</td>
+            <td>
+              <select id="exampleSelect" class="styled-select" style="width:20ch; margin:0"></select>
+              <button type="button" id="loadExampleBtn" class="styled-button" style="margin-left:0.5em; margin-bottom:0;">Load</button>
+            </td>
+          </tr>
+          <tr>
+            <td>ID (hex)</td>
+            <td>
+              <input type="text" id="inputID" class="input-field" value="0x000" style="width:12ch;" />
+            </td>
+          </tr>
+          <tr>
+            <td>DLC</td>
+            <td>
+              <input type="number" id="inputDLC" class="input-field" value="0" min="0" max="15" style="width:8ch;" />
+              <span id="dlcRangeHint" class="range-hint">(0–15)</span>
+            </td>
+          </tr>
+          <tr id="rowBRS">
+            <td>BRS</td>
+            <td><input type="checkbox" id="inputBRS" checked /></td>
+          </tr>
+          <tr id="rowESI">
+            <td>ESI</td>
+            <td><input type="checkbox" id="inputESI" disabled /></td>
+          </tr>
+          <tr id="rowRRS">
+            <td>RRS</td>
+            <td><input type="checkbox" id="inputRRS" disabled /></td>
+          </tr>
+          <tr id="rowSEC">
+            <td>SEC</td>
+            <td><input type="checkbox" id="inputSEC" disabled /></td>
+          </tr>
+          <tr id="rowSDT">
+            <td>SDT (hex)</td>
+            <td>
+              <input type="text" id="inputSDT" class="input-field" value="0x00" disabled style="width:8ch;" />
+            </td>
+          </tr>
+          <tr id="rowVCID">
+            <td>VCID (hex)</td>
+            <td>
+              <input type="text" id="inputVCID" class="input-field" value="0x00" disabled style="width:8ch;" />
+            </td>
+          </tr>
+          <tr id="rowAF">
+            <td>AF (hex)</td>
+            <td>
+              <input type="text" id="inputAF" class="input-field" value="0x00000000" disabled style="width:12ch;" />
+              <span id="dlcRangeHint" class="range-hint"> [31:0]</span>
+            </td>
+          </tr>
+          <tr id="rowData">
+            <td>Data (hex)</td>
+            <td>
+              <textarea id="inputData" class="input-field" placeholder="DE AD BE EF ..." rows="4" style="width:34ch; resize:vertical;"></textarea>
+            </td>
+          </tr>
+          <tr>
+            <td>ACK slot</td>
+            <td>
+              <select id="inputACK" class="input-field" style="width:34ch">
+                <option value="1" selected>1 (no ACK)</option>
+                <option value="0">0 (ACK received)</option>
+              </select>
+            </td>
+          </tr>
+        </table>
+
+        <br />
+        <button type="button" id="showFrameBtn" class="styled-button">Show Frame</button>
+      </div>
+
+      <!-- ════════════════ Column 2: Output ════════════════ -->
+      <div class="column report-column">
+
+        <!-- Checkbox row -->
+        <h3 class="report-headline">Generated CAN Frame
+          <div class="inline-control">
+            <label><input type="checkbox" id="chkBitNames" checked /> bit names</label>
+            <label><input type="checkbox" id="chkColor" checked /> color bits</label>
+            <label><input type="checkbox" id="chkColorStuff" checked /> color stuff bits</label>
+            <label><input type="checkbox" id="chkBitSeparators" checked /> bit separators</label>
+            <label><input type="checkbox" id="chkFields" checked /> fields</label>
+            <label><input type="checkbox" id="chkPhases" checked /> phases</label>
+            <label><input type="checkbox" id="chkArbPhaseBitsLonger" unchecked /> Arb-bits longer</label>
+            <label class="switch-label"><input type="checkbox" id="chkRealArbDataBitRatio" /><span class="switch-slider"></span> Real Arb/Data bit ratio</label>
+          </div>
+        </h3>
+
+        <!-- Real Arb/Data bit ratio inputs (hidden by default) -->
+        <div id="realBitRatioInputs" style="display:none;" class="real-bit-ratio-row">
+          <span><b>Arbitration Phase:</b></span>
+          <span style="margin-left:0.5em;">Bit-rate</span>
+          <input type="number" id="inputArbBitrate" class="input-field" value="500" min="100" max="20000" style="width:10ch; margin:0 6px; vertical-align:middle;" />
+          <span>kbit/s,</span>
+          <span style="margin-left:0.5em;">SP</span>
+          <input type="number" id="inputArbSP" class="input-field" value="80" min="1" max="99" style="width:8ch; margin:0 6px; vertical-align:middle;" />
+          <span>%</span>
+          <span id="dataPhaseInputs">
+          <span style="margin-left:1.2em;"><b>Data Phase:</b></span>
+          <span style="margin-left:0.5em;">Bit-rate</span>
+          <input type="number" id="inputDataBitrate" class="input-field" value="1000" min="100" max="20000" style="width:10ch; margin:0 6px; vertical-align:middle;" />
+          <span>kbit/s,</span>
+          <span  style="margin-left:0.5em;">SP</span>
+          <input type="number" id="inputDataSP" class="input-field" value="70" min="1" max="99" style="width:8ch; margin:0 6px; vertical-align:middle;" />
+          <span>%</span>
+          </span>
+        </div>
+
+        <!-- SVG container -->
+        <div class="svg-wrapper" id="svgContainer">
+          <p style="color:#999;padding:1em;">Press "Show Frame" to generate the waveform.</p>
+        </div>
+
+        <!-- Export row -->
+        <div class="export-row">
+          <span>Export:</span>
+          <a href="#" id="btnExportSVG">Download SVG</a>
+          <a href="#" id="btnExportPNG">Download PNG</a>
+          <a href="#" id="btnExportCSV">Download CSV</a>
+          <a href="#" id="btnExportVHDL" style="display:none;">Download VHDL</a>
+        </div>
+
+        <!-- Info display -->
+        <div>
+          <b>Frame Information</b>
+          <pre id="infoDisplay" class="info-display">Frame information will appear here after pressing "Show Frame".</pre>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="site-footer"></div>
+  <script type="module" src="/can/footer.js"></script>
+
+</body>
+
+</html>

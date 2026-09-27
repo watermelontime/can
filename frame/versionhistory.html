@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAN Register Evaluator</title>
+  <!-- <link rel="manifest" href="manifest.json" /> -->
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="icon" href="../favicon.ico" type="image/x-icon" />
+  <script data-goatcounter="https://can.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+
+<body>
+
+  <div id="site-menu"></div>
+  <script type="module" src="/can/menu.js"></script>
+
+  <main>
+
+    <div class="page-header">
+      <h1>CAN Frame Generator - Version History</h1>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Version</th>
+          <th>Date</th>
+          <th>Changes to previous version</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1.0.0</td>
+          <td>2026-03-27</td>
+          <td>Initial version. Frames of all frame formates (CAN, CAN FD, CAN XL) can be generated.
+          </td>
+        </tr>
+        <tr>
+          <td>1.1.0</td>
+          <td>2026-03-28</td>
+          <td> Added more visual functions:
+            <ul>
+              <li>Added more options to control the generated frame drawing (SVG). E.g. a real ratio of Arbitration Phase and Data Phase bits.</li>
+              <li>VHDL export added.</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td>1.1.1</td>
+          <td>2026-03-29</td>
+          <td> Improvements
+            <ul>
+              <li>XL Data phase bar now starts/ends correctly</li>
+              <li>Checkboxes above figure now immediately take effect when checked/unchecked</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td>1.1.2</td>
+          <td>2026-04-08</td>
+          <td> Improvements
+            <ul>
+              <li>switching "Real arb/data bit rate ratio" triggers frame generation</li>
+              <li>examples added (can be loaded via button)</li>
+              <li>input fields visual improvements</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td>1.1.3</td>
+          <td>2026-04-11</td>
+          <td> Frame VHDL export file improved (better comments, more alignment, help signals)
+          </td>
+        </tr>      
+      </tbody>
+    </table>  
+
+  </main>
+
+  <div id="site-footer"></div>
+  <script type="module" src="/can/footer.js"></script>
+
+</body>
+
+</html>
