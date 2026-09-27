@@ -730,17 +730,17 @@ function setExampleBTconfig() {
 
   // Konfigurationsmatrix: Jede Zeile enthält alle Werte der oben definierten IDs
   const configMatrixSICXL = {
-    cfg01M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 80, 79, 79, true, true],
-    cfg02M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 40, 39, 39, true, true],
-    cfg05M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 16, 15, 15, true, true],
-    cfg08M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 10,  9,  9, true, true],
-	  cfg10M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  8,  7,  7, true, true],
-    cfg12M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  6,  6,  6, true, true],
-    cfg13M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  6,  5,  5, true, true],
-    cfg14M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  5,  5,  5, true, true],
-    cfg16M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  5,  4,  4, true, true],
-	  cfg17M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  4,  4,  4, true, true],
-	  cfg20M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  4,  3,  3, true, true]	
+    cfg01M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 80, 79, 79, false, true],
+    cfg02M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 40, 39, 39, false, true],
+    cfg05M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 16, 15, 15, false, true],
+    cfg08M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0, 10,  9,  9, false, true],
+	  cfg10M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  8,  7,  7, false, true],
+    cfg12M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  6,  6,  6, false, true],
+    cfg13M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  6,  5,  5, false, true],
+    cfg14M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  5,  5,  5, false, true],
+    cfg16M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  5,  4,  4, false, true],
+	  cfg17M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  4,  4,  4, false, true],
+	  cfg20M: [160, 0.2, 700, 1, 191, 64, 64, 64, 0,  4,  3,  3, false, true]	
   };
   // TODO: adapt values for SIC transceivers
   const configMatrixSIC = {
