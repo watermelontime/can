@@ -26,3 +26,4 @@ The goal of this project is to make CAN configuration and timing concepts easier
 - The project uses plain HTML, CSS, and JavaScript.
 - No build step is required for the basic static pages.
 - Assets such as screenshots and diagrams are stored in the project folders.
+- All rights reserved.
