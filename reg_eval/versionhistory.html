@@ -32,6 +32,37 @@
       </thead>
       <tbody>
         <tr>
+          <td>1.0.5</td>
+          <td>2026-10-20</td>
+          <td>
+            <ul>
+              <li>Added "download" link in the Evaluation Report header: exports the current evaluation as a single
+                self-contained HTML file (inlined styles, static settings, memory dump, SVGs and report). The report
+                filter checkboxes stay functional in the exported file.</li>
+              <li>Added "Copy link with current memory dump" button: shares CAN module, clock frequency and memory dump via
+                the URL hash fragment. Opening such a link restores the inputs and evaluates them automatically.</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td>1.0.3</td>
+          <td>2026-09-04</td>
+          <td>Bug fix in XS_CAN.PRT.EVNT register decoding
+          </td>
+        </tr>
+        <tr>
+          <td>1.0.2</td>
+          <td>2026-04-09</td>
+          <td>Added download links for bit timing image (SVG and PNG)
+          </td>
+        </tr>
+        <tr>
+          <td>1.0.1</td>
+          <td>2026-01-29</td>
+          <td>Fixes XS_CAN and X_CAN decoding: 32 bit fields were sometimes shown as negative values.
+          </td>
+        </tr>
+        <tr>
           <td>1.0.0</td>
           <td>2025-12-28</td>
           <td>Initial release version with full functionality. All registers of the following Bosch CAN Modules CAN be
@@ -42,24 +73,6 @@
               <li>XS_CAN up to V1.1.0</li>
               <li>X_CANB up to V0.8.0</li>
             </ul>
-          </td>
-        </tr>
-         <tr>
-          <td>1.0.1</td>
-          <td>2026-01-29</td>
-          <td>Fixes XS_CAN and X_CAN decoding: 32 bit fields were sometimes shown as negative values.
-          </td>
-        </tr>
-        <tr>
-          <td>1.0.2</td>
-          <td>2026-04-09</td>
-          <td>Added download links for bit timing image (SVG and PNG)
-          </td>
-        </tr>
-        <tr>
-          <td>1.0.3</td>
-          <td>2026-09-04</td>
-          <td>Bug fix in XS_CAN.PRT.EVNT register decoding
           </td>
         </tr>
       </tbody>

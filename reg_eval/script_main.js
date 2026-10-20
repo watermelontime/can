@@ -45,6 +45,7 @@ import * as x_can from './x_can_main.js';
 import * as x_canb from './x_canb_main.js';
 import * as xs_can from './xs_can_main.js';
 import { sevC, clearObject } from './help_functions.js';
+import { downloadEvaluationReport } from './report_export.js';
 
 // global variable definitions
 let par_clk_freq_g = 160; // Global variable for CAN clock frequency in MHz
@@ -53,7 +54,7 @@ let par_clk_freq_g = 160; // Global variable for CAN clock frequency in MHz
 let reg = {};
 
 // Application version shown next to the page title
-const APP_VERSION = 'V1.0.3';
+const APP_VERSION = 'V1.0.5';
 
 // initialize report verbosity object
 const reportVerbosity = {
@@ -126,6 +127,9 @@ function init() {
 
   // read report verbosity checkboxes from HTML
   getReportVerbositySettingFromHTML(reportVerbosity);
+
+  // If the URL hash carries a shared memory dump, load it and process automatically
+  applyHashParamsAndProcess();
 }
 
 // ===================================================================================
@@ -145,6 +149,22 @@ function initEventListeners() {
     loadExampleButton.addEventListener('click', loadRegisterValuesExample);
   } else {
     console.warn('[Warning] Load example register button not found in HTML');
+  }
+
+  // HTML BUTTON: Add event listener for the copy-share-link button
+  const copyShareLinkButton = document.getElementById('copyShareLinkButton');
+  if (copyShareLinkButton) {
+    copyShareLinkButton.addEventListener('click', copyShareLink);
+  } else {
+    console.warn('[Warning] Copy share link button not found in HTML');
+  }
+
+  // HTML LINK: Add event listener for the download-report link
+  const downloadReportLink = document.getElementById('downloadReportLink');
+  if (downloadReportLink) {
+    downloadReportLink.addEventListener('click', (e) => { e.preventDefault(); handleDownloadReport(); });
+  } else {
+    console.warn('[Warning] Download report link not found in HTML');
   }
 
   // Download combined BT diagram links
@@ -600,7 +620,8 @@ function displayValidationReport(reg, reportVerbosity) {
       .replace(/>/g, '&gt;')
       .replace(/\n/g, '\n      '); // indentation of lines 2 to N
     
-    reportText += `<span class="${severityCssClass}">${severitySymbol} ${formattedMsg}</span>\n`;
+    // Newline kept INSIDE the span so export filtering hides the line break too
+    reportText += `<span class="report-detail ${severityCssClass}">${severitySymbol} ${formattedMsg}\n</span>`;
   });
   
   // Add footer
@@ -1125,6 +1146,173 @@ function getCanIpModuleFromHTML() {
     console.error('[Error] CAN IP Module select field not found in HTML');
     return null;
   }
+}
+
+// ===================================================================================
+// === SHAREABLE LINK (URL hash fragment, compact format) ============================
+// Hash format: #m=<MODULE>&clk=<FREQ_MHz>&d=<addr>-<val>,<addr>-<val>,...
+// Addresses and values are hex (no '0x', lowercase, leading zeros stripped).
+// ===================================================================================
+
+// Build the compact "d" parameter from the register textarea content.
+// Only valid "<addr> <value>" lines are kept; comments/blank lines are dropped.
+function buildCompactDumpFromText(text) {
+  const pairs = [];
+  for (const line of text.split('\n')) {
+    const trimmedLine = line.trim();
+    if (trimmedLine.length === 0 || trimmedLine.startsWith('#')) {
+      continue;
+    }
+    const match = trimmedLine.match(/^(0x)?([0-9a-fA-F]+)\s+(0x)?([0-9a-fA-F]+)$/);
+    if (match) {
+      const addr = match[2].toLowerCase().replace(/^0+(?=.)/, '');
+      const val = match[4].toLowerCase().replace(/^0+(?=.)/, '');
+      pairs.push(`${addr}-${val}`);
+    }
+  }
+  return pairs.join(',');
+}
+
+// Expand the compact "d" parameter back into textarea lines ("0x<ADDR> 0x<VAL>").
+// Hex is restored uppercase; values are zero-padded to 32 bit so it looks like a memory dump.
+function expandCompactDump(d) {
+  const lines = [];
+  for (const pair of d.split(',')) {
+    const [addr, val] = pair.split('-');
+    if (addr === undefined || val === undefined || addr.length === 0 || val.length === 0) {
+      continue;
+    }
+    const addrHex = addr.toUpperCase().padStart(8, '0');
+    const valHex = val.toUpperCase().padStart(8, '0');
+    lines.push(`0x${addrHex} 0x${valHex}`);
+  }
+  return lines.join('\n');
+}
+
+// Build the full shareable URL from the current tool state.
+function buildShareLink() {
+  const canIpModule = getCanIpModuleFromHTML() || '';
+  const userRegText = document.getElementById('userInputRegisterValues').value;
+  const d = buildCompactDumpFromText(userRegText);
+  const base = location.origin + location.pathname;
+  return `${base}#m=${encodeURIComponent(canIpModule)}` +
+         `&clk=${encodeURIComponent(par_clk_freq_g)}` +
+         `&d=${d}`;
+}
+
+// Copy the shareable link to the clipboard and give short visual feedback on the button.
+async function copyShareLink() {
+  const button = document.getElementById('copyShareLinkButton');
+  const link = buildShareLink();
+
+  const showFeedback = (msg) => {
+    if (!button) {
+      return;
+    }
+    const original = button.dataset.originalLabel || button.textContent;
+    button.dataset.originalLabel = original;
+    button.textContent = msg;
+    setTimeout(() => { button.textContent = original; }, 1500);
+  };
+
+  try {
+    await navigator.clipboard.writeText(link);
+    console.log('[Info] Share link copied to clipboard:', link);
+    showFeedback('Link copied!');
+  } catch (err) {
+    console.warn('[Warning] Clipboard API failed, using fallback:', err);
+    // Fallback for browsers/contexts without clipboard permission
+    const tempInput = document.createElement('textarea');
+    tempInput.value = link;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    let ok = false;
+    try {
+      ok = document.execCommand('copy');
+    } catch (e) {
+      ok = false;
+    }
+    document.body.removeChild(tempInput);
+    showFeedback(ok ? 'Link copied!' : 'Copy failed');
+  }
+}
+
+// On page load: if the URL hash carries all 3 parameters (m, clk, d),
+// restore the state into the HTML fields and run the register processing.
+// Returns true if a shared link was applied.
+function applyHashParamsAndProcess() {
+  const hash = location.hash;
+  if (!hash || hash.length < 2) {
+    return false;
+  }
+
+  const params = new URLSearchParams(hash.substring(1));
+  const canIpModule = params.get('m');
+  const clk = params.get('clk');
+  const d = params.get('d');
+
+  // Require all three parameters to be present
+  if (!canIpModule || !clk || !d) {
+    return false;
+  }
+
+  // Restore CAN IP Module selection
+  const canIpModuleSelect = document.getElementById('canIpModuleSelect');
+  if (canIpModuleSelect) {
+    canIpModuleSelect.value = canIpModule;
+  }
+
+  // Restore clock frequency
+  const clkNum = parseFloat(clk);
+  if (!isNaN(clkNum) && clkNum > 0) {
+    par_clk_freq_g = clkNum;
+    const clkFreqField = document.getElementById('par_clk_freq');
+    if (clkFreqField) {
+      clkFreqField.value = clkNum;
+      clkFreqField.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+
+  // Restore memory dump into the textarea
+  const registerTextArea = document.getElementById('userInputRegisterValues');
+  if (registerTextArea) {
+    registerTextArea.value = expandCompactDump(d);
+  }
+
+  // Run the same processing as the "process register values" button
+  console.log('[Info] Shared link detected in URL hash - processing register values automatically');
+  processUserRegisterValues();
+  return true;
+}
+
+// ===================================================================================
+// Download the current evaluation as a single, self-contained HTML report file.
+// The report is first re-rendered with ALL severities (so the exported filter
+// checkboxes can show/hide every line), then restored to the on-screen state.
+function handleDownloadReport() {
+  const canIpModule = getCanIpModuleFromHTML() || 'CAN';
+
+  const reportEl = document.getElementById('reportTextArea');
+  let fullReportHtml = reportEl ? reportEl.innerHTML : '';
+
+  // Only re-render if register values have actually been processed
+  if (reportEl && reg && reg.parse_output && reg.general) {
+    const savedHtml = reportEl.innerHTML;
+    const allVerbose = {
+      info: true, infoVerbose: true, infoBold: true,
+      calculation: true, warning: true, error: true
+    };
+    try {
+      displayValidationReport(reg, allVerbose);
+      fullReportHtml = reportEl.innerHTML;
+    } catch (err) {
+      console.warn('[Warning] handleDownloadReport(): could not render full report:', err);
+    } finally {
+      reportEl.innerHTML = savedHtml; // restore the on-screen (filtered) view
+    }
+  }
+
+  downloadEvaluationReport({ canIpModule, reportHtml: fullReportHtml });
 }
 
 // ===================================================================================

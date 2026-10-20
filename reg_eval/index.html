@@ -24,7 +24,10 @@
     <div class="page-header">
         <h1>CAN Register Evaluator <a href="versionhistory.html" id="appVersion" class="version-label" target="_blank" rel="noopener noreferrer"
           aria-label="Version"></a></h1>
-      <h1><a href="#" id="openHelp" class="help-link" aria-haspopup="dialog" aria-controls="helpModal">Help</a></h1>
+      <div class="header-actions">
+        <button type="button" id="copyShareLinkButton" class="styled-select">Copy link with current memory dump</button>
+        <h1><a href="#" id="openHelp" class="help-link" aria-haspopup="dialog" aria-controls="helpModal">Help</a></h1>
+      </div>
     </div>
 
     <!-- Responsive container for 3-column layout -->
@@ -297,6 +300,7 @@ Reserved Addresses: Memory dump can contain also reserved addresses. They will b
             <!--<input type="checkbox" id="par_report_calculation" checked/> calculation-->
             <input type="checkbox" id="par_report_warning" checked /> warning
             <input type="checkbox" id="par_report_error" checked /> error
+            <a href="#" id="downloadReportLink" class="report-download-link" aria-label="Download report">&#x21E9; download</a>
 
           </div>
         </h3>
