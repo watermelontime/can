@@ -7,6 +7,15 @@
   font-weight: normal;
   font-size: 0.9em;
 }
+.report-download-link {
+  color: #007acc;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.report-download-link:hover {
+  text-decoration: underline;
+}
 /* Allgemeines Layout */
 body {
   font-family: sans-serif;
@@ -367,6 +376,14 @@ svg {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 0.5rem;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.header-actions .styled-button {
+  margin-bottom: 0;
 }
 .help-link {
   color: #007acc;
