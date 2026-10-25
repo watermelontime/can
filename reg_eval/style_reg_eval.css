@@ -1,0 +1,327 @@
+/* ===================================================================================
+   style_reg_eval.css
+   Styles used ONLY by the CAN Register Evaluator (reg_eval).
+   Loaded in addition to the shared global ../styles.css.
+   Keep shared layout / form / header / modal styles in ../styles.css.
+   =================================================================================== */
+
+/* Inline report header with checkbox */
+.report-headline {
+  display: flex;
+  gap: 2em;
+}
+.report-headline .inline-control {
+  font-weight: normal;
+  font-size: 0.9em;
+}
+.report-download-link {
+  color: #007acc;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.report-download-link:hover {
+  text-decoration: underline;
+}
+
+/* Make ClockSettingsTable fit its content tightly */
+#ClockSettingsTable {
+  width: auto;
+  table-layout: auto;
+  max-width: none;
+  display: inline-table; /* Force table to shrink to content */
+}
+
+.register-textarea,
+.report-textarea {
+    height: 450px;
+}
+
+/* Make register textarea fill vertical space in register column */
+.register-column .register-textarea {
+    flex: 1; /* Fill remaining vertical space in column */
+    height: auto; /* Override fixed height */
+    min-height: 600px; /* Minimum height for usability */
+    resize: both; /* Allow both vertical and horizontal resizing */
+}
+
+/* Enable line wrapping for the report area while preserving other pre formatting */
+#reportTextArea {
+  white-space: pre-wrap;  /* Preserves whitespace and newlines but allows wrapping */
+  word-wrap: break-word;  /* Break long words if necessary */
+  overflow-wrap: break-word;  /* Modern equivalent of word-wrap */
+}
+
+.register-column {
+    flex: 0 0 350px; /* Fixed width - don't grow or shrink */
+    min-width: 320px; /* Reduced minimum width */
+    background-color: #f0f8ff; /* Light green background */
+    border: 1px solid #e8f0e0;
+}
+
+/* Adjust textarea sizes for columns */
+.register-column .register-textarea,
+.report-column .register-textarea {
+    width: 100%;
+    min-width: 300px;
+    box-sizing: border-box;
+}
+
+.report-textarea {
+    height: 500px; /* Larger height for validation report */
+    flex: 1; /* Fill remaining vertical space in column */
+    min-height: 400px; /* Minimum height for readability */
+    resize: vertical; /* Allow vertical resizing */
+}
+
+/* Color classes for validation report severity levels */
+.report-info {
+    color: #000000;
+}
+
+.report-infoVerbose {
+    color: #9e9e9e;
+}
+
+.report-infoCalculation,
+.report-infoBold {
+    color: #0077ff;
+    font-weight: bold;
+}
+
+.report-error {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.report-warning {
+    color: #a04800;
+    font-weight: bold;
+}
+
+.report-header {
+    color: #000000;
+    font-weight: bold;
+}
+
+/* ===== Evaluation Report tabs (normal / compact) ===== */
+.report-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 0.5em;
+  border-bottom: 2px solid #ccc;
+}
+.report-tab {
+  border: 2px solid #ccc;
+  border-bottom: none;
+  background: #e8e8e8;
+  padding: 6px 16px;
+  border-radius: 10px 10px 0 0;
+  cursor: pointer;
+  font-size: 0.95em;
+  color: #444;
+}
+.report-tab:hover {
+  background: #dcdcdc;
+}
+.report-tab.active {
+  background: white;
+  color: #000;
+  font-weight: bold;
+  position: relative;
+  top: 2px;
+}
+.report-tabpanel {
+  margin-top: 0.5em;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.report-tabpanel[hidden] {
+  display: none;
+}
+.report-filters {
+  font-weight: normal;
+  font-size: 0.9em;
+  margin-bottom: 0.5em;
+}
+
+/* ===== Compact register view ===== */
+:root {
+  /* Color used for non-zero bit/field values in the compact view (editable) */
+  --compact-nonzero-color: #d32f2f;
+  /* Background color of a non-zero value cell */
+  --compact-nonzero-value-bg: #fcee76; /* light red: #ffe0e0 */
+  /* Text color of the field-name cell of a non-zero field */
+  --compact-nonzero-name-color: #000000;
+  /* Font size of the table content (bit numbers, values, field names) */
+  --compact-font-size: 12px;
+  /* Font size of the register name / title (header row) */
+  --compact-title-font-size: 14px;
+  /* Width of one single-bit table cell (a register spans 32 of these) */
+  --compact-cell-width: 24px;
+  /* Height of the field-name row (vertical text) */
+  --compact-name-height: 40px;
+}
+.compact-view {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+.compact-note {
+  color: #777;
+  font-style: italic;
+}
+
+/* Compact view: register-selection (config) mode */
+.cv-config-toggle,
+.cv-config-btn {
+  font-size: 0.85em;
+  padding: 2px 8px;
+  margin-right: 0.5em;
+  border: 1px solid #999;
+  border-radius: 4px;
+  background: #e8e8e8;
+  cursor: pointer;
+}
+.cv-config-toggle:hover:not(:disabled),
+.cv-config-btn:hover {
+  background: #dcdcdc;
+}
+.cv-config-toggle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* 3D raised look for the "select registers" + config buttons */
+.cv-config-toggle,
+.cv-config-btn {
+  border: 1px solid #7a7a7a;
+  border-radius: 5px;
+  background: linear-gradient(to bottom, #fdfdfd, #d4d4d4);
+  box-shadow: 0 1px 0 #ffffff inset, 0 2px 3px rgba(0, 0, 0, 0.35);
+  transition: box-shadow 0.05s, transform 0.05s;
+}
+.cv-config-toggle:hover:not(:disabled),
+.cv-config-btn:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #ffffff, #dcdcdc);
+}
+.cv-config-toggle:active:not(:disabled),
+.cv-config-btn:active:not(:disabled) {
+  background: linear-gradient(to bottom, #d4d4d4, #fdfdfd);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) inset;
+  transform: translateY(1px);
+}
+.cv-config-toggle:disabled {
+  box-shadow: none;
+}
+#compactConfigControls {
+  margin: 0.5em 0;
+}
+.cv-config-title {
+  font-weight: bold;
+  margin-bottom: 0.4em;
+}
+.cv-config-buttons {
+  display: flex;
+  gap: 0.5em;
+  margin-bottom: 0.5em;
+  font-size: 0.9em;
+}
+.cv-config-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6em;
+  margin-bottom: 0.5em;
+}
+.cv-show {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 0.9em;
+  padding-top: 0.3em;
+  cursor: pointer;
+}
+.cv-config-table {
+  overflow-x: auto;
+}
+.cv-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: auto;
+  margin-bottom: 1.5em;
+  font-family: monospace;
+}
+.cv-table td,
+.cv-table th {
+  border: 1px solid #999;
+  text-align: center;
+  overflow: hidden;
+  padding: 0;
+}
+.cv-table .cv-header {
+  background: #f0f0f0;
+  color: #000;
+  font-weight: bold;
+  font-size: var(--compact-title-font-size);
+  text-align: left;
+  padding: 4px 6px;
+  font-family: sans-serif;
+}
+.cv-bitnum {
+  font-size: var(--compact-font-size);
+  color: #555;
+  width: var(--compact-cell-width);
+  padding: 1px 0;
+  background: #fafafa;
+}
+.cv-value {
+  font-size: var(--compact-font-size);
+  padding: 2px 0;
+  background: white;
+  color: #000;
+}
+.cv-name {
+  vertical-align: bottom;
+  height: var(--compact-name-height);
+  background: white;
+  padding: 2px 0;
+  position: relative;
+}
+.cv-name-text {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  font-size: var(--compact-font-size);
+  display: inline-block;
+}
+/* Let the tooltip escape the cell's own overflow:hidden clipping */
+.cv-longnames .cv-name[data-long]:hover {
+  overflow: visible;
+}
+.cv-longnames .cv-name[data-long]:hover::after {
+  content: attr(data-long);
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  margin-bottom: calc(2.7 * var(--compact-font-size));
+  z-index: 10;
+  background: #333;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  writing-mode: horizontal-tb;
+  pointer-events: none;
+}
+.cv-highlight .cv-value.cv-nonzero {
+  color: var(--compact-nonzero-color);
+  background: var(--compact-nonzero-value-bg);
+  font-weight: bold;
+}
+.cv-highlight .cv-name.cv-nonzero {
+  color: var(--compact-nonzero-name-color);
+}
+.cv-reserved {
+  background: #e0e0e0;
+  color: #888;
+}

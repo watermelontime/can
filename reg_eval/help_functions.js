@@ -26,6 +26,22 @@ export function getBits(regVal, endBit, startBit) {
   }
 }
 
+// Define a decoded register field as a single source of truth.
+// Stores raw value together with bit range and names so reports read from one place.
+// decodeFn (optional) maps raw bits to an interpreted value stored in .decoded (e.g. raw+1).
+export function defineField(regObj, regValue, name_short, msb, lsb, name_long, decodeFn) {
+  if (regObj.fields === undefined) {
+    regObj.fields = {};
+  }
+  const value = getBits(regValue, msb, lsb);
+  const field = { value, msb, lsb, name_short, name_long };
+  if (typeof decodeFn === 'function') {
+    field.decoded = decodeFn(value);
+  }
+  regObj.fields[name_short] = field;
+  return field;
+}
+
 // Generate binary line data for a given register value
 // 0 0 0 0   0 0 0 1   1 0 1 0   0 0 1 1 ...
 export function getBinaryLineData(regValue, bits2print=32) {

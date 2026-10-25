@@ -1,7 +1,7 @@
 // All rights reserved. (c) 2026 //
 
 // XS_CAN: MH register decoding
-import { getBits } from './help_functions.js';
+import { getBits, defineField } from './help_functions.js';
 import { sevC } from './help_functions.js';
 
 // ===================================================================================
@@ -16,23 +16,24 @@ export function procRegsMhGlobal(reg) {
     reg.XSCAN_VERSION.report = [];
 
     // 1. Decode all individual bits of register
-    reg.XSCAN_VERSION.fields.MAJOR   = getBits(regValue, 11, 8);
-    reg.XSCAN_VERSION.fields.MINOR   = getBits(regValue, 7, 4);
-    reg.XSCAN_VERSION.fields.PATCH   = getBits(regValue, 3, 0);
+    defineField(reg.XSCAN_VERSION, regValue, 'MAJOR', 11, 8, 'Major');
+    defineField(reg.XSCAN_VERSION, regValue, 'MINOR', 7, 4, 'Minor');
+    defineField(reg.XSCAN_VERSION, regValue, 'PATCH', 3, 0, 'Patch');
+    const f = reg.XSCAN_VERSION.fields;
 
     // 1. Decode all individual bits of register
     reg.XSCAN_VERSION.report.push({
       severityLevel: sevC.info,
       msg: `XSCAN_VERSION: ${reg.XSCAN_VERSION.name_long} (0x${reg.XSCAN_VERSION.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-         `[MAJOR  ] Major = 0x${reg.XSCAN_VERSION.fields.MAJOR.toString(16).toUpperCase()}\n` +
-         `[MINOR  ] Minor = 0x${reg.XSCAN_VERSION.fields.MINOR.toString(16).toUpperCase()}\n` +
-         `[PATCH  ] Patch = 0x${reg.XSCAN_VERSION.fields.PATCH.toString(16).toUpperCase()}`
+         `[${f.MAJOR.name_short.padEnd(7)}] ${f.MAJOR.name_long.padEnd(5)} = 0x${f.MAJOR.value.toString(16).toUpperCase()}\n` +
+         `[${f.MINOR.name_short.padEnd(7)}] ${f.MINOR.name_long.padEnd(5)} = 0x${f.MINOR.value.toString(16).toUpperCase()}\n` +
+         `[${f.PATCH.name_short.padEnd(7)}] ${f.PATCH.name_long.padEnd(5)} = 0x${f.PATCH.value.toString(16).toUpperCase()}`
     });
 
     // 2. Generate human-readable register report
     reg.XSCAN_VERSION.report.push({
       severityLevel: sevC.infoBold,
-      msg: `Version: XS_CAN ${reg.XSCAN_VERSION.fields.MAJOR.toString(16).toUpperCase()}.${reg.XSCAN_VERSION.fields.MINOR.toString(16).toUpperCase()}.${reg.XSCAN_VERSION.fields.PATCH.toString(16).toUpperCase()}`
+      msg: `Version: XS_CAN ${f.MAJOR.value.toString(16).toUpperCase()}.${f.MINOR.value.toString(16).toUpperCase()}.${f.PATCH.value.toString(16).toUpperCase()}`
     });
   } // XSCAN_VERSION
 
@@ -45,13 +46,14 @@ export function procRegsMhGlobal(reg) {
     reg.MH_CTRL.report = [];
 
     // 1. Decode all individual bits of MH_CTRL register
-    reg.MH_CTRL.fields.MH_ENABLE = getBits(regValue, 0, 0);
+    defineField(reg.MH_CTRL, regValue, 'MH_ENABLE', 0, 0, 'Message Handler Enable');
+    const f = reg.MH_CTRL.fields;
 
     // 2. Generate human-readable register report
     reg.MH_CTRL.report.push({
       severityLevel: sevC.info,
       msg: `MH_CTRL: ${reg.MH_CTRL.name_long} (0x${reg.MH_CTRL.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[MH_ENABLE] Message Handler Enable = ${reg.MH_CTRL.fields.MH_ENABLE} (0: disabled, 1: enabled)`
+           `[${f.MH_ENABLE.name_short.padEnd(9)}] ${f.MH_ENABLE.name_long.padEnd(22)} = ${f.MH_ENABLE.value} (0: disabled, 1: enabled)`
     });
   } // MH_CTRL
 
@@ -64,25 +66,26 @@ export function procRegsMhGlobal(reg) {
     reg.MH_CFG.report = [];
 
     // 1. Decode all individual bits of MH_CFG register
-    reg.MH_CFG.fields.MAX_RETRANS = getBits(regValue, 18, 16);
-    reg.MH_CFG.fields.CTME        = getBits(regValue, 8, 8);
-    reg.MH_CFG.fields.RXFQ1E      = getBits(regValue, 4, 4);
-    reg.MH_CFG.fields.RXFQ0E      = getBits(regValue, 3, 3);
-    reg.MH_CFG.fields.TEFQE       = getBits(regValue, 2, 2);
-    reg.MH_CFG.fields.TXPQE       = getBits(regValue, 1, 1);
-    reg.MH_CFG.fields.TXFQE       = getBits(regValue, 0, 0);
+    defineField(reg.MH_CFG, regValue, 'MAX_RETRANS', 18, 16, 'Maximum TX re-transmissions');
+    defineField(reg.MH_CFG, regValue, 'CTME', 8, 8, 'Cut-Through Mode Enable');
+    defineField(reg.MH_CFG, regValue, 'RXFQ1E', 4, 4, 'RXFQ1 Enable');
+    defineField(reg.MH_CFG, regValue, 'RXFQ0E', 3, 3, 'RXFQ0 Enable');
+    defineField(reg.MH_CFG, regValue, 'TEFQE', 2, 2, 'TX Event FIFO Enable');
+    defineField(reg.MH_CFG, regValue, 'TXPQE', 1, 1, 'TX Priority Queue Enable');
+    defineField(reg.MH_CFG, regValue, 'TXFQE', 0, 0, 'TX FIFO Queue Enable');
+    const f = reg.MH_CFG.fields;
 
     // 2. Generate human-readable register report
     reg.MH_CFG.report.push({
       severityLevel: sevC.info,
       msg: `MH_CFG: ${reg.MH_CFG.name_long} (0x${reg.MH_CFG.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[MAX_RETRANS] Maximum TX re-transmissions = ${reg.MH_CFG.fields.MAX_RETRANS} (0: none, 1-6: 1-6, 7: unlimited)\n` +
-           `[CTME       ] Cut-Through Mode Enable     = ${reg.MH_CFG.fields.CTME} (0: FMM, 1: CTM)\n` +
-           `[RXFQ1E     ] RXFQ1 Enable                = ${reg.MH_CFG.fields.RXFQ1E}\n` +
-           `[RXFQ0E     ] RXFQ0 Enable                = ${reg.MH_CFG.fields.RXFQ0E}\n` +
-           `[TEFQE      ] TX Event FIFO Enable        = ${reg.MH_CFG.fields.TEFQE}\n` +
-           `[TXPQE      ] TX Priority Queue Enable    = ${reg.MH_CFG.fields.TXPQE}\n` +
-           `[TXFQE      ] TX FIFO Queue Enable        = ${reg.MH_CFG.fields.TXFQE}`
+           `[${f.MAX_RETRANS.name_short.padEnd(11)}] ${f.MAX_RETRANS.name_long.padEnd(27)} = ${f.MAX_RETRANS.value} (0: none, 1-6: 1-6, 7: unlimited)\n` +
+           `[${f.CTME.name_short.padEnd(11)}] ${f.CTME.name_long.padEnd(27)} = ${f.CTME.value} (0: FMM, 1: CTM)\n` +
+           `[${f.RXFQ1E.name_short.padEnd(11)}] ${f.RXFQ1E.name_long.padEnd(27)} = ${f.RXFQ1E.value}\n` +
+           `[${f.RXFQ0E.name_short.padEnd(11)}] ${f.RXFQ0E.name_long.padEnd(27)} = ${f.RXFQ0E.value}\n` +
+           `[${f.TEFQE.name_short.padEnd(11)}] ${f.TEFQE.name_long.padEnd(27)} = ${f.TEFQE.value}\n` +
+           `[${f.TXPQE.name_short.padEnd(11)}] ${f.TXPQE.name_long.padEnd(27)} = ${f.TXPQE.value}\n` +
+           `[${f.TXFQE.name_short.padEnd(11)}] ${f.TXFQE.name_long.padEnd(27)} = ${f.TXFQE.value}`
     });
   } // MH_CFG
 
@@ -95,45 +98,46 @@ export function procRegsMhGlobal(reg) {
     reg.MH_STS0.report = [];
 
     // 1. Decode all individual bits of MH_STS0 register
-    reg.MH_STS0.fields.TXFQ_ELEM_TOO_BIG = getBits(regValue, 30, 30);
-    reg.MH_STS0.fields.TXPQ_ELEM_TOO_BIG = getBits(regValue, 29, 29);
-    reg.MH_STS0.fields.TXFQ_FULL_WR      = getBits(regValue, 28, 28);
-    reg.MH_STS0.fields.TXPQ_FULL_WR      = getBits(regValue, 27, 27);
-    reg.MH_STS0.fields.TEFQ_EMPTY_RD     = getBits(regValue, 26, 26);
-    reg.MH_STS0.fields.RXFQ0_EMPTY_RD    = getBits(regValue, 25, 25);
-    reg.MH_STS0.fields.RXFQ1_EMPTY_RD    = getBits(regValue, 24, 24);
-    reg.MH_STS0.fields.CTB_RD_WO_REQ     = getBits(regValue, 23, 23);
-    reg.MH_STS0.fields.CTB_WR_WO_REQ     = getBits(regValue, 22, 22);
-    reg.MH_STS0.fields.TXFQ_VB_NO_SA     = getBits(regValue, 21, 21);
-    reg.MH_STS0.fields.TXPQ_VB_NO_SA     = getBits(regValue, 20, 20);
-    reg.MH_STS0.fields.TEFQ_VB_NO_SA     = getBits(regValue, 19, 19);
-    reg.MH_STS0.fields.RXFQ0_VB_NO_SA    = getBits(regValue, 18, 18);
-    reg.MH_STS0.fields.RXFQ1_VB_NO_SA    = getBits(regValue, 17, 17);
-    reg.MH_STS0.fields.CTB_VB_NO_SA      = getBits(regValue, 16, 16);
-    reg.MH_STS0.fields.CLOCK_ACTIVE      = getBits(regValue, 1, 1);
-    reg.MH_STS0.fields.PRT_ENABLE        = getBits(regValue, 0, 0);
+    defineField(reg.MH_STS0, regValue, 'TXFQ_ELEM_TOO_BIG', 30, 30, 'TXFQ element too big');
+    defineField(reg.MH_STS0, regValue, 'TXPQ_ELEM_TOO_BIG', 29, 29, 'TXPQ element too big');
+    defineField(reg.MH_STS0, regValue, 'TXFQ_FULL_WR', 28, 28, 'Write to full TXFQ');
+    defineField(reg.MH_STS0, regValue, 'TXPQ_FULL_WR', 27, 27, 'Write to full TXPQ');
+    defineField(reg.MH_STS0, regValue, 'TEFQ_EMPTY_RD', 26, 26, 'Read from empty TEFQ');
+    defineField(reg.MH_STS0, regValue, 'RXFQ0_EMPTY_RD', 25, 25, 'Read from empty RXFQ0');
+    defineField(reg.MH_STS0, regValue, 'RXFQ1_EMPTY_RD', 24, 24, 'Read from empty RXFQ1');
+    defineField(reg.MH_STS0, regValue, 'CTB_RD_WO_REQ', 23, 23, 'CTB read without request');
+    defineField(reg.MH_STS0, regValue, 'CTB_WR_WO_REQ', 22, 22, 'CTB write without request');
+    defineField(reg.MH_STS0, regValue, 'TXFQ_VB_NO_SA', 21, 21, 'TXFQ VB wrong addr');
+    defineField(reg.MH_STS0, regValue, 'TXPQ_VB_NO_SA', 20, 20, 'TXPQ VB wrong addr');
+    defineField(reg.MH_STS0, regValue, 'TEFQ_VB_NO_SA', 19, 19, 'TEFQ VB wrong addr');
+    defineField(reg.MH_STS0, regValue, 'RXFQ0_VB_NO_SA', 18, 18, 'RXFQ0 VB wrong addr');
+    defineField(reg.MH_STS0, regValue, 'RXFQ1_VB_NO_SA', 17, 17, 'RXFQ1 VB wrong addr');
+    defineField(reg.MH_STS0, regValue, 'CTB_VB_NO_SA', 16, 16, 'CTB VB wrong addr');
+    defineField(reg.MH_STS0, regValue, 'CLOCK_ACTIVE', 1, 1, 'HOST_CLK active');
+    defineField(reg.MH_STS0, regValue, 'PRT_ENABLE', 0, 0, 'PRT enable signal');
+    const f = reg.MH_STS0.fields;
 
     // 2. Generate human-readable register report
     reg.MH_STS0.report.push({
       severityLevel: sevC.info,
       msg: `MH_STS0: ${reg.MH_STS0.name_long} (0x${reg.MH_STS0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[TXFQ_ELEM_TOO_BIG] TXFQ element too big         = ${reg.MH_STS0.fields.TXFQ_ELEM_TOO_BIG}\n` +
-           `[TXPQ_ELEM_TOO_BIG] TXPQ element too big         = ${reg.MH_STS0.fields.TXPQ_ELEM_TOO_BIG}\n` +
-           `[TXFQ_FULL_WR     ] Write to full TXFQ           = ${reg.MH_STS0.fields.TXFQ_FULL_WR}\n` +
-           `[TXPQ_FULL_WR     ] Write to full TXPQ           = ${reg.MH_STS0.fields.TXPQ_FULL_WR}\n` +
-           `[TEFQ_EMPTY_RD    ] Read from empty TEFQ         = ${reg.MH_STS0.fields.TEFQ_EMPTY_RD}\n` +
-           `[RXFQ0_EMPTY_RD   ] Read from empty RXFQ0        = ${reg.MH_STS0.fields.RXFQ0_EMPTY_RD}\n` +
-           `[RXFQ1_EMPTY_RD   ] Read from empty RXFQ1        = ${reg.MH_STS0.fields.RXFQ1_EMPTY_RD}\n` +
-           `[CTB_RD_WO_REQ    ] CTB read without request     = ${reg.MH_STS0.fields.CTB_RD_WO_REQ} (N/A in FMM)\n` +
-           `[CTB_WR_WO_REQ    ] CTB write without request    = ${reg.MH_STS0.fields.CTB_WR_WO_REQ} (N/A in FMM)\n` +
-           `[TXFQ_VB_NO_SA    ] TXFQ VB wrong addr           = ${reg.MH_STS0.fields.TXFQ_VB_NO_SA}\n` +
-           `[TXPQ_VB_NO_SA    ] TXPQ VB wrong addr           = ${reg.MH_STS0.fields.TXPQ_VB_NO_SA}\n` +
-           `[TEFQ_VB_NO_SA    ] TEFQ VB wrong addr           = ${reg.MH_STS0.fields.TEFQ_VB_NO_SA}\n` +
-           `[RXFQ0_VB_NO_SA   ] RXFQ0 VB wrong addr          = ${reg.MH_STS0.fields.RXFQ0_VB_NO_SA}\n` +
-           `[RXFQ1_VB_NO_SA   ] RXFQ1 VB wrong addr          = ${reg.MH_STS0.fields.RXFQ1_VB_NO_SA}\n` +
-           `[CTB_VB_NO_SA     ] CTB VB wrong addr            = ${reg.MH_STS0.fields.CTB_VB_NO_SA} (N/A in FMM)\n` +
-           `[CLOCK_ACTIVE     ] HOST_CLK active              = ${reg.MH_STS0.fields.CLOCK_ACTIVE}\n` +
-           `[PRT_ENABLE       ] PRT enable signal            = ${reg.MH_STS0.fields.PRT_ENABLE}`
+           `[${f.TXFQ_ELEM_TOO_BIG.name_short.padEnd(17)}] ${f.TXFQ_ELEM_TOO_BIG.name_long.padEnd(28)} = ${f.TXFQ_ELEM_TOO_BIG.value}\n` +
+           `[${f.TXPQ_ELEM_TOO_BIG.name_short.padEnd(17)}] ${f.TXPQ_ELEM_TOO_BIG.name_long.padEnd(28)} = ${f.TXPQ_ELEM_TOO_BIG.value}\n` +
+           `[${f.TXFQ_FULL_WR.name_short.padEnd(17)}] ${f.TXFQ_FULL_WR.name_long.padEnd(28)} = ${f.TXFQ_FULL_WR.value}\n` +
+           `[${f.TXPQ_FULL_WR.name_short.padEnd(17)}] ${f.TXPQ_FULL_WR.name_long.padEnd(28)} = ${f.TXPQ_FULL_WR.value}\n` +
+           `[${f.TEFQ_EMPTY_RD.name_short.padEnd(17)}] ${f.TEFQ_EMPTY_RD.name_long.padEnd(28)} = ${f.TEFQ_EMPTY_RD.value}\n` +
+           `[${f.RXFQ0_EMPTY_RD.name_short.padEnd(17)}] ${f.RXFQ0_EMPTY_RD.name_long.padEnd(28)} = ${f.RXFQ0_EMPTY_RD.value}\n` +
+           `[${f.RXFQ1_EMPTY_RD.name_short.padEnd(17)}] ${f.RXFQ1_EMPTY_RD.name_long.padEnd(28)} = ${f.RXFQ1_EMPTY_RD.value}\n` +
+           `[${f.CTB_RD_WO_REQ.name_short.padEnd(17)}] ${f.CTB_RD_WO_REQ.name_long.padEnd(28)} = ${f.CTB_RD_WO_REQ.value} (N/A in FMM)\n` +
+           `[${f.CTB_WR_WO_REQ.name_short.padEnd(17)}] ${f.CTB_WR_WO_REQ.name_long.padEnd(28)} = ${f.CTB_WR_WO_REQ.value} (N/A in FMM)\n` +
+           `[${f.TXFQ_VB_NO_SA.name_short.padEnd(17)}] ${f.TXFQ_VB_NO_SA.name_long.padEnd(28)} = ${f.TXFQ_VB_NO_SA.value}\n` +
+           `[${f.TXPQ_VB_NO_SA.name_short.padEnd(17)}] ${f.TXPQ_VB_NO_SA.name_long.padEnd(28)} = ${f.TXPQ_VB_NO_SA.value}\n` +
+           `[${f.TEFQ_VB_NO_SA.name_short.padEnd(17)}] ${f.TEFQ_VB_NO_SA.name_long.padEnd(28)} = ${f.TEFQ_VB_NO_SA.value}\n` +
+           `[${f.RXFQ0_VB_NO_SA.name_short.padEnd(17)}] ${f.RXFQ0_VB_NO_SA.name_long.padEnd(28)} = ${f.RXFQ0_VB_NO_SA.value}\n` +
+           `[${f.RXFQ1_VB_NO_SA.name_short.padEnd(17)}] ${f.RXFQ1_VB_NO_SA.name_long.padEnd(28)} = ${f.RXFQ1_VB_NO_SA.value}\n` +
+           `[${f.CTB_VB_NO_SA.name_short.padEnd(17)}] ${f.CTB_VB_NO_SA.name_long.padEnd(28)} = ${f.CTB_VB_NO_SA.value} (N/A in FMM)\n` +
+           `[${f.CLOCK_ACTIVE.name_short.padEnd(17)}] ${f.CLOCK_ACTIVE.name_long.padEnd(28)} = ${f.CLOCK_ACTIVE.value}\n` +
+           `[${f.PRT_ENABLE.name_short.padEnd(17)}] ${f.PRT_ENABLE.name_long.padEnd(28)} = ${f.PRT_ENABLE.value}`
     });
   } // MH_STS0
 
@@ -146,47 +150,48 @@ export function procRegsMhGlobal(reg) {
     reg.MH_STS1.report = [];
 
     // 1. Decode all individual bits of MH_STS1 register
-    reg.MH_STS1.fields.TXFQ_VB_NONLIN_ACC = getBits(regValue, 17, 17);
-    reg.MH_STS1.fields.TXPQ_VB_NONLIN_ACC = getBits(regValue, 16, 16);
-    reg.MH_STS1.fields.TEFQ_VB_NONLIN_ACC = getBits(regValue, 15, 15);
-    reg.MH_STS1.fields.RXFQ0_VB_NONLIN_ACC = getBits(regValue, 14, 14);
-    reg.MH_STS1.fields.RXFQ1_VB_NONLIN_ACC = getBits(regValue, 13, 13);
-    reg.MH_STS1.fields.CTB_VB_NONLIN_ACC  = getBits(regValue, 12, 12);
-    reg.MH_STS1.fields.TXFQ_VB_RD         = getBits(regValue, 11, 11);
-    reg.MH_STS1.fields.TXPQ_VB_RD         = getBits(regValue, 10, 10);
-    reg.MH_STS1.fields.TEFQ_VB_WR         = getBits(regValue, 9, 9);
-    reg.MH_STS1.fields.RXFQ0_VB_WR        = getBits(regValue, 8, 8);
-    reg.MH_STS1.fields.RXFQ1_VB_WR        = getBits(regValue, 7, 7);
-    reg.MH_STS1.fields.CTB_VB_TX_RD       = getBits(regValue, 6, 6);
-    reg.MH_STS1.fields.CTB_VB_RX_WR       = getBits(regValue, 5, 5);
-    reg.MH_STS1.fields.TX_DP_SEQ_ERR      = getBits(regValue, 4, 4);
-    reg.MH_STS1.fields.RX_DP_SEQ_ERR      = getBits(regValue, 3, 3);
-    reg.MH_STS1.fields.TX_DP_PARITY_ERR   = getBits(regValue, 2, 2);
-    reg.MH_STS1.fields.RX_DP_PARITY_ERR   = getBits(regValue, 1, 1);
-    reg.MH_STS1.fields.TS_PARITY_ERR      = getBits(regValue, 0, 0);
+    defineField(reg.MH_STS1, regValue, 'TXFQ_VB_NONLIN_ACC', 17, 17, 'TXFQ VB non-linear access');
+    defineField(reg.MH_STS1, regValue, 'TXPQ_VB_NONLIN_ACC', 16, 16, 'TXPQ VB non-linear access');
+    defineField(reg.MH_STS1, regValue, 'TEFQ_VB_NONLIN_ACC', 15, 15, 'TEFQ VB non-linear access');
+    defineField(reg.MH_STS1, regValue, 'RXFQ0_VB_NONLIN_ACC', 14, 14, 'RXFQ0 VB non-linear access');
+    defineField(reg.MH_STS1, regValue, 'RXFQ1_VB_NONLIN_ACC', 13, 13, 'RXFQ1 VB non-linear access');
+    defineField(reg.MH_STS1, regValue, 'CTB_VB_NONLIN_ACC', 12, 12, 'CTB VB non-linear access');
+    defineField(reg.MH_STS1, regValue, 'TXFQ_VB_RD', 11, 11, 'Read from TXFQ VB');
+    defineField(reg.MH_STS1, regValue, 'TXPQ_VB_RD', 10, 10, 'Read from TXPQ VB');
+    defineField(reg.MH_STS1, regValue, 'TEFQ_VB_WR', 9, 9, 'Write to TEFQ VB');
+    defineField(reg.MH_STS1, regValue, 'RXFQ0_VB_WR', 8, 8, 'Write to RXFQ0 VB');
+    defineField(reg.MH_STS1, regValue, 'RXFQ1_VB_WR', 7, 7, 'Write to RXFQ1 VB');
+    defineField(reg.MH_STS1, regValue, 'CTB_VB_TX_RD', 6, 6, 'Read TX from CTB VB');
+    defineField(reg.MH_STS1, regValue, 'CTB_VB_RX_WR', 5, 5, 'Write RX to CTB VB');
+    defineField(reg.MH_STS1, regValue, 'TX_DP_SEQ_ERR', 4, 4, 'TX datapath sequence error');
+    defineField(reg.MH_STS1, regValue, 'RX_DP_SEQ_ERR', 3, 3, 'RX datapath sequence error');
+    defineField(reg.MH_STS1, regValue, 'TX_DP_PARITY_ERR', 2, 2, 'TX datapath parity error');
+    defineField(reg.MH_STS1, regValue, 'RX_DP_PARITY_ERR', 1, 1, 'RX datapath parity error');
+    defineField(reg.MH_STS1, regValue, 'TS_PARITY_ERR', 0, 0, 'Timestamp parity error');
+    const f = reg.MH_STS1.fields;
 
     // 2. Generate human-readable register report
     reg.MH_STS1.report.push({
       severityLevel: sevC.info,
       msg: `MH_STS1: ${reg.MH_STS1.name_long} (0x${reg.MH_STS1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[TXFQ_VB_NONLIN_ACC ] TXFQ VB non-linear access  = ${reg.MH_STS1.fields.TXFQ_VB_NONLIN_ACC}\n` +
-           `[TXPQ_VB_NONLIN_ACC ] TXPQ VB non-linear access  = ${reg.MH_STS1.fields.TXPQ_VB_NONLIN_ACC}\n` +
-           `[TEFQ_VB_NONLIN_ACC ] TEFQ VB non-linear access  = ${reg.MH_STS1.fields.TEFQ_VB_NONLIN_ACC}\n` +
-           `[RXFQ0_VB_NONLIN_ACC] RXFQ0 VB non-linear access = ${reg.MH_STS1.fields.RXFQ0_VB_NONLIN_ACC}\n` +
-           `[RXFQ1_VB_NONLIN_ACC] RXFQ1 VB non-linear access = ${reg.MH_STS1.fields.RXFQ1_VB_NONLIN_ACC}\n` +
-           `[CTB_VB_NONLIN_ACC  ] CTB VB non-linear access   = ${reg.MH_STS1.fields.CTB_VB_NONLIN_ACC} (N/A in FMM)\n` +
-           `[TXFQ_VB_RD         ] Read from TXFQ VB          = ${reg.MH_STS1.fields.TXFQ_VB_RD}\n` +
-           `[TXPQ_VB_RD         ] Read from TXPQ VB          = ${reg.MH_STS1.fields.TXPQ_VB_RD}\n` +
-           `[TEFQ_VB_WR         ] Write to TEFQ VB           = ${reg.MH_STS1.fields.TEFQ_VB_WR}\n` +
-           `[RXFQ0_VB_WR        ] Write to RXFQ0 VB          = ${reg.MH_STS1.fields.RXFQ0_VB_WR}\n` +
-           `[RXFQ1_VB_WR        ] Write to RXFQ1 VB          = ${reg.MH_STS1.fields.RXFQ1_VB_WR}\n` +
-           `[CTB_VB_TX_RD       ] Read TX from CTB VB        = ${reg.MH_STS1.fields.CTB_VB_TX_RD} (N/A in FMM)\n` +
-           `[CTB_VB_RX_WR       ] Write RX to CTB VB         = ${reg.MH_STS1.fields.CTB_VB_RX_WR} (N/A in FMM)\n` +
-           `[TX_DP_SEQ_ERR      ] TX datapath sequence error = ${reg.MH_STS1.fields.TX_DP_SEQ_ERR}\n` +
-           `[RX_DP_SEQ_ERR      ] RX datapath sequence error = ${reg.MH_STS1.fields.RX_DP_SEQ_ERR}\n` +
-           `[TX_DP_PARITY_ERR   ] TX datapath parity error   = ${reg.MH_STS1.fields.TX_DP_PARITY_ERR}\n` +
-           `[RX_DP_PARITY_ERR   ] RX datapath parity error   = ${reg.MH_STS1.fields.RX_DP_PARITY_ERR}\n` +
-           `[TS_PARITY_ERR      ] Timestamp parity error     = ${reg.MH_STS1.fields.TS_PARITY_ERR} (PRT stops when set)`
+           `[${f.TXFQ_VB_NONLIN_ACC.name_short.padEnd(19)}] ${f.TXFQ_VB_NONLIN_ACC.name_long.padEnd(26)} = ${f.TXFQ_VB_NONLIN_ACC.value}\n` +
+           `[${f.TXPQ_VB_NONLIN_ACC.name_short.padEnd(19)}] ${f.TXPQ_VB_NONLIN_ACC.name_long.padEnd(26)} = ${f.TXPQ_VB_NONLIN_ACC.value}\n` +
+           `[${f.TEFQ_VB_NONLIN_ACC.name_short.padEnd(19)}] ${f.TEFQ_VB_NONLIN_ACC.name_long.padEnd(26)} = ${f.TEFQ_VB_NONLIN_ACC.value}\n` +
+           `[${f.RXFQ0_VB_NONLIN_ACC.name_short.padEnd(19)}] ${f.RXFQ0_VB_NONLIN_ACC.name_long.padEnd(26)} = ${f.RXFQ0_VB_NONLIN_ACC.value}\n` +
+           `[${f.RXFQ1_VB_NONLIN_ACC.name_short.padEnd(19)}] ${f.RXFQ1_VB_NONLIN_ACC.name_long.padEnd(26)} = ${f.RXFQ1_VB_NONLIN_ACC.value}\n` +
+           `[${f.CTB_VB_NONLIN_ACC.name_short.padEnd(19)}] ${f.CTB_VB_NONLIN_ACC.name_long.padEnd(26)} = ${f.CTB_VB_NONLIN_ACC.value} (N/A in FMM)\n` +
+           `[${f.TXFQ_VB_RD.name_short.padEnd(19)}] ${f.TXFQ_VB_RD.name_long.padEnd(26)} = ${f.TXFQ_VB_RD.value}\n` +
+           `[${f.TXPQ_VB_RD.name_short.padEnd(19)}] ${f.TXPQ_VB_RD.name_long.padEnd(26)} = ${f.TXPQ_VB_RD.value}\n` +
+           `[${f.TEFQ_VB_WR.name_short.padEnd(19)}] ${f.TEFQ_VB_WR.name_long.padEnd(26)} = ${f.TEFQ_VB_WR.value}\n` +
+           `[${f.RXFQ0_VB_WR.name_short.padEnd(19)}] ${f.RXFQ0_VB_WR.name_long.padEnd(26)} = ${f.RXFQ0_VB_WR.value}\n` +
+           `[${f.RXFQ1_VB_WR.name_short.padEnd(19)}] ${f.RXFQ1_VB_WR.name_long.padEnd(26)} = ${f.RXFQ1_VB_WR.value}\n` +
+           `[${f.CTB_VB_TX_RD.name_short.padEnd(19)}] ${f.CTB_VB_TX_RD.name_long.padEnd(26)} = ${f.CTB_VB_TX_RD.value} (N/A in FMM)\n` +
+           `[${f.CTB_VB_RX_WR.name_short.padEnd(19)}] ${f.CTB_VB_RX_WR.name_long.padEnd(26)} = ${f.CTB_VB_RX_WR.value} (N/A in FMM)\n` +
+           `[${f.TX_DP_SEQ_ERR.name_short.padEnd(19)}] ${f.TX_DP_SEQ_ERR.name_long.padEnd(26)} = ${f.TX_DP_SEQ_ERR.value}\n` +
+           `[${f.RX_DP_SEQ_ERR.name_short.padEnd(19)}] ${f.RX_DP_SEQ_ERR.name_long.padEnd(26)} = ${f.RX_DP_SEQ_ERR.value}\n` +
+           `[${f.TX_DP_PARITY_ERR.name_short.padEnd(19)}] ${f.TX_DP_PARITY_ERR.name_long.padEnd(26)} = ${f.TX_DP_PARITY_ERR.value}\n` +
+           `[${f.RX_DP_PARITY_ERR.name_short.padEnd(19)}] ${f.RX_DP_PARITY_ERR.name_long.padEnd(26)} = ${f.RX_DP_PARITY_ERR.value}\n` +
+           `[${f.TS_PARITY_ERR.name_short.padEnd(19)}] ${f.TS_PARITY_ERR.name_long.padEnd(26)} = ${f.TS_PARITY_ERR.value} (PRT stops when set)`
     });
   } // MH_STS1
 
@@ -199,21 +204,22 @@ export function procRegsMhGlobal(reg) {
     reg.MH_SFTY_CFG.report = [];
 
     // 1. Decode all individual bits of MH_SFTY_CFG register
-    reg.MH_SFTY_CFG.fields.LMEM_TIMEOUT_VAL = getBits(regValue, 15, 8);
-    reg.MH_SFTY_CFG.fields.PRESCALER        = getBits(regValue, 2, 1);
-    reg.MH_SFTY_CFG.fields.LMEM_TO_EN       = getBits(regValue, 0, 0);
+    defineField(reg.MH_SFTY_CFG, regValue, 'LMEM_TIMEOUT_VAL', 15, 8, 'LMEM watchdog timeout (ticks)');
+    defineField(reg.MH_SFTY_CFG, regValue, 'PRESCALER', 2, 1, 'Watchdog prescaler');
+    defineField(reg.MH_SFTY_CFG, regValue, 'LMEM_TO_EN', 0, 0, 'Enable LMEM watchdog');
+    const f = reg.MH_SFTY_CFG.fields;
 
     // Derive human-readable clock division from PRESCALER
-    const presVal = reg.MH_SFTY_CFG.fields.PRESCALER;
+    const presVal = f.PRESCALER.value;
     const presDiv = (presVal >= 0 && presVal <= 3) ? (32 << presVal) : undefined;
 
     // 2. Generate human-readable register report
     reg.MH_SFTY_CFG.report.push({
       severityLevel: sevC.info,
       msg: `MH_SFTY_CFG: ${reg.MH_SFTY_CFG.name_long} (0x${reg.MH_SFTY_CFG.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[LMEM_TIMEOUT_VAL] LMEM watchdog timeout (ticks) = ${reg.MH_SFTY_CFG.fields.LMEM_TIMEOUT_VAL}\n` +
-           `[PRESCALER       ] Watchdog prescaler            = ${reg.MH_SFTY_CFG.fields.PRESCALER} (${presDiv !== undefined ? `clk divided by ${presDiv}` : 'Reserved/invalid'})\n` +
-           `[LMEM_TO_EN      ] Enable LMEM watchdog          = ${reg.MH_SFTY_CFG.fields.LMEM_TO_EN}`
+           `[${f.LMEM_TIMEOUT_VAL.name_short.padEnd(16)}] ${f.LMEM_TIMEOUT_VAL.name_long.padEnd(29)} = ${f.LMEM_TIMEOUT_VAL.value}\n` +
+           `[${f.PRESCALER.name_short.padEnd(16)}] ${f.PRESCALER.name_long.padEnd(29)} = ${f.PRESCALER.value} (${presDiv !== undefined ? `clk divided by ${presDiv}` : 'Reserved/invalid'})\n` +
+           `[${f.LMEM_TO_EN.name_short.padEnd(16)}] ${f.LMEM_TO_EN.name_long.padEnd(29)} = ${f.LMEM_TO_EN.value}`
     });
   } // MH_SFTY_CFG
 
@@ -226,19 +232,20 @@ export function procRegsMhGlobal(reg) {
     reg.LMEM_PROT.report = [];
 
     // 1. Decode all individual bits of register
-    reg.LMEM_PROT.fields.EA = getBits(regValue, 31, 16);
-    reg.LMEM_PROT.fields.SA = getBits(regValue, 15, 0);
+    defineField(reg.LMEM_PROT, regValue, 'EA', 31, 16, 'LMEM End   Address (of accessible space)');
+    defineField(reg.LMEM_PROT, regValue, 'SA', 15, 0, 'LMEM Start Address (of accessible space)');
+    const f = reg.LMEM_PROT.fields;
 
     // 2. Generate human-readable register report
     reg.LMEM_PROT.report.push({
       severityLevel: sevC.info,
       msg: `LMEM_PROT: ${reg.LMEM_PROT.name_long} (0x${reg.LMEM_PROT.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[EA] LMEM End   Address (of accessible space) = 0x${(reg.LMEM_PROT.fields.EA).toString(16).toUpperCase().padStart(4,'0')} word addr = 0x${(reg.LMEM_PROT.fields.EA << 2).toString(16).toUpperCase().padStart(5,'0')} (dec: ${(reg.LMEM_PROT.fields.EA << 2).toString(10).padStart(5,' ')}) byte addr\n` +
-           `[SA] LMEM Start Address (of accessible space) = 0x${(reg.LMEM_PROT.fields.SA).toString(16).toUpperCase().padStart(4,'0')} word addr = 0x${(reg.LMEM_PROT.fields.SA << 2).toString(16).toUpperCase().padStart(5,'0')} (dec: ${(reg.LMEM_PROT.fields.SA << 2).toString(10).padStart(5,' ')}) byte addr`
+           `[${f.EA.name_short.padEnd(2)}] ${f.EA.name_long.padEnd(40)} = 0x${(f.EA.value).toString(16).toUpperCase().padStart(4,'0')} word addr = 0x${(f.EA.value << 2).toString(16).toUpperCase().padStart(5,'0')} (dec: ${(f.EA.value << 2).toString(10).padStart(5,' ')}) byte addr\n` +
+           `[${f.SA.name_short.padEnd(2)}] ${f.SA.name_long.padEnd(40)} = 0x${(f.SA.value).toString(16).toUpperCase().padStart(4,'0')} word addr = 0x${(f.SA.value << 2).toString(16).toUpperCase().padStart(5,'0')} (dec: ${(f.SA.value << 2).toString(10).padStart(5,' ')}) byte addr`
     });
 
     // Check if Protected area is maximum size
-    if (reg.LMEM_PROT.fields.SA === 0x0000 && reg.LMEM_PROT.fields.EA === 0xFFFF) {
+    if (f.SA.value === 0x0000 && f.EA.value === 0xFFFF) {
       reg.LMEM_PROT.report.push({
         severityLevel: sevC.infoBold,
         msg: `LMEM_PROT: Entire LMEM address space (18 bit = 256 KB) is accessible by XS_CAN (no protection applied)!`
@@ -255,21 +262,22 @@ export function procRegsMhGlobal(reg) {
     reg.RX_FILTER_CFG.report = [];
 
     // 1. Decode all individual bits of register
-    reg.RX_FILTER_CFG.fields.DEFAULT_FIFO = getBits(regValue, 9, 9);
-    reg.RX_FILTER_CFG.fields.AFAB        = getBits(regValue, 8, 8);
-    reg.RX_FILTER_CFG.fields.ANMF        = getBits(regValue, 7, 7);
-    reg.RX_FILTER_CFG.fields.FE_NUM      = getBits(regValue, 6, 0);
+    defineField(reg.RX_FILTER_CFG, regValue, 'DEFAULT_FIFO', 9, 9, 'Default RX FIFO');
+    defineField(reg.RX_FILTER_CFG, regValue, 'AFAB', 8, 8, 'Accept Filter Abort Frames');
+    defineField(reg.RX_FILTER_CFG, regValue, 'ANMF', 7, 7, 'Accept Non-Matching Frames');
+    defineField(reg.RX_FILTER_CFG, regValue, 'FE_NUM', 6, 0, 'RX Filter elements #');
+    const f = reg.RX_FILTER_CFG.fields;
 
-    const defFifoName = reg.RX_FILTER_CFG.fields.DEFAULT_FIFO ? 'RXFQ1' : 'RXFQ0';
+    const defFifoName = f.DEFAULT_FIFO.value ? 'RXFQ1' : 'RXFQ0';
 
     // 2. Generate human-readable register report
     reg.RX_FILTER_CFG.report.push({
       severityLevel: sevC.info,
       msg: `RX_FILTER_CFG: ${reg.RX_FILTER_CFG.name_long} (0x${reg.RX_FILTER_CFG.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[DEFAULT_FIFO] Default RX FIFO            = ${reg.RX_FILTER_CFG.fields.DEFAULT_FIFO} (${defFifoName}, destination for Frames for AFAB and ANMF)\n` +
-           `[AFAB        ] Accept Filter Abort Frames = ${reg.RX_FILTER_CFG.fields.AFAB} (store Frame if Filtering not finished in time)\n` +
-           `[ANMF        ] Accept Non-Matching Frames = ${reg.RX_FILTER_CFG.fields.ANMF} (store Frame if no Filter matches)\n` +
-           `[FE_NUM      ] RX Filter elements #       = ${reg.RX_FILTER_CFG.fields.FE_NUM} (0-127 allowed, 0: disabled)`
+           `[${f.DEFAULT_FIFO.name_short.padEnd(12)}] ${f.DEFAULT_FIFO.name_long.padEnd(26)} = ${f.DEFAULT_FIFO.value} (${defFifoName}, destination for Frames for AFAB and ANMF)\n` +
+           `[${f.AFAB.name_short.padEnd(12)}] ${f.AFAB.name_long.padEnd(26)} = ${f.AFAB.value} (store Frame if Filtering not finished in time)\n` +
+           `[${f.ANMF.name_short.padEnd(12)}] ${f.ANMF.name_long.padEnd(26)} = ${f.ANMF.value} (store Frame if no Filter matches)\n` +
+           `[${f.FE_NUM.name_short.padEnd(12)}] ${f.FE_NUM.name_long.padEnd(26)} = ${f.FE_NUM.value} (0-127 allowed, 0: disabled)`
     });
   } // RX_FILTER_CFG
 
@@ -282,14 +290,15 @@ export function procRegsMhGlobal(reg) {
     reg.RX_FILTER_LMEM.report = [];
 
     // 1. Decode all individual bits of register
-    reg.RX_FILTER_LMEM.fields.SA = getBits(regValue, 17, 6);
-    const startAddrByte = reg.RX_FILTER_LMEM.fields.SA << 6; // 64-byte alignment
+    defineField(reg.RX_FILTER_LMEM, regValue, 'SA', 17, 6, 'Start address (LMEM, 64 byte aligned)');
+    const f = reg.RX_FILTER_LMEM.fields;
+    const startAddrByte = f.SA.value << 6; // 64-byte alignment
 
     // 2. Generate human-readable register report
     reg.RX_FILTER_LMEM.report.push({
       severityLevel: sevC.info,
       msg: `RX_FILTER_LMEM: ${reg.RX_FILTER_LMEM.name_long} (0x${reg.RX_FILTER_LMEM.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[SA] Start address (LMEM, 64 byte aligned) = 0x${(startAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.SA.name_short.padEnd(2)}] ${f.SA.name_long.padEnd(37)} = 0x${(startAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RX_FILTER_LMEM
 }
@@ -304,14 +313,15 @@ export function procRegsMhTXFQ(reg) {
     reg.TXFQ_LMEM_SA.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TXFQ_LMEM_SA.fields.ADD = getBits(regValue, 17, 6);
-    const startAddrByte = reg.TXFQ_LMEM_SA.fields.ADD << 6; // 64-byte alignment
+    defineField(reg.TXFQ_LMEM_SA, regValue, 'ADD', 17, 6, 'TXFQ Start Address (LMEM, 64 byte aligned)');
+    const f = reg.TXFQ_LMEM_SA.fields;
+    const startAddrByte = f.ADD.value << 6; // 64-byte alignment
 
     // 2. Generate human-readable register report
     reg.TXFQ_LMEM_SA.report.push({
       severityLevel: sevC.info,
       msg: `TXFQ_LMEM_SA: ${reg.TXFQ_LMEM_SA.name_long} (0x${reg.TXFQ_LMEM_SA.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] TXFQ Start Address (LMEM, 64 byte aligned) = 0x${(startAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.ADD.name_short}] ${f.ADD.name_long} = 0x${(startAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // TXFQ_LMEM_SA
 
@@ -324,14 +334,15 @@ export function procRegsMhTXFQ(reg) {
     reg.TXFQ_LMEM_EA.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TXFQ_LMEM_EA.fields.ADD = getBits(regValue, 17, 6);
-    const endAddrByte = reg.TXFQ_LMEM_EA.fields.ADD << 6;
+    defineField(reg.TXFQ_LMEM_EA, regValue, 'ADD', 17, 6, 'TXFQ End   Address (LMEM, 64 byte aligned)');
+    const f = reg.TXFQ_LMEM_EA.fields;
+    const endAddrByte = f.ADD.value << 6;
 
     // 2. Generate human-readable register report
     reg.TXFQ_LMEM_EA.report.push({
       severityLevel: sevC.info,
       msg: `TXFQ_LMEM_EA: ${reg.TXFQ_LMEM_EA.name_long} (0x${reg.TXFQ_LMEM_EA.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] TXFQ End   Address (LMEM, 64 byte aligned) = 0x${(endAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${endAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.ADD.name_short}] ${f.ADD.name_long} = 0x${(endAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${endAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   }
 
@@ -344,15 +355,16 @@ export function procRegsMhTXFQ(reg) {
     reg.TXFQ_STS.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TXFQ_STS.fields.FIFO_FULL  = getBits(regValue, 8, 8);
-    reg.TXFQ_STS.fields.FILL_LEVEL = getBits(regValue, 7, 0);
+    defineField(reg.TXFQ_STS, regValue, 'FIFO_FULL', 8, 8, 'TXFQ full flag');
+    defineField(reg.TXFQ_STS, regValue, 'FILL_LEVEL', 7, 0, 'Elements in TXFQ');
+    const f = reg.TXFQ_STS.fields;
 
     // 2. Generate human-readable register report
     reg.TXFQ_STS.report.push({
       severityLevel: sevC.info,
       msg: `TXFQ_STS: ${reg.TXFQ_STS.name_long} (0x${reg.TXFQ_STS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[FIFO_FULL ] TXFQ full flag   = ${reg.TXFQ_STS.fields.FIFO_FULL}\n` +
-           `[FILL_LEVEL] Elements in TXFQ = ${reg.TXFQ_STS.fields.FILL_LEVEL}`
+           `[${f.FIFO_FULL.name_short.padEnd(10)}] ${f.FIFO_FULL.name_long.padEnd(16)} = ${f.FIFO_FULL.value}\n` +
+           `[${f.FILL_LEVEL.name_short.padEnd(10)}] ${f.FILL_LEVEL.name_long.padEnd(16)} = ${f.FILL_LEVEL.value}`
     });
   }
 
@@ -365,8 +377,9 @@ export function procRegsMhTXFQ(reg) {
     reg.TXFQ_CFG.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TXFQ_CFG.fields.MAX_ELEM_SIZE = getBits(regValue, 5, 0);
-    const maxElemBytes = reg.TXFQ_CFG.fields.MAX_ELEM_SIZE << 6; // in bytes: * 64
+    defineField(reg.TXFQ_CFG, regValue, 'MAX_ELEM_SIZE', 5, 0, 'Max TX Element size');
+    const f = reg.TXFQ_CFG.fields;
+    const maxElemBytes = f.MAX_ELEM_SIZE.value << 6; // in bytes: * 64
 
     // calculate maximum CAN message payload sizes in FMM mode
     // CAN FD: 2 header words (8 bytes)
@@ -380,13 +393,13 @@ export function procRegsMhTXFQ(reg) {
     reg.TXFQ_CFG.report.push({
       severityLevel: sevC.info,
       msg: `TXFQ_CFG: ${reg.TXFQ_CFG.name_long} (0x${reg.TXFQ_CFG.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[MAX_ELEM_SIZE] Max TX Element size = ${reg.TXFQ_CFG.fields.MAX_ELEM_SIZE} x 64 byte (${maxElemBytes} bytes) (In FMM enough for: FD with ${fmmFdMaxPayload} bytes payload, or XL with ${fmmXlMaxPayload} bytes payload)`
+           `[${f.MAX_ELEM_SIZE.name_short}] ${f.MAX_ELEM_SIZE.name_long} = ${f.MAX_ELEM_SIZE.value} x 64 byte (${maxElemBytes} bytes) (In FMM enough for: FD with ${fmmFdMaxPayload} bytes payload, or XL with ${fmmXlMaxPayload} bytes payload)`
     });
 
     // Check if CTM is enabled and max Elements size is > 2
     if (('MH_CFG' in reg) && (reg.MH_CFG.fields !== undefined)) {
-      const ctmEnabled = reg.MH_CFG.fields.CTME === 1;
-      if (ctmEnabled && (reg.TXFQ_CFG.fields.MAX_ELEM_SIZE > 2)) {
+      const ctmEnabled = reg.MH_CFG.fields.CTME.value === 1;
+      if (ctmEnabled && (f.MAX_ELEM_SIZE.value > 2)) {
         reg.TXFQ_CFG.report.push({
           severityLevel: sevC.warn,
           msg: `TXFQ_CFG: In Cut-Through Mode (CTM) the TXFQ maximum element size should be set to 2 (128 bytes) to have space for header and 64 bytes of payload (larger values are also functional, but waste LMEM).`
@@ -404,14 +417,15 @@ export function procRegsMhTXFQ(reg) {
     reg.TXFQ_WPTR.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TXFQ_WPTR.fields.WPTR_ADD = getBits(regValue, 17, 2);
-    const wptrAddrByte = reg.TXFQ_WPTR.fields.WPTR_ADD << 2;
+    defineField(reg.TXFQ_WPTR, regValue, 'WPTR_ADD', 17, 2, 'TXFQ Write Pointer (LMEM)');
+    const f = reg.TXFQ_WPTR.fields;
+    const wptrAddrByte = f.WPTR_ADD.value << 2;
 
     // 2. Generate human-readable register report
     reg.TXFQ_WPTR.report.push({
       severityLevel: sevC.info,
       msg: `TXFQ_WPTR: ${reg.TXFQ_WPTR.name_long} (0x${reg.TXFQ_WPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[WPTR_ADD] TXFQ Write Pointer (LMEM) = 0x${(wptrAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.WPTR_ADD.name_short}] ${f.WPTR_ADD.name_long} = 0x${(wptrAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // TXFQ_WPTR
 
@@ -424,14 +438,15 @@ export function procRegsMhTXFQ(reg) {
     reg.TXFQ_RPTR.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TXFQ_RPTR.fields.RPTR_ADD = getBits(regValue, 17, 2);
-    const rptrAddrByte = reg.TXFQ_RPTR.fields.RPTR_ADD << 2;
+    defineField(reg.TXFQ_RPTR, regValue, 'RPTR_ADD', 17, 2, 'TXFQ Read Pointer (LMEM) ');
+    const f = reg.TXFQ_RPTR.fields;
+    const rptrAddrByte = f.RPTR_ADD.value << 2;
 
     // 2. Generate human-readable register report
     reg.TXFQ_RPTR.report.push({
       severityLevel: sevC.info,
       msg: `TXFQ_RPTR: ${reg.TXFQ_RPTR.name_long} (0x${reg.TXFQ_RPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[RPTR_ADD] TXFQ Read Pointer (LMEM)  = 0x${(rptrAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${rptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.RPTR_ADD.name_short}] ${f.RPTR_ADD.name_long} = 0x${(rptrAddrByte).toString(16).toUpperCase().padStart(4,'0')} (dec: ${rptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // TXFQ_RPTR
 }
@@ -446,11 +461,12 @@ export function procRegsMhTXPQ(reg) {
     reg.TXPQ_CFG.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TXPQ_CFG.fields.SLOT_SIZE   = getBits(regValue, 17, 8);
-    reg.TXPQ_CFG.fields.TX_MSG_SEQE = getBits(regValue, 7, 7);
-    reg.TXPQ_CFG.fields.SLOT_NUM    = getBits(regValue, 5, 0);
+    defineField(reg.TXPQ_CFG, regValue, 'SLOT_SIZE', 17, 8, 'Slot size');
+    defineField(reg.TXPQ_CFG, regValue, 'TX_MSG_SEQE', 7, 7, 'TX Messages with same ID in sequence');
+    defineField(reg.TXPQ_CFG, regValue, 'SLOT_NUM', 5, 0, 'Number of PQ slots');
+    const f = reg.TXPQ_CFG.fields;
 
-    const slotSizeWords = reg.TXPQ_CFG.fields.SLOT_SIZE;
+    const slotSizeWords = f.SLOT_SIZE.value;
     const slotSizeBytes = slotSizeWords << 2; // words -> bytes (*4)
 
     // calculate maximum CAN message payload sizes in FMM mode
@@ -465,14 +481,14 @@ export function procRegsMhTXPQ(reg) {
     reg.TXPQ_CFG.report.push({
       severityLevel: sevC.info,
       msg: `TXPQ_CFG: ${reg.TXPQ_CFG.name_long} (0x${reg.TXPQ_CFG.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[SLOT_SIZE  ] Slot size                            = ${slotSizeWords} words (${slotSizeBytes} bytes) (In FMM enough for: FD with ${fmmFdMaxPayload} bytes payload, or XL with ${fmmXlMaxPayload} bytes payload)\n` +
-           `[TX_MSG_SEQE] TX Messages with same ID in sequence = ${reg.TXPQ_CFG.fields.TX_MSG_SEQE}\n` +
-           `[SLOT_NUM   ] Number of PQ slots                   = ${reg.TXPQ_CFG.fields.SLOT_NUM} (0 disables TXPQ, >32 is capped to 32)`
+           `[${f.SLOT_SIZE.name_short.padEnd(11)}] ${f.SLOT_SIZE.name_long.padEnd(36)} = ${slotSizeWords} words (${slotSizeBytes} bytes) (In FMM enough for: FD with ${fmmFdMaxPayload} bytes payload, or XL with ${fmmXlMaxPayload} bytes payload)\n` +
+           `[${f.TX_MSG_SEQE.name_short.padEnd(11)}] ${f.TX_MSG_SEQE.name_long.padEnd(36)} = ${f.TX_MSG_SEQE.value}\n` +
+           `[${f.SLOT_NUM.name_short.padEnd(11)}] ${f.SLOT_NUM.name_long.padEnd(36)} = ${f.SLOT_NUM.value} (0 disables TXPQ, >32 is capped to 32)`
     });
 
     // Check if CTM is enabled and max Elements size is > 2
     if (('MH_CFG' in reg) && (reg.MH_CFG.fields !== undefined)) {
-      const ctmEnabled = reg.MH_CFG.fields.CTME === 1;
+      const ctmEnabled = reg.MH_CFG.fields.CTME.value === 1;
       if (ctmEnabled && (slotSizeBytes > 80)) { // 80 bytes = 3 words header + 1 word pointer + 64 bytes payload
         reg.TXFQ_CFG.report.push({
           severityLevel: sevC.warn,
@@ -492,8 +508,9 @@ export function procRegsMhTXPQ(reg) {
     reg.TXPQ_STS0.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TXPQ_STS0.fields.SLOT_OCC = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
-    const occ = reg.TXPQ_STS0.fields.SLOT_OCC >>> 0;
+    defineField(reg.TXPQ_STS0, regValue, 'SLOT_OCC', 31, 0, 'Slot occupancy mask');
+    const f = reg.TXPQ_STS0.fields;
+    const occ = f.SLOT_OCC.value >>> 0;
     // Count busy slots
     let busyCount = 0; {
       let v = occ; while (v) { v &= (v - 1); busyCount++; } // uses Brian Kernighan’s algorithm
@@ -503,7 +520,7 @@ export function procRegsMhTXPQ(reg) {
     reg.TXPQ_STS0.report.push({
       severityLevel: sevC.info,
       msg: `TXPQ_STS0: ${reg.TXPQ_STS0.name_long} (0x${reg.TXPQ_STS0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[SLOT_OCC] Slot occupancy mask = 0x${occ.toString(16).toUpperCase().padStart(8,'0')} (busy slots: ${busyCount})`
+           `[${f.SLOT_OCC.name_short}] ${f.SLOT_OCC.name_long} = 0x${occ.toString(16).toUpperCase().padStart(8,'0')} (busy slots: ${busyCount})`
     });
   } // TXPQ_STS0
 
@@ -516,15 +533,16 @@ export function procRegsMhTXPQ(reg) {
     reg.TXPQ_STS1.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TXPQ_STS1.fields.TXPQ_FULL  = getBits(regValue, 8, 8);
-    reg.TXPQ_STS1.fields.FILL_LEVEL = getBits(regValue, 5, 0);
+    defineField(reg.TXPQ_STS1, regValue, 'TXPQ_FULL', 8, 8, 'TXPQ full flag');
+    defineField(reg.TXPQ_STS1, regValue, 'FILL_LEVEL', 5, 0, 'Pending PQ elements');
+    const f = reg.TXPQ_STS1.fields;
 
     // 2. Generate human-readable register report
     reg.TXPQ_STS1.report.push({
       severityLevel: sevC.info,
       msg: `TXPQ_STS1: ${reg.TXPQ_STS1.name_long} (0x${reg.TXPQ_STS1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[TXPQ_FULL ] TXPQ full flag       = ${reg.TXPQ_STS1.fields.TXPQ_FULL}\n` +
-           `[FILL_LEVEL] Pending PQ elements  = ${reg.TXPQ_STS1.fields.FILL_LEVEL}`
+           `[${f.TXPQ_FULL.name_short.padEnd(10)}] ${f.TXPQ_FULL.name_long.padEnd(20)} = ${f.TXPQ_FULL.value}\n` +
+           `[${f.FILL_LEVEL.name_short.padEnd(10)}] ${f.FILL_LEVEL.name_long.padEnd(20)} = ${f.FILL_LEVEL.value}`
     });
   } // TXPQ_STS1
 
@@ -537,14 +555,15 @@ export function procRegsMhTXPQ(reg) {
     reg.TXPQ_LMEM.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TXPQ_LMEM.fields.SA = getBits(regValue, 17, 6);
-    const startAddrByte = reg.TXPQ_LMEM.fields.SA << 6; // 64-byte alignment
+    defineField(reg.TXPQ_LMEM, regValue, 'SA', 17, 6, 'Start address (LMEM, 64 byte aligned)');
+    const f = reg.TXPQ_LMEM.fields;
+    const startAddrByte = f.SA.value << 6; // 64-byte alignment
 
     // 2. Generate human-readable register report
     reg.TXPQ_LMEM.report.push({
       severityLevel: sevC.info,
       msg: `TXPQ_LMEM: ${reg.TXPQ_LMEM.name_long}  (0x${reg.TXPQ_LMEM.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[SA] Start address (LMEM, 64 byte aligned) = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.SA.name_short}] ${f.SA.name_long} = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // TXPQ_LMEM
 
@@ -557,14 +576,15 @@ export function procRegsMhTXPQ(reg) {
     reg.TXPQ_WPTR.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TXPQ_WPTR.fields.WPTR_ADD = getBits(regValue, 17, 2);
-    const wptrAddrByte = reg.TXPQ_WPTR.fields.WPTR_ADD << 2; // word aligned
+    defineField(reg.TXPQ_WPTR, regValue, 'WPTR_ADD', 17, 2, 'TXPQ Write Pointer (LMEM)');
+    const f = reg.TXPQ_WPTR.fields;
+    const wptrAddrByte = f.WPTR_ADD.value << 2; // word aligned
 
     // 2. Generate human-readable register report
     reg.TXPQ_WPTR.report.push({
       severityLevel: sevC.info,
       msg: `TXPQ_WPTR: ${reg.TXPQ_WPTR.name_long} (0x${reg.TXPQ_WPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[WPTR_ADD] TXPQ Write Pointer (LMEM)       = 0x${wptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.WPTR_ADD.name_short}] ${f.WPTR_ADD.name_long.padEnd(31)} = 0x${wptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // TXPQ_WPTR
 }
@@ -579,14 +599,15 @@ export function procRegsMhTEFQ(reg) {
     reg.TEFQ_LMEM.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TEFQ_LMEM.fields.SA = getBits(regValue, 17, 6);
-    const startAddrByte = reg.TEFQ_LMEM.fields.SA << 6; // 64-byte alignment
+    defineField(reg.TEFQ_LMEM, regValue, 'SA', 17, 6, 'Start address (LMEM, 64 byte aligned)');
+    const f = reg.TEFQ_LMEM.fields;
+    const startAddrByte = f.SA.value << 6; // 64-byte alignment
 
     // 2. Generate human-readable register report
     reg.TEFQ_LMEM.report.push({
       severityLevel: sevC.info,
       msg: `TEFQ_LMEM: ${reg.TEFQ_LMEM.name_long} (0x${reg.TEFQ_LMEM.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[SA] Start address (LMEM, 64 byte aligned) = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.SA.name_short}] ${f.SA.name_long} = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // TEFQ_LMEM
 
@@ -599,18 +620,19 @@ export function procRegsMhTEFQ(reg) {
     reg.TEFQ_CFG.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TEFQ_CFG.fields.TEQE_LARGE = getBits(regValue, 8, 8);
-    reg.TEFQ_CFG.fields.TEQE_NUM   = getBits(regValue, 5, 0);
+    defineField(reg.TEFQ_CFG, regValue, 'TEQE_LARGE', 8, 8, 'TEFQ large element size enable');
+    defineField(reg.TEFQ_CFG, regValue, 'TEQE_NUM', 5, 0, 'Number of TEFQ elements');
+    const f = reg.TEFQ_CFG.fields;
 
-    const teqeSizeWords = 4 + (reg.TEFQ_CFG.fields.TEQE_LARGE ? 1 : 0);
+    const teqeSizeWords = 4 + (f.TEQE_LARGE.value ? 1 : 0);
     const teqeSizeBytes = teqeSizeWords << 2; // words -> bytes (*4)
 
     // 2. Generate human-readable register report
     reg.TEFQ_CFG.report.push({
       severityLevel: sevC.info,
       msg: `TEFQ_CFG: ${reg.TEFQ_CFG.name_long} (0x${reg.TEFQ_CFG.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[TEQE_LARGE] TEFQ large element size enable = ${reg.TEFQ_CFG.fields.TEQE_LARGE} (resulting TEQE size: ${teqeSizeWords} words, ${teqeSizeBytes} bytes)\n` +
-           `[TEQE_NUM  ] Number of TEFQ elements        = ${reg.TEFQ_CFG.fields.TEQE_NUM} (0 disables TEFQ, max. 63)`
+           `[${f.TEQE_LARGE.name_short.padEnd(10)}] ${f.TEQE_LARGE.name_long.padEnd(30)} = ${f.TEQE_LARGE.value} (resulting TEQE size: ${teqeSizeWords} words, ${teqeSizeBytes} bytes)\n` +
+           `[${f.TEQE_NUM.name_short.padEnd(10)}] ${f.TEQE_NUM.name_long.padEnd(30)} = ${f.TEQE_NUM.value} (0 disables TEFQ, max. 63)`
     });
   } // TEFQ_CFG
 
@@ -623,15 +645,16 @@ export function procRegsMhTEFQ(reg) {
     reg.TEFQ_STS.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TEFQ_STS.fields.TEFQ_FULL  = getBits(regValue, 8, 8);
-    reg.TEFQ_STS.fields.FILL_LEVEL = getBits(regValue, 5, 0);
+    defineField(reg.TEFQ_STS, regValue, 'TEFQ_FULL', 8, 8, 'TEFQ full flag');
+    defineField(reg.TEFQ_STS, regValue, 'FILL_LEVEL', 5, 0, 'TEFQ fill level');
+    const f = reg.TEFQ_STS.fields;
 
     // 2. Generate human-readable register report
     reg.TEFQ_STS.report.push({
       severityLevel: sevC.info,
       msg: `TEFQ_STS: ${reg.TEFQ_STS.name_long} (0x${reg.TEFQ_STS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[TEFQ_FULL ] TEFQ full flag  = ${reg.TEFQ_STS.fields.TEFQ_FULL}\n` +
-           `[FILL_LEVEL] TEFQ fill level = ${reg.TEFQ_STS.fields.FILL_LEVEL} TEQEs (0: empty)`
+           `[${f.TEFQ_FULL.name_short.padEnd(10)}] ${f.TEFQ_FULL.name_long.padEnd(15)} = ${f.TEFQ_FULL.value}\n` +
+           `[${f.FILL_LEVEL.name_short.padEnd(10)}] ${f.FILL_LEVEL.name_long.padEnd(15)} = ${f.FILL_LEVEL.value} TEQEs (0: empty)`
     });
   } // TEFQ_STS
 
@@ -644,14 +667,15 @@ export function procRegsMhTEFQ(reg) {
     reg.TEFQ_WPTR.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TEFQ_WPTR.fields.WPTR_ADD = getBits(regValue, 17, 2);
-    const wptrAddrByte = reg.TEFQ_WPTR.fields.WPTR_ADD << 2; // word aligned
+    defineField(reg.TEFQ_WPTR, regValue, 'WPTR_ADD', 17, 2, 'TEFQ Write Pointer (LMEM)');
+    const f = reg.TEFQ_WPTR.fields;
+    const wptrAddrByte = f.WPTR_ADD.value << 2; // word aligned
 
     // 2. Generate human-readable register report
     reg.TEFQ_WPTR.report.push({
       severityLevel: sevC.info,
       msg: `TEFQ_WPTR: ${reg.TEFQ_WPTR.name_long} (0x${reg.TEFQ_WPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[WPTR_ADD] TEFQ Write Pointer (LMEM) = 0x${wptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.WPTR_ADD.name_short}] ${f.WPTR_ADD.name_long} = 0x${wptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // TEFQ_WPTR
 
@@ -664,14 +688,15 @@ export function procRegsMhTEFQ(reg) {
     reg.TEFQ_RPTR.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TEFQ_RPTR.fields.RPTR_ADD = getBits(regValue, 17, 2);
-    const rptrAddrByte = reg.TEFQ_RPTR.fields.RPTR_ADD << 2; // word aligned
+    defineField(reg.TEFQ_RPTR, regValue, 'RPTR_ADD', 17, 2, 'TEFQ Read Pointer (LMEM)');
+    const f = reg.TEFQ_RPTR.fields;
+    const rptrAddrByte = f.RPTR_ADD.value << 2; // word aligned
 
     // 2. Generate human-readable register report
     reg.TEFQ_RPTR.report.push({
       severityLevel: sevC.info,
       msg: `TEFQ_RPTR: ${reg.TEFQ_RPTR.name_long} (0x${reg.TEFQ_RPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[RPTR_ADD] TEFQ Read Pointer (LMEM)  = 0x${rptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${rptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.RPTR_ADD.name_short}] ${f.RPTR_ADD.name_long.padEnd(25)} = 0x${rptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${rptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // TEFQ_RPTR
 }
@@ -686,14 +711,15 @@ export function procRegsMhCTM(reg) {
     reg.CTB_LMEM.report = [];
 
     // 1. Decode all individual bits of register
-    reg.CTB_LMEM.fields.SA = getBits(regValue, 17, 6);
-    const startAddrByte = reg.CTB_LMEM.fields.SA << 6; // 64-byte alignment
+    defineField(reg.CTB_LMEM, regValue, 'SA', 17, 6, 'Start address (LMEM, 64 byte aligned)');
+    const f = reg.CTB_LMEM.fields;
+    const startAddrByte = f.SA.value << 6; // 64-byte alignment
 
     // 2. Generate human-readable register report
     reg.CTB_LMEM.report.push({
       severityLevel: sevC.info,
       msg: `CTB_LMEM: ${reg.CTB_LMEM.name_long} (0x${reg.CTB_LMEM.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[SA] Start address (LMEM, 64 byte aligned) = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr (only applicable in CTM)`
+           `[${f.SA.name_short}] ${f.SA.name_long} = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr (only applicable in CTM)`
     });
   } // CTB_LMEM
 
@@ -706,13 +732,15 @@ export function procRegsMhCTM(reg) {
     reg.CTM_DESC_SRC.report = [];
 
     // 1. Decode all individual bits of register
-    reg.CTM_DESC_SRC.fields.ADD = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
+    defineField(reg.CTM_DESC_SRC, regValue, 'ADD', 31, 0, 'CTM source address for 64 byte block copy');
+    const f = reg.CTM_DESC_SRC.fields;
+    f.ADD.value = f.ADD.value >>> 0; // convert to unsigned, to prevent negative numbers in printout
 
     // 2. Generate human-readable register report
     reg.CTM_DESC_SRC.report.push({
       severityLevel: sevC.info,
       msg: `CTM_DESC_SRC: ${reg.CTM_DESC_SRC.name_long} (0x${reg.CTM_DESC_SRC.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] CTM source address for 64 byte block copy      = 0x${reg.CTM_DESC_SRC.fields.ADD.toString(16).toUpperCase().padStart(8,'0')} (dec: ${reg.CTM_DESC_SRC.fields.ADD >>> 0}) (only applicable in CTM)`
+           `[${f.ADD.name_short}] ${f.ADD.name_long.padEnd(46)} = 0x${f.ADD.value.toString(16).toUpperCase().padStart(8,'0')} (dec: ${f.ADD.value >>> 0}) (only applicable in CTM)`
     });
   } // CTM_DESC_SRC
 
@@ -725,13 +753,15 @@ export function procRegsMhCTM(reg) {
     reg.CTM_DESC_DEST.report = [];
 
     // 1. Decode all individual bits of register
-    reg.CTM_DESC_DEST.fields.ADD = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
+    defineField(reg.CTM_DESC_DEST, regValue, 'ADD', 31, 0, 'CTM destination address for 64 byte block copy');
+    const f = reg.CTM_DESC_DEST.fields;
+    f.ADD.value = f.ADD.value >>> 0; // convert to unsigned, to prevent negative numbers in printout
 
     // 2. Generate human-readable register report
     reg.CTM_DESC_DEST.report.push({
       severityLevel: sevC.info,
       msg: `CTM_DESC_DEST: ${reg.CTM_DESC_DEST.name_long} (0x${reg.CTM_DESC_DEST.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] CTM destination address for 64 byte block copy = 0x${reg.CTM_DESC_DEST.fields.ADD.toString(16).toUpperCase().padStart(8,'0')} (dec: ${reg.CTM_DESC_DEST.fields.ADD >>> 0}) (only applicable in CTM)`
+           `[${f.ADD.name_short}] ${f.ADD.name_long.padEnd(46)} = 0x${f.ADD.value.toString(16).toUpperCase().padStart(8,'0')} (dec: ${f.ADD.value >>> 0}) (only applicable in CTM)`
     });
   } // CTM_DESC_DEST
 
@@ -744,15 +774,16 @@ export function procRegsMhCTM(reg) {
     reg.CTM_EVENT.report = [];
 
     // 1. Decode all individual bits of register
-    reg.CTM_EVENT.fields.RX_BLOCK_COPY_REQ = getBits(regValue, 1, 1);
-    reg.CTM_EVENT.fields.TX_BLOCK_COPY_REQ = getBits(regValue, 0, 0);
+    defineField(reg.CTM_EVENT, regValue, 'RX_BLOCK_COPY_REQ', 1, 1, 'RX block copy request');
+    defineField(reg.CTM_EVENT, regValue, 'TX_BLOCK_COPY_REQ', 0, 0, 'TX block copy request');
+    const f = reg.CTM_EVENT.fields;
 
     // 2. Generate human-readable register report
     reg.CTM_EVENT.report.push({
       severityLevel: sevC.info,
       msg: `CTM_EVENT: ${reg.CTM_EVENT.name_long} (0x${reg.CTM_EVENT.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[RX_BLOCK_COPY_REQ] RX block copy request = ${reg.CTM_EVENT.fields.RX_BLOCK_COPY_REQ} (only applicable in CTM)\n` +
-           `[TX_BLOCK_COPY_REQ] TX block copy request = ${reg.CTM_EVENT.fields.TX_BLOCK_COPY_REQ} (only applicable in CTM)`
+           `[${f.RX_BLOCK_COPY_REQ.name_short}] ${f.RX_BLOCK_COPY_REQ.name_long} = ${f.RX_BLOCK_COPY_REQ.value} (only applicable in CTM)\n` +
+           `[${f.TX_BLOCK_COPY_REQ.name_short}] ${f.TX_BLOCK_COPY_REQ.name_long} = ${f.TX_BLOCK_COPY_REQ.value} (only applicable in CTM)`
     });
   } // CTM_EVENT
 }
@@ -767,14 +798,15 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ0_SA.report = [];
 
     // 1. Decode all individual bits of register
-    reg.RXFQ0_SA.fields.ADD = getBits(regValue, 31, 6);
-    const startAddrByte = reg.RXFQ0_SA.fields.ADD << 6; // 64-byte alignment
+    defineField(reg.RXFQ0_SA, regValue, 'ADD', 31, 6, 'RXFQ0 Start Address (FMM: LMEM, CTM: SMEM, 64 byte aligned)');
+    const f = reg.RXFQ0_SA.fields;
+    const startAddrByte = f.ADD.value << 6; // 64-byte alignment
 
     // 2. Generate human-readable register report
     reg.RXFQ0_SA.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ0_SA: ${reg.RXFQ0_SA.name_long} (0x${reg.RXFQ0_SA.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] RXFQ0 Start Address (FMM: LMEM, CTM: SMEM, 64 byte aligned) = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.ADD.name_short}] ${f.ADD.name_long} = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RXFQ0_SA
 
@@ -787,14 +819,15 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ0_EA.report = [];
 
     // 1. Decode all individual bits of register
-    reg.RXFQ0_EA.fields.ADD = getBits(regValue, 31, 6);
-    const endAddrByte = reg.RXFQ0_EA.fields.ADD << 6; // 64-byte alignment
+    defineField(reg.RXFQ0_EA, regValue, 'ADD', 31, 6, 'RXFQ0 End   Address (FMM: LMEM, CTM: SMEM, 64 byte aligned)');
+    const f = reg.RXFQ0_EA.fields;
+    const endAddrByte = f.ADD.value << 6; // 64-byte alignment
 
     // 2. Generate human-readable register report
     reg.RXFQ0_EA.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ0_EA: ${reg.RXFQ0_EA.name_long} (0x${reg.RXFQ0_EA.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] RXFQ0 End   Address (FMM: LMEM, CTM: SMEM, 64 byte aligned) = 0x${endAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${endAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.ADD.name_short}] ${f.ADD.name_long} = 0x${endAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${endAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RXFQ0_EA
 
@@ -807,14 +840,15 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ0_RPTR.report = [];
 
     // 1. Decode all individual bits of register
-    reg.RXFQ0_RPTR.fields.ADD = getBits(regValue, 31, 2);
-    const rptrAddrByte = reg.RXFQ0_RPTR.fields.ADD << 2; // word aligned
+    defineField(reg.RXFQ0_RPTR, regValue, 'ADD', 31, 2, 'RXFQ0 Read Pointer (FMM: LMEM, CTM: SMEM)');
+    const f = reg.RXFQ0_RPTR.fields;
+    const rptrAddrByte = f.ADD.value << 2; // word aligned
 
     // 2. Generate human-readable register report
     reg.RXFQ0_RPTR.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ0_RPTR: ${reg.RXFQ0_RPTR.name_long} (0x${reg.RXFQ0_RPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] RXFQ0 Read Pointer (FMM: LMEM, CTM: SMEM) = 0x${rptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${rptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.ADD.name_short}] ${f.ADD.name_long} = 0x${rptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${rptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RXFQ0_RPTR
 
@@ -827,14 +861,15 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ0_WPTR.report = [];
 
     // 1. Decode all individual bits of register
-    reg.RXFQ0_WPTR.fields.ADD = getBits(regValue, 31, 2);
-    const wptrAddrByte = reg.RXFQ0_WPTR.fields.ADD << 2; // word aligned
+    defineField(reg.RXFQ0_WPTR, regValue, 'ADD', 31, 2, 'RXFQ0 Write Pointer (FMM: LMEM, CTM: SMEM)');
+    const f = reg.RXFQ0_WPTR.fields;
+    const wptrAddrByte = f.ADD.value << 2; // word aligned
 
     // 2. Generate human-readable register report
     reg.RXFQ0_WPTR.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ0_WPTR: ${reg.RXFQ0_WPTR.name_long} (0x${reg.RXFQ0_WPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] RXFQ0 Write Pointer (FMM: LMEM, CTM: SMEM) = 0x${wptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.ADD.name_short}] ${f.ADD.name_long} = 0x${wptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RXFQ0_WPTR
 
@@ -847,14 +882,15 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ0_WRAP_PTR.report = [];
 
     // 1. Decode all individual bits of register
-    reg.RXFQ0_WRAP_PTR.fields.SMEM_ADD = getBits(regValue, 31, 2);
-    const smemAddrByte = reg.RXFQ0_WRAP_PTR.fields.SMEM_ADD << 2; // word aligned
+    defineField(reg.RXFQ0_WRAP_PTR, regValue, 'SMEM_ADD', 31, 2, 'RXFQ0 Wrap Pointer (SMEM)');
+    const f = reg.RXFQ0_WRAP_PTR.fields;
+    const smemAddrByte = f.SMEM_ADD.value << 2; // word aligned
 
     // 2. Generate human-readable register report
     reg.RXFQ0_WRAP_PTR.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ0_WRAP_PTR: ${reg.RXFQ0_WRAP_PTR.name_long} (0x${reg.RXFQ0_WRAP_PTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[SMEM_ADD] RXFQ0 Wrap Pointer (SMEM) = 0x${smemAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${smemAddrByte.toString(10).padStart(5,' ')}) byte addr (only applicable in CTM)`
+           `[${f.SMEM_ADD.name_short}] ${f.SMEM_ADD.name_long} = 0x${smemAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${smemAddrByte.toString(10).padStart(5,' ')}) byte addr (only applicable in CTM)`
     });
   } // RXFQ0_WRAP_PTR
 
@@ -867,14 +903,15 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ1_SA.report = [];
 
     // 1. Decode all individual bits of register
-    reg.RXFQ1_SA.fields.ADD = getBits(regValue, 31, 6);
-    const startAddrByte = reg.RXFQ1_SA.fields.ADD << 6; // 64-byte alignment
+    defineField(reg.RXFQ1_SA, regValue, 'ADD', 31, 6, 'RXFQ1 Start Address (FMM: LMEM, CTM: SMEM, 64 byte aligned)');
+    const f = reg.RXFQ1_SA.fields;
+    const startAddrByte = f.ADD.value << 6; // 64-byte alignment
 
     // 2. Generate human-readable register report
     reg.RXFQ1_SA.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ1_SA: ${reg.RXFQ1_SA.name_long} (0x${reg.RXFQ1_SA.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] RXFQ1 Start Address (FMM: LMEM, CTM: SMEM, 64 byte aligned) = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.ADD.name_short}] ${f.ADD.name_long} = 0x${startAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${startAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RXFQ1_SA
 
@@ -887,14 +924,15 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ1_EA.report = [];
 
     // 1. Decode all individual bits of register
-    reg.RXFQ1_EA.fields.ADD = getBits(regValue, 31, 6);
-    const endAddrByte = reg.RXFQ1_EA.fields.ADD << 6; // 64-byte alignment
+    defineField(reg.RXFQ1_EA, regValue, 'ADD', 31, 6, 'RXFQ1 End   Address (FMM: LMEM, CTM: SMEM, 64 byte aligned)');
+    const f = reg.RXFQ1_EA.fields;
+    const endAddrByte = f.ADD.value << 6; // 64-byte alignment
 
     // 2. Generate human-readable register report
     reg.RXFQ1_EA.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ1_EA: ${reg.RXFQ1_EA.name_long} (0x${reg.RXFQ1_EA.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] RXFQ1 End   Address (FMM: LMEM, CTM: SMEM, 64 byte aligned) = 0x${endAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${endAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.ADD.name_short}] ${f.ADD.name_long} = 0x${endAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${endAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RXFQ1_EA
 
@@ -907,14 +945,15 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ1_RPTR.report = [];
 
     // 1. Decode all individual bits of register
-    reg.RXFQ1_RPTR.fields.ADD = getBits(regValue, 31, 2);
-    const rptrAddrByte = reg.RXFQ1_RPTR.fields.ADD << 2; // word aligned
+    defineField(reg.RXFQ1_RPTR, regValue, 'ADD', 31, 2, 'RXFQ1 Read Pointer (FMM: LMEM, CTM: SMEM)');
+    const f = reg.RXFQ1_RPTR.fields;
+    const rptrAddrByte = f.ADD.value << 2; // word aligned
 
     // 2. Generate human-readable register report
     reg.RXFQ1_RPTR.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ1_RPTR: ${reg.RXFQ1_RPTR.name_long} (0x${reg.RXFQ1_RPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] RXFQ1 Read Pointer (FMM: LMEM, CTM: SMEM)  = 0x${rptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${rptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.ADD.name_short}] ${f.ADD.name_long.padEnd(42)} = 0x${rptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${rptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RXFQ1_RPTR
 
@@ -927,14 +966,15 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ1_WPTR.report = [];
 
     // 1. Decode all individual bits of register
-    reg.RXFQ1_WPTR.fields.ADD = getBits(regValue, 31, 2);
-    const wptrAddrByte = reg.RXFQ1_WPTR.fields.ADD << 2; // word aligned
+    defineField(reg.RXFQ1_WPTR, regValue, 'ADD', 31, 2, 'RXFQ1 Write Pointer (FMM: LMEM, CTM: SMEM)');
+    const f = reg.RXFQ1_WPTR.fields;
+    const wptrAddrByte = f.ADD.value << 2; // word aligned
 
     // 2. Generate human-readable register report
     reg.RXFQ1_WPTR.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ1_WPTR: ${reg.RXFQ1_WPTR.name_long} (0x${reg.RXFQ1_WPTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ADD] RXFQ1 Write Pointer (FMM: LMEM, CTM: SMEM) = 0x${wptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
+           `[${f.ADD.name_short}] ${f.ADD.name_long} = 0x${wptrAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${wptrAddrByte.toString(10).padStart(5,' ')}) byte addr`
     });
   } // RXFQ1_WPTR
 
@@ -947,14 +987,15 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ1_WRAP_PTR.report = [];
 
     // 1. Decode all individual bits of register
-    reg.RXFQ1_WRAP_PTR.fields.SMEM_ADD = getBits(regValue, 31, 2);
-    const smemAddrByte = reg.RXFQ1_WRAP_PTR.fields.SMEM_ADD << 2; // word aligned
+    defineField(reg.RXFQ1_WRAP_PTR, regValue, 'SMEM_ADD', 31, 2, 'RXFQ1 Wrap Pointer (SMEM)');
+    const f = reg.RXFQ1_WRAP_PTR.fields;
+    const smemAddrByte = f.SMEM_ADD.value << 2; // word aligned
 
     // 2. Generate human-readable register report
     reg.RXFQ1_WRAP_PTR.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ1_WRAP_PTR: ${reg.RXFQ1_WRAP_PTR.name_long} (0x${reg.RXFQ1_WRAP_PTR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[SMEM_ADD] RXFQ1 Wrap Pointer (SMEM) = 0x${smemAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${smemAddrByte.toString(10).padStart(5,' ')}) byte addr (only applicable in CTM)`
+           `[${f.SMEM_ADD.name_short}] ${f.SMEM_ADD.name_long} = 0x${smemAddrByte.toString(16).toUpperCase().padStart(4,'0')} (dec: ${smemAddrByte.toString(10).padStart(5,' ')}) byte addr (only applicable in CTM)`
     });
   } // RXFQ1_WRAP_PTR
 
@@ -967,15 +1008,16 @@ export function procRegsMhRXFQ(reg) {
     reg.RXFQ_STS.report = [];
 
     // 1. Decode all individual bits of register
-    reg.RXFQ_STS.fields.RXFQ1_FILL_LEVEL = getBits(regValue, 15, 8);
-    reg.RXFQ_STS.fields.RXFQ0_FILL_LEVEL = getBits(regValue, 7, 0);
+    defineField(reg.RXFQ_STS, regValue, 'RXFQ1_FILL_LEVEL', 15, 8, 'Elements in RXFQ1');
+    defineField(reg.RXFQ_STS, regValue, 'RXFQ0_FILL_LEVEL', 7, 0, 'Elements in RXFQ0');
+    const f = reg.RXFQ_STS.fields;
 
     // 2. Generate human-readable register report
     reg.RXFQ_STS.report.push({
       severityLevel: sevC.info,
       msg: `RXFQ_STS: ${reg.RXFQ_STS.name_long} (0x${reg.RXFQ_STS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[RXFQ1_FILL_LEVEL] Elements in RXFQ1 = ${reg.RXFQ_STS.fields.RXFQ1_FILL_LEVEL} (range: 0 to 255) (FMM: real fill level, CTM: only up counter with warp-around)\n` +
-           `[RXFQ0_FILL_LEVEL] Elements in RXFQ0 = ${reg.RXFQ_STS.fields.RXFQ0_FILL_LEVEL} (range: 0 to 255) (FMM: real fill level, CTM: only up counter with wrap-around)`
+           `[${f.RXFQ1_FILL_LEVEL.name_short}] ${f.RXFQ1_FILL_LEVEL.name_long} = ${f.RXFQ1_FILL_LEVEL.value} (range: 0 to 255) (FMM: real fill level, CTM: only up counter with warp-around)\n` +
+           `[${f.RXFQ0_FILL_LEVEL.name_short}] ${f.RXFQ0_FILL_LEVEL.name_long} = ${f.RXFQ0_FILL_LEVEL.value} (range: 0 to 255) (FMM: real fill level, CTM: only up counter with wrap-around)`
     });
   } // RXFQ_STS
 }
@@ -990,15 +1032,16 @@ export function procRegsMhDebug(reg) {
     reg.DEBUG_TEST_CTRL.report = [];
 
     // 1. Decode all individual bits of register
-    reg.DEBUG_TEST_CTRL.fields.HDP_SEL = getBits(regValue, 10, 8);
-    reg.DEBUG_TEST_CTRL.fields.HDP_EN  = getBits(regValue, 0, 0);
+    defineField(reg.DEBUG_TEST_CTRL, regValue, 'HDP_SEL', 10, 8, 'HDP[15:0] signal set select');
+    defineField(reg.DEBUG_TEST_CTRL, regValue, 'HDP_EN', 0, 0, 'Hardware debug port enable');
+    const f = reg.DEBUG_TEST_CTRL.fields;
 
     // 2. Generate human-readable register report
     reg.DEBUG_TEST_CTRL.report.push({
       severityLevel: sevC.info,
       msg: `DEBUG_TEST_CTRL: ${reg.DEBUG_TEST_CTRL.name_long} (0x${reg.DEBUG_TEST_CTRL.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[HDP_SEL] HDP[15:0] signal set select = ${reg.DEBUG_TEST_CTRL.fields.HDP_SEL}\n` +
-           `[HDP_EN ] Hardware debug port enable  = ${reg.DEBUG_TEST_CTRL.fields.HDP_EN}`
+           `[${f.HDP_SEL.name_short.padEnd(7)}] ${f.HDP_SEL.name_long.padEnd(27)} = ${f.HDP_SEL.value}\n` +
+           `[${f.HDP_EN.name_short.padEnd(7)}] ${f.HDP_EN.name_long.padEnd(27)} = ${f.HDP_EN.value}`
     });
   } // DEBUG_TEST_CTRL
 
@@ -1011,22 +1054,23 @@ export function procRegsMhDebug(reg) {
     reg.TX_SCAN_WC.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TX_SCAN_WC.fields.FQ_PQ_ADD = getBits(regValue, 31, 16);
-    reg.TX_SCAN_WC.fields.PQSN      = getBits(regValue, 6, 2);
-    reg.TX_SCAN_WC.fields.FQ_PQ     = getBits(regValue, 1, 1);
-    reg.TX_SCAN_WC.fields.VALID     = getBits(regValue, 0, 0);
+    defineField(reg.TX_SCAN_WC, regValue, 'FQ_PQ_ADD', 31, 16, 'LMEM address pointer (byte)');
+    defineField(reg.TX_SCAN_WC, regValue, 'PQSN', 6, 2, 'PQ slot number (if from PQ)');
+    defineField(reg.TX_SCAN_WC, regValue, 'FQ_PQ', 1, 1, 'Candidate source (0:TXFQ, 1:TXPQ)');
+    defineField(reg.TX_SCAN_WC, regValue, 'VALID', 0, 0, 'Register contents valid');
+    const f = reg.TX_SCAN_WC.fields;
 
-    const candType = reg.TX_SCAN_WC.fields.FQ_PQ ? 'TXPQ' : 'TXFQ';
-    const addrByte = reg.TX_SCAN_WC.fields.FQ_PQ_ADD << 2; // LMEM pointer, word -> byte
+    const candType = f.FQ_PQ.value ? 'TXPQ' : 'TXFQ';
+    const addrByte = f.FQ_PQ_ADD.value << 2; // LMEM pointer, word -> byte
 
     // 2. Generate human-readable register report
     reg.TX_SCAN_WC.report.push({
       severityLevel: sevC.info,
       msg: `TX_SCAN_WC: ${reg.TX_SCAN_WC.name_long} (0x${reg.TX_SCAN_WC.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[FQ_PQ_ADD] LMEM address pointer (byte)       = 0x${addrByte.toString(16).toUpperCase().padStart(5,'0')} (dec: ${addrByte.toString(10).padStart(5,' ')})\n` +
-           `[PQSN     ] PQ slot number (if from PQ)       = ${reg.TX_SCAN_WC.fields.PQSN}\n` +
-           `[FQ_PQ    ] Candidate source (0:TXFQ, 1:TXPQ) = ${reg.TX_SCAN_WC.fields.FQ_PQ} (${candType})\n` +
-           `[VALID    ] Register contents valid           = ${reg.TX_SCAN_WC.fields.VALID} (0: invalid, 1: valid)` 
+           `[${f.FQ_PQ_ADD.name_short.padEnd(9)}] ${f.FQ_PQ_ADD.name_long.padEnd(33)} = 0x${addrByte.toString(16).toUpperCase().padStart(5,'0')} (dec: ${addrByte.toString(10).padStart(5,' ')})\n` +
+           `[${f.PQSN.name_short.padEnd(9)}] ${f.PQSN.name_long.padEnd(33)} = ${f.PQSN.value}\n` +
+           `[${f.FQ_PQ.name_short.padEnd(9)}] ${f.FQ_PQ.name_long.padEnd(33)} = ${f.FQ_PQ.value} (${candType})\n` +
+           `[${f.VALID.name_short.padEnd(9)}] ${f.VALID.name_long.padEnd(33)} = ${f.VALID.value} (0: invalid, 1: valid)` 
     });
   } // TX_SCAN_WC
 
@@ -1039,22 +1083,23 @@ export function procRegsMhDebug(reg) {
     reg.TX_SCAN_PC.report = [];
 
     // 1. Decode all individual bits of register
-    reg.TX_SCAN_PC.fields.FQ_PQ_ADD = getBits(regValue, 31, 16);
-    reg.TX_SCAN_PC.fields.PQSN      = getBits(regValue, 6, 2);
-    reg.TX_SCAN_PC.fields.FQ_PQ     = getBits(regValue, 1, 1);
-    reg.TX_SCAN_PC.fields.VALID     = getBits(regValue, 0, 0);
+    defineField(reg.TX_SCAN_PC, regValue, 'FQ_PQ_ADD', 31, 16, 'LMEM address pointer (byte)');
+    defineField(reg.TX_SCAN_PC, regValue, 'PQSN', 6, 2, 'PQ slot number (if from PQ)');
+    defineField(reg.TX_SCAN_PC, regValue, 'FQ_PQ', 1, 1, 'Candidate source (0:TXFQ, 1:TXPQ)');
+    defineField(reg.TX_SCAN_PC, regValue, 'VALID', 0, 0, 'Register contents valid');
+    const f = reg.TX_SCAN_PC.fields;
 
-    const candType = reg.TX_SCAN_PC.fields.FQ_PQ ? 'TXPQ' : 'TXFQ';
-    const addrByte = reg.TX_SCAN_PC.fields.FQ_PQ_ADD << 2; // LMEM pointer, word -> byte
+    const candType = f.FQ_PQ.value ? 'TXPQ' : 'TXFQ';
+    const addrByte = f.FQ_PQ_ADD.value << 2; // LMEM pointer, word -> byte
 
     // 2. Generate human-readable register report
     reg.TX_SCAN_PC.report.push({
       severityLevel: sevC.info,
       msg: `TX_SCAN_PC: ${reg.TX_SCAN_PC.name_long} (0x${reg.TX_SCAN_PC.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[FQ_PQ_ADD] LMEM address pointer (byte)       = 0x${addrByte.toString(16).toUpperCase().padStart(5,'0')} (dec: ${addrByte.toString(10).padStart(5,' ')})\n` +
-           `[PQSN     ] PQ slot number (if from PQ)       = ${reg.TX_SCAN_PC.fields.PQSN}\n` +
-           `[FQ_PQ    ] Candidate source (0:TXFQ, 1:TXPQ) = ${reg.TX_SCAN_PC.fields.FQ_PQ} (${candType})\n` +
-           `[VALID    ] Register contents valid           = ${reg.TX_SCAN_PC.fields.VALID} (0: invalid, 1: valid)`
+           `[${f.FQ_PQ_ADD.name_short.padEnd(9)}] ${f.FQ_PQ_ADD.name_long.padEnd(33)} = 0x${addrByte.toString(16).toUpperCase().padStart(5,'0')} (dec: ${addrByte.toString(10).padStart(5,' ')})\n` +
+           `[${f.PQSN.name_short.padEnd(9)}] ${f.PQSN.name_long.padEnd(33)} = ${f.PQSN.value}\n` +
+           `[${f.FQ_PQ.name_short.padEnd(9)}] ${f.FQ_PQ.name_long.padEnd(33)} = ${f.FQ_PQ.value} (${candType})\n` +
+           `[${f.VALID.name_short.padEnd(9)}] ${f.VALID.name_long.padEnd(33)} = ${f.VALID.value} (0: invalid, 1: valid)`
     });
   } // TX_SCAN_PC
 
@@ -1067,25 +1112,26 @@ export function procRegsMhDebug(reg) {
     reg.VBM_STATUS.report = [];
 
     // 1. Decode all individual bits of register
-    reg.VBM_STATUS.fields.TXFQ_ENQ  = getBits(regValue, 6, 6);
-    reg.VBM_STATUS.fields.TXPQ_ENQ  = getBits(regValue, 5, 5);
-    reg.VBM_STATUS.fields.RXFQ0_DEQ = getBits(regValue, 4, 4);
-    reg.VBM_STATUS.fields.RXFQ1_DEQ = getBits(regValue, 3, 3);
-    reg.VBM_STATUS.fields.TEFQ_DEQ  = getBits(regValue, 2, 2);
-    reg.VBM_STATUS.fields.CTB_ENQ   = getBits(regValue, 1, 1);
-    reg.VBM_STATUS.fields.CTB_DEQ   = getBits(regValue, 0, 0);
+    defineField(reg.VBM_STATUS, regValue, 'TXFQ_ENQ', 6, 6, 'TXFQ enqueuing in progress');
+    defineField(reg.VBM_STATUS, regValue, 'TXPQ_ENQ', 5, 5, 'TXPQ enqueuing in progress');
+    defineField(reg.VBM_STATUS, regValue, 'RXFQ0_DEQ', 4, 4, 'RXFQ0 dequeuing in progress');
+    defineField(reg.VBM_STATUS, regValue, 'RXFQ1_DEQ', 3, 3, 'RXFQ1 dequeuing in progress');
+    defineField(reg.VBM_STATUS, regValue, 'TEFQ_DEQ', 2, 2, 'TEFQ dequeuing in progress');
+    defineField(reg.VBM_STATUS, regValue, 'CTB_ENQ', 1, 1, 'CTB enqueuing in progress');
+    defineField(reg.VBM_STATUS, regValue, 'CTB_DEQ', 0, 0, 'CTB dequeuing in progress');
+    const f = reg.VBM_STATUS.fields;
 
     // 2. Generate human-readable register report
     reg.VBM_STATUS.report.push({
       severityLevel: sevC.info,
       msg: `VBM_STATUS: ${reg.VBM_STATUS.name_long} (0x${reg.VBM_STATUS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[TXFQ_ENQ ] TXFQ enqueuing in progress  = ${reg.VBM_STATUS.fields.TXFQ_ENQ}\n` +
-           `[TXPQ_ENQ ] TXPQ enqueuing in progress  = ${reg.VBM_STATUS.fields.TXPQ_ENQ}\n` +
-           `[RXFQ0_DEQ] RXFQ0 dequeuing in progress = ${reg.VBM_STATUS.fields.RXFQ0_DEQ}\n` +
-           `[RXFQ1_DEQ] RXFQ1 dequeuing in progress = ${reg.VBM_STATUS.fields.RXFQ1_DEQ}\n` +
-           `[TEFQ_DEQ ] TEFQ dequeuing in progress  = ${reg.VBM_STATUS.fields.TEFQ_DEQ}\n` +
-           `[CTB_ENQ  ] CTB enqueuing in progress   = ${reg.VBM_STATUS.fields.CTB_ENQ} (only applicable in CTM)\n` +
-           `[CTB_DEQ  ] CTB dequeuing in progress   = ${reg.VBM_STATUS.fields.CTB_DEQ} (only applicable in CTM)`
+           `[${f.TXFQ_ENQ.name_short.padEnd(9)}] ${f.TXFQ_ENQ.name_long.padEnd(27)} = ${f.TXFQ_ENQ.value}\n` +
+           `[${f.TXPQ_ENQ.name_short.padEnd(9)}] ${f.TXPQ_ENQ.name_long.padEnd(27)} = ${f.TXPQ_ENQ.value}\n` +
+           `[${f.RXFQ0_DEQ.name_short.padEnd(9)}] ${f.RXFQ0_DEQ.name_long.padEnd(27)} = ${f.RXFQ0_DEQ.value}\n` +
+           `[${f.RXFQ1_DEQ.name_short.padEnd(9)}] ${f.RXFQ1_DEQ.name_long.padEnd(27)} = ${f.RXFQ1_DEQ.value}\n` +
+           `[${f.TEFQ_DEQ.name_short.padEnd(9)}] ${f.TEFQ_DEQ.name_long.padEnd(27)} = ${f.TEFQ_DEQ.value}\n` +
+           `[${f.CTB_ENQ.name_short.padEnd(9)}] ${f.CTB_ENQ.name_long.padEnd(27)} = ${f.CTB_ENQ.value} (only applicable in CTM)\n` +
+           `[${f.CTB_DEQ.name_short.padEnd(9)}] ${f.CTB_DEQ.name_long.padEnd(27)} = ${f.CTB_DEQ.value} (only applicable in CTM)`
     });
   }
 }

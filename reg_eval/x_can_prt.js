@@ -2,6 +2,7 @@
 
 // X_CAN: PRT register decoding
 import { getBits } from './help_functions.js';
+import { defineField } from './help_functions.js';
 import { sevC } from './help_functions.js';
 
 // TODO: check bit timing check rules, some things might be missing
@@ -40,57 +41,59 @@ export function procRegsPrtBitTiming(reg) {
     reg.MODE.report = []; // Initialize report array
 
     // 1. Decode all individual bits of MODE register
-    reg.MODE.fields.FIME = getBits(regValue, 11, 11);  // Fault Injection Module Enable
-    reg.MODE.fields.EFDI = getBits(regValue, 10, 10);  // Error Flag/Frame Dissable
-    reg.MODE.fields.XLTR = getBits(regValue, 9, 9);    // TMS Enable (XL Transceiver present)
-    reg.MODE.fields.SFS  = getBits(regValue, 8, 8);    // Time Stamp Position: Start of Frame (1), End of Frame (0)
-    reg.MODE.fields.RSTR = getBits(regValue, 7, 7);    // Restircted Mode Enable
-    reg.MODE.fields.MON  = getBits(regValue, 6, 6);    // (Bus) Monitoring Mode Enable
-    reg.MODE.fields.TXP  = getBits(regValue, 5, 5);    // TX Pause
-    reg.MODE.fields.EFBI = getBits(regValue, 4, 4);    // Edge Filtering during Bus Integration
-    reg.MODE.fields.PXHD = getBits(regValue, 3, 3);    // Protocol Exception Handling Disable
-    reg.MODE.fields.TDCE = getBits(regValue, 2, 2);    // TDC: Transmitter Delay Compensation Enable
-    reg.MODE.fields.XLOE = getBits(regValue, 1, 1);    // XL Operation Enable
-    reg.MODE.fields.FDOE = getBits(regValue, 0, 0);    // FD Operation Enable
-    
+    defineField(reg.MODE, regValue, 'FIME', 11, 11, 'Fault Injection Module Enable');
+    defineField(reg.MODE, regValue, 'EFDI', 10, 10, 'Error Flag/Frame Disable');
+    defineField(reg.MODE, regValue, 'XLTR',  9,  9, 'Transceiver Mode Switching (TMS) Enable');
+    defineField(reg.MODE, regValue, 'SFS',   8,  8, 'Time Stamp Position: SOF(1), EOF(0)');
+    defineField(reg.MODE, regValue, 'RSTR',  7,  7, 'Restricted Mode Enable');
+    defineField(reg.MODE, regValue, 'MON',   6,  6, '(Bus) Monitoring Mode Enable');
+    defineField(reg.MODE, regValue, 'TXP',   5,  5, 'TX Pause');
+    defineField(reg.MODE, regValue, 'EFBI',  4,  4, 'Edge Filtering during Bus Integration');
+    defineField(reg.MODE, regValue, 'PXHD',  3,  3, 'Protocol Exception Handling Disable');
+    defineField(reg.MODE, regValue, 'TDCE',  2,  2, 'Transmitter Delay Compensation (TDC) Enable');
+    defineField(reg.MODE, regValue, 'XLOE',  1,  1, 'XL Operation Enable');
+    defineField(reg.MODE, regValue, 'FDOE',  0,  0, 'FD Operation Enable');
+
+    const f = reg.MODE.fields;
+
     // 2. Store MODE-related bit timing settings in general structure
-    reg.general.bt_global.set.tms = (reg.MODE.fields.XLTR === 1);
-    reg.general.bt_global.set.tdc = (reg.MODE.fields.TDCE === 1);
-    reg.general.bt_global.set.es  = (reg.MODE.fields.EFDI === 0); // Error Signaling Enable when EFDI=0
-    reg.general.bt_global.set.fd  = (reg.MODE.fields.FDOE === 1 && reg.general.bt_global.set.es === true && reg.general.bt_global.set.tms === false); // FD Operation Enable when FDOE=1
-    reg.general.bt_global.set.xl  = (reg.MODE.fields.XLOE === 1); // XL Operation Enable when XLOE=1
+    reg.general.bt_global.set.tms = (f.XLTR.value === 1);
+    reg.general.bt_global.set.tdc = (f.TDCE.value === 1);
+    reg.general.bt_global.set.es  = (f.EFDI.value === 0); // Error Signaling Enable when EFDI=0
+    reg.general.bt_global.set.fd  = (f.FDOE.value === 1 && reg.general.bt_global.set.es === true && reg.general.bt_global.set.tms === false); // FD Operation Enable when FDOE=1
+    reg.general.bt_global.set.xl  = (f.XLOE.value === 1); // XL Operation Enable when XLOE=1
 
     // 3. Generate human-readable register report
   reg.MODE.report.push({
     severityLevel: sevC.info, // info
         msg: `MODE: ${reg.MODE.name_long} (0x${reg.MODE.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `[FIME] Fault Injection Module Enable               = ${reg.MODE.fields.FIME}\n` +
-             `[EFDI] Error Flag/Frame Disable                    = ${reg.MODE.fields.EFDI}\n` +
-             `[XLTR] Transceiver Mode Switching (TMS) Enable     = ${reg.MODE.fields.XLTR}\n` +
-             `[SFS ] Time Stamp Position: SOF(1), EOF(0)         = ${reg.MODE.fields.SFS}\n` +
-             `[RSTR] Restricted Mode Enable                      = ${reg.MODE.fields.RSTR}\n` +
-             `[MON ] (Bus) Monitoring Mode Enable                = ${reg.MODE.fields.MON}\n` +
-             `[TXP ] TX Pause                                    = ${reg.MODE.fields.TXP}\n` +
-             `[EFBI] Edge Filtering during Bus Integration       = ${reg.MODE.fields.EFBI}\n` +
-             `[PXHD] Protocol Exception Handling Disable         = ${reg.MODE.fields.PXHD}\n` +
-             `[TDCE] Transmitter Delay Compensation (TDC) Enable = ${reg.MODE.fields.TDCE}\n` +
-             `[XLOE] XL Operation Enable                         = ${reg.MODE.fields.XLOE}\n` +
-             `[FDOE] FD Operation Enable                         = ${reg.MODE.fields.FDOE}`
+             `[${f.FIME.name_short.padEnd(4)}] ${f.FIME.name_long.padEnd(43)} = ${f.FIME.value}\n` +
+             `[${f.EFDI.name_short.padEnd(4)}] ${f.EFDI.name_long.padEnd(43)} = ${f.EFDI.value}\n` +
+             `[${f.XLTR.name_short.padEnd(4)}] ${f.XLTR.name_long.padEnd(43)} = ${f.XLTR.value}\n` +
+             `[${f.SFS.name_short.padEnd(4)}] ${f.SFS.name_long.padEnd(43)} = ${f.SFS.value}\n` +
+             `[${f.RSTR.name_short.padEnd(4)}] ${f.RSTR.name_long.padEnd(43)} = ${f.RSTR.value}\n` +
+             `[${f.MON.name_short.padEnd(4)}] ${f.MON.name_long.padEnd(43)} = ${f.MON.value}\n` +
+             `[${f.TXP.name_short.padEnd(4)}] ${f.TXP.name_long.padEnd(43)} = ${f.TXP.value}\n` +
+             `[${f.EFBI.name_short.padEnd(4)}] ${f.EFBI.name_long.padEnd(43)} = ${f.EFBI.value}\n` +
+             `[${f.PXHD.name_short.padEnd(4)}] ${f.PXHD.name_long.padEnd(43)} = ${f.PXHD.value}\n` +
+             `[${f.TDCE.name_short.padEnd(4)}] ${f.TDCE.name_long.padEnd(43)} = ${f.TDCE.value}\n` +
+             `[${f.XLOE.name_short.padEnd(4)}] ${f.XLOE.name_long.padEnd(43)} = ${f.XLOE.value}\n` +
+             `[${f.FDOE.name_short.padEnd(4)}] ${f.FDOE.name_long.padEnd(43)} = ${f.FDOE.value}`
     });
 
     // Check: FDOE is set when XLOE is also set
-    if (reg.MODE.fields.FDOE === 0 && reg.MODE.fields.XLOE === 1) {
+    if (f.FDOE.value === 0 && f.XLOE.value === 1) {
       reg.MODE.report.push({
         severityLevel: sevC.error, // error
-        msg: `MODE: FDOE (${reg.MODE.fields.FDOE}) is not set when XLOE (${reg.MODE.fields.XLOE}) is set. FDOE must be set to 1 when XLOE is set to 1.`
+        msg: `MODE: FDOE (${f.FDOE.value}) is not set when XLOE (${f.XLOE.value}) is set. FDOE must be set to 1 when XLOE is set to 1.`
       });
     }
 
     // Check: TMS=1 while ES=0
-    if (reg.MODE.fields.XLTR === 1 && reg.MODE.fields.EFDI === 0) {
+    if (f.XLTR.value === 1 && f.EFDI.value === 0) {
       reg.MODE.report.push({
         severityLevel: sevC.error, // error
-        msg: `MODE: TMS=ON while ES=OFF. This is not supported by X_CAN. XLTR (${reg.MODE.fields.XLTR}), EFDI (${reg.MODE.fields.EFDI})`
+        msg: `MODE: TMS=ON while ES=OFF. This is not supported by X_CAN. XLTR (${f.XLTR.value}), EFDI (${f.EFDI.value})`
       });
     }
   }
@@ -104,25 +107,27 @@ export function procRegsPrtBitTiming(reg) {
     reg.NBTP.report = []; // Initialize report array
 
     // 1. Decode all individual bits of NBTP register
-    reg.NBTP.fields.BRP    = getBits(regValue, 29, 25) + 1;  // Bit Rate Prescaler
-    reg.NBTP.fields.NTSEG1 = getBits(regValue, 24, 16) + 1;  // Nominal Time Segment 1
-    reg.NBTP.fields.NTSEG2 = getBits(regValue, 14, 8) + 1;   // Nominal Time Segment 2
-    reg.NBTP.fields.NSJW   = getBits(regValue, 6, 0) + 1;    // Nominal Synchronization Jump Width
+    defineField(reg.NBTP, regValue, 'BRP',    29, 25, 'Bit Rate Prescaler', r => r + 1);
+    defineField(reg.NBTP, regValue, 'NTSEG1', 24, 16, 'Nominal Time Segment 1', r => r + 1);
+    defineField(reg.NBTP, regValue, 'NTSEG2', 14,  8, 'Nominal Time Segment 2', r => r + 1);
+    defineField(reg.NBTP, regValue, 'NSJW',    6,  0, 'Nominal SJW', r => r + 1);
+
+    const f = reg.NBTP.fields;
 
     // 2. Store NBTP bit timing settings in general structure
-    reg.general.bt_arb.set.brp = reg.NBTP.fields.BRP;
-    reg.general.bt_arb.set.prop_and_phaseseg1 = reg.NBTP.fields.NTSEG1;
-    reg.general.bt_arb.set.phaseseg2 = reg.NBTP.fields.NTSEG2;
-    reg.general.bt_arb.set.sjw = reg.NBTP.fields.NSJW;
+    reg.general.bt_arb.set.brp = f.BRP.decoded;
+    reg.general.bt_arb.set.prop_and_phaseseg1 = f.NTSEG1.decoded;
+    reg.general.bt_arb.set.phaseseg2 = f.NTSEG2.decoded;
+    reg.general.bt_arb.set.sjw = f.NSJW.decoded;
 
     // 3. Generate human-readable register report
   reg.NBTP.report.push({
     severityLevel: sevC.info, // info
         msg: `NBTP: ${reg.NBTP.name_long} (0x${reg.NBTP.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `[BRP   ] Bit Rate Prescaler     = ${reg.NBTP.fields.BRP.toString(10).padStart(3,' ')} (range: 1- 32)\n` +
-             `[NTSEG1] Nominal Time Segment 1 = ${reg.NBTP.fields.NTSEG1.toString(10).padStart(3,' ')} (range: 1-512) TQ\n` +
-             `[NTSEG2] Nominal Time Segment 2 = ${reg.NBTP.fields.NTSEG2.toString(10).padStart(3,' ')} (range: 1-128) TQ\n` +
-             `[NSJW  ] Nominal SJW            = ${reg.NBTP.fields.NSJW.toString(10).padStart(3,' ')} (range: 1-128) TQ`
+             `[${f.BRP.name_short.padEnd(6)}] ${f.BRP.name_long.padEnd(22)} = ${f.BRP.decoded.toString(10).padStart(3,' ')} (range: 1- 32)\n` +
+             `[${f.NTSEG1.name_short.padEnd(6)}] ${f.NTSEG1.name_long.padEnd(22)} = ${f.NTSEG1.decoded.toString(10).padStart(3,' ')} (range: 1-512) TQ\n` +
+             `[${f.NTSEG2.name_short.padEnd(6)}] ${f.NTSEG2.name_long.padEnd(22)} = ${f.NTSEG2.decoded.toString(10).padStart(3,' ')} (range: 1-128) TQ\n` +
+             `[${f.NSJW.name_short.padEnd(6)}] ${f.NSJW.name_long.padEnd(22)} = ${f.NSJW.decoded.toString(10).padStart(3,' ')} (range: 1-128) TQ`
     });
 
     // 4. Calculate arbitration phase results and store in general structure
@@ -184,16 +189,18 @@ export function procRegsPrtBitTiming(reg) {
     reg.DBTP.report = []; // Initialize report array
 
     // 1. Decode all individual bits of DBTP register
-    reg.DBTP.fields.DTDCO  = getBits(regValue, 31, 24);      // CAN FD Transmitter Delay Compensation Offset
-    reg.DBTP.fields.DTSEG1 = getBits(regValue, 23, 16) + 1;  // CAN FD Data Time Segment 1
-    reg.DBTP.fields.DTSEG2 = getBits(regValue, 14, 8) + 1;   // CAN FD Data Time Segment 2
-    reg.DBTP.fields.DSJW   = getBits(regValue, 6, 0) + 1;    // CAN FD Data Synchronization Jump Width
+    defineField(reg.DBTP, regValue, 'DTDCO',  31, 24, 'FD TDC Offset');
+    defineField(reg.DBTP, regValue, 'DTSEG1', 23, 16, 'FD Time Segment 1', r => r + 1);
+    defineField(reg.DBTP, regValue, 'DTSEG2', 14,  8, 'FD Time Segment 2', r => r + 1);
+    defineField(reg.DBTP, regValue, 'DSJW',    6,  0, 'FD SJW', r => r + 1);
+
+    const f = reg.DBTP.fields;
     // TODO: move storage of global parameters into area after check "FD enabled"
     // 2. Store DBTP bit timing settings in general structure
-    reg.general.bt_fddata.set.ssp_offset = reg.DBTP.fields.DTDCO;
-    reg.general.bt_fddata.set.prop_and_phaseseg1 = reg.DBTP.fields.DTSEG1;
-    reg.general.bt_fddata.set.phaseseg2 = reg.DBTP.fields.DTSEG2;
-    reg.general.bt_fddata.set.sjw = reg.DBTP.fields.DSJW;
+    reg.general.bt_fddata.set.ssp_offset = f.DTDCO.value;
+    reg.general.bt_fddata.set.prop_and_phaseseg1 = f.DTSEG1.decoded;
+    reg.general.bt_fddata.set.phaseseg2 = f.DTSEG2.decoded;
+    reg.general.bt_fddata.set.sjw = f.DSJW.decoded;
     // set brp (as a copy of arb)
     reg.general.bt_fddata.set.brp = reg.general.bt_arb.set.brp !== undefined ? reg.general.bt_arb.set.brp : 0; // X_CAN uses same BRP as in arbitration phase
 
@@ -211,10 +218,10 @@ export function procRegsPrtBitTiming(reg) {
       reg.DBTP.report.push({
         severityLevel: sevC.info, // info
           msg: `DBTP: ${reg.DBTP.name_long} (0x${reg.DBTP.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-               `[DTDCO ] FD TDC Offset     = ${reg.DBTP.fields.DTDCO.toString(10).padStart(3,' ')} (range: 0-255) clock periods\n` +
-               `[DTSEG1] FD Time Segment 1 = ${reg.DBTP.fields.DTSEG1.toString(10).padStart(3,' ')} (range: 1-256) TQ\n` +
-               `[DTSEG2] FD Time Segment 2 = ${reg.DBTP.fields.DTSEG2.toString(10).padStart(3,' ')} (range: 1-128) TQ\n` +
-               `[DSJW  ] FD SJW            = ${reg.DBTP.fields.DSJW.toString(10).padStart(3,' ')} (range: 1-128) TQ`
+               `[${f.DTDCO.name_short.padEnd(6)}] ${f.DTDCO.name_long.padEnd(17)} = ${f.DTDCO.value.toString(10).padStart(3,' ')} (range: 0-255) clock periods\n` +
+               `[${f.DTSEG1.name_short.padEnd(6)}] ${f.DTSEG1.name_long.padEnd(17)} = ${f.DTSEG1.decoded.toString(10).padStart(3,' ')} (range: 1-256) TQ\n` +
+               `[${f.DTSEG2.name_short.padEnd(6)}] ${f.DTSEG2.name_long.padEnd(17)} = ${f.DTSEG2.decoded.toString(10).padStart(3,' ')} (range: 1-128) TQ\n` +
+               `[${f.DSJW.name_short.padEnd(6)}] ${f.DSJW.name_long.padEnd(17)} = ${f.DSJW.decoded.toString(10).padStart(3,' ')} (range: 1-128) TQ`
         });
 
       // 4. Calculate FD data phase results and store in general structure
@@ -294,16 +301,18 @@ export function procRegsPrtBitTiming(reg) {
     reg.XBTP.report = []; // Initialize report array
 
     // 1. Decode all individual bits of XBTP register
-    reg.XBTP.fields.XTDCO  = getBits(regValue, 31, 24);      // XL Transmitter Delay Compensation Offset
-    reg.XBTP.fields.XTSEG1 = getBits(regValue, 23, 16) + 1;  // XL Time Segment 1
-    reg.XBTP.fields.XTSEG2 = getBits(regValue, 14, 8) + 1;   // XL Time Segment 2
-    reg.XBTP.fields.XSJW   = getBits(regValue, 6, 0) + 1;    // XL Synchronization Jump Width
-    
+    defineField(reg.XBTP, regValue, 'XTDCO',  31, 24, 'XL TDC Offset');
+    defineField(reg.XBTP, regValue, 'XTSEG1', 23, 16, 'XL Time Segment 1', r => r + 1);
+    defineField(reg.XBTP, regValue, 'XTSEG2', 14,  8, 'XL Time Segment 2', r => r + 1);
+    defineField(reg.XBTP, regValue, 'XSJW',    6,  0, 'XL SJW', r => r + 1);
+
+    const f = reg.XBTP.fields;
+
     // 2. Store XBTP bit timing settings in general structure
-    reg.general.bt_xldata.set.ssp_offset = reg.XBTP.fields.XTDCO;
-    reg.general.bt_xldata.set.prop_and_phaseseg1 = reg.XBTP.fields.XTSEG1;
-    reg.general.bt_xldata.set.phaseseg2 = reg.XBTP.fields.XTSEG2;
-    reg.general.bt_xldata.set.sjw = reg.XBTP.fields.XSJW;
+    reg.general.bt_xldata.set.ssp_offset = f.XTDCO.value;
+    reg.general.bt_xldata.set.prop_and_phaseseg1 = f.XTSEG1.decoded;
+    reg.general.bt_xldata.set.phaseseg2 = f.XTSEG2.decoded;
+    reg.general.bt_xldata.set.sjw = f.XSJW.decoded;
     // set brp (as a copy of arb)
     reg.general.bt_xldata.set.brp = reg.general.bt_arb.set.brp !== undefined ? reg.general.bt_arb.set.brp : 0; // X_CAN uses same BRP as in arbitration phase
 
@@ -321,10 +330,10 @@ export function procRegsPrtBitTiming(reg) {
     reg.XBTP.report.push({
       severityLevel: sevC.info, // info
           msg: `XBTP: ${reg.XBTP.name_long} (0x${reg.XBTP.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-               `[XTDCO ] XL TDC Offset     = ${reg.XBTP.fields.XTDCO.toString(10).padStart(3,' ')} (range: 0-255) clock periods\n` +
-               `[XTSEG1] XL Time Segment 1 = ${reg.XBTP.fields.XTSEG1.toString(10).padStart(3,' ')} (range: 1-256) TQ\n` +
-               `[XTSEG2] XL Time Segment 2 = ${reg.XBTP.fields.XTSEG2.toString(10).padStart(3,' ')} (range: 1-128) TQ\n` +
-               `[XSJW  ] XL SJW            = ${reg.XBTP.fields.XSJW.toString(10).padStart(3,' ')} (range: 1-128) TQ`
+               `[${f.XTDCO.name_short.padEnd(6)}] ${f.XTDCO.name_long.padEnd(17)} = ${f.XTDCO.value.toString(10).padStart(3,' ')} (range: 0-255) clock periods\n` +
+               `[${f.XTSEG1.name_short.padEnd(6)}] ${f.XTSEG1.name_long.padEnd(17)} = ${f.XTSEG1.decoded.toString(10).padStart(3,' ')} (range: 1-256) TQ\n` +
+               `[${f.XTSEG2.name_short.padEnd(6)}] ${f.XTSEG2.name_long.padEnd(17)} = ${f.XTSEG2.decoded.toString(10).padStart(3,' ')} (range: 1-128) TQ\n` +
+               `[${f.XSJW.name_short.padEnd(6)}] ${f.XSJW.name_long.padEnd(17)} = ${f.XSJW.decoded.toString(10).padStart(3,' ')} (range: 1-128) TQ`
       });
 
       // 4. Calculate XL data phase results and store in general structure
@@ -393,7 +402,7 @@ export function procRegsPrtBitTiming(reg) {
       }
 
       // Ratio of Arb. Bit Time / XL Data Bit Time >= 2 ?
-      if (!reg.MODE || !reg.MODE.fields || reg.MODE.fields.EFDI == 0) { // Error Signaling is enabled
+      if (!reg.MODE || !reg.MODE.fields || reg.MODE.fields.EFDI.value == 0) { // Error Signaling is enabled
         if (reg.general.bt_arb.res.tq_per_bit < (2 * reg.general.bt_xldata.res.tq_per_bit)) {
           reg.XBTP.report.push({
             severityLevel: sevC.error, // error
@@ -413,18 +422,20 @@ export function procRegsPrtBitTiming(reg) {
     reg.PCFG.report = []; // Initialize report array
 
     // 1. Decode all individual bits of PCFG register
-    reg.PCFG.fields.PWMO = getBits(regValue, 21, 16);     // PWM Offset
-    reg.PCFG.fields.PWML = getBits(regValue, 13, 8) + 1;  // PWM Long
-    reg.PCFG.fields.PWMS = getBits(regValue, 5, 0) + 1;   // PWM Short
+    defineField(reg.PCFG, regValue, 'PWMO', 21, 16, 'PWM Offset');
+    defineField(reg.PCFG, regValue, 'PWML', 13,  8, 'PWM Phase Long', r => r + 1);
+    defineField(reg.PCFG, regValue, 'PWMS',  5,  0, 'PWM Phase Short', r => r + 1);
+
+    const f = reg.PCFG.fields;
 
     // 2. Store PWM settings in XL data structure
-    reg.general.bt_xldata.set.pwm_offset = reg.PCFG.fields.PWMO;
-    reg.general.bt_xldata.set.pwm_long = reg.PCFG.fields.PWML;
-    reg.general.bt_xldata.set.pwm_short = reg.PCFG.fields.PWMS;
+    reg.general.bt_xldata.set.pwm_offset = f.PWMO.value;
+    reg.general.bt_xldata.set.pwm_long = f.PWML.decoded;
+    reg.general.bt_xldata.set.pwm_short = f.PWMS.decoded;
 
     // different output based on XLOE & TMS
     // PWM SETTINGS NOT USED
-    if (!reg.MODE || !reg.MODE.fields || (reg.MODE.fields.XLOE !== undefined && reg.MODE.fields.XLOE == 0) || (reg.MODE.fields.XLTR !== undefined && reg.MODE.fields.XLTR == 0) || !reg.XBTP) {
+    if (!reg.MODE || !reg.MODE.fields || (reg.MODE.fields.XLOE !== undefined && reg.MODE.fields.XLOE.value == 0) || (reg.MODE.fields.XLTR !== undefined && reg.MODE.fields.XLTR.value == 0) || !reg.XBTP) {
       // 3. Generate human-readable register report
       reg.PCFG.report.push({
         severityLevel: sevC.info, // info
@@ -437,9 +448,9 @@ export function procRegsPrtBitTiming(reg) {
       reg.PCFG.report.push({
         severityLevel: sevC.info, // info
           msg: `PCFG: ${reg.PCFG.name_long} (0x${reg.PCFG.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-               `[PWMO] PWM Offset      = ${reg.PCFG.fields.PWMO}\n` +
-               `[PWML] PWM Phase Long  = ${reg.PCFG.fields.PWML}\n` +
-               `[PWMS] PWM Phase Short = ${reg.PCFG.fields.PWMS}`
+               `[${f.PWMO.name_short.padEnd(4)}] ${f.PWMO.name_long.padEnd(15)} = ${f.PWMO.value}\n` +
+               `[${f.PWML.name_short.padEnd(4)}] ${f.PWML.name_long.padEnd(15)} = ${f.PWML.decoded}\n` +
+               `[${f.PWMS.name_short.padEnd(4)}] ${f.PWMS.name_long.padEnd(15)} = ${f.PWMS.decoded}`
       });
 
       // 4. Calculate PWM results and store in XL data structure
@@ -471,17 +482,17 @@ export function procRegsPrtBitTiming(reg) {
       }
 
       // Check: PWML > PWMS 
-      if (reg.PCFG.fields.PWML <= reg.PCFG.fields.PWMS) {
+      if (f.PWML.decoded <= f.PWMS.decoded) {
         reg.PCFG.report.push({
           severityLevel: sevC.error, // error
-          msg: `PWM Phase Long (PCFG.PWML = ${reg.PCFG.fields.PWML}) must be larger than PWM Phase Short (PCFG.PWMS = ${reg.PCFG.fields.PWMS})`
+          msg: `PWM Phase Long (PCFG.PWML = ${f.PWML.decoded}) must be larger than PWM Phase Short (PCFG.PWMS = ${f.PWMS.decoded})`
         });
       } else {
         // Check: PWML >= 2*PWMS
-        if (reg.PCFG.fields.PWML < (2 * reg.PCFG.fields.PWMS)) {
+        if (f.PWML.decoded < (2 * f.PWMS.decoded)) {
           reg.PCFG.report.push({
             severityLevel: sevC.warning, // warning
-            msg: `PWM Phase Long (PCFG.PWML = ${reg.PCFG.fields.PWML}) is only slightly larger than PWM Phase Short (PCFG.PWMS = ${reg.PCFG.fields.PWMS}). Recommended are PWML = 75%, PWMS= 25% of PWM length.`
+            msg: `PWM Phase Long (PCFG.PWML = ${f.PWML.decoded}) is only slightly larger than PWM Phase Short (PCFG.PWMS = ${f.PWMS.decoded}). Recommended are PWML = 75%, PWMS= 25% of PWM length.`
           });
         }
       }
@@ -503,7 +514,7 @@ export function procRegsPrtOther(reg) {
     reg.ENDN.report = []; // Initialize report array
 
     // 1. Decode ENDN register (simple 32-bit value)
-    reg.ENDN.fields.ETV = regValue; // Endianness Test Value
+    defineField(reg.ENDN, regValue, 'ETV', 31, 0, 'Endianness Test Value'); // Endianness Test Value
 
     // 2. Generate human-readable register report
     if (regValue === 0x87654321) {
@@ -530,29 +541,31 @@ export function procRegsPrtOther(reg) {
     reg.PREL.report = []; // Initialize report array
 
     // 1. Decode all individual bits of PREL register
-    reg.PREL.fields.REL = getBits(regValue, 31, 28); // Release
-    reg.PREL.fields.STEP = getBits(regValue, 27, 24); // Step
-    reg.PREL.fields.SUBSTEP = getBits(regValue, 23, 20); // Substep
-    reg.PREL.fields.YEAR = getBits(regValue, 19, 16); // Year
-    reg.PREL.fields.MON = getBits(regValue, 15, 8); // Month
-    reg.PREL.fields.DAY = getBits(regValue, 7, 0); // Day
+    defineField(reg.PREL, regValue, 'REL',     31, 28, 'Release');
+    defineField(reg.PREL, regValue, 'STEP',    27, 24, 'Step');
+    defineField(reg.PREL, regValue, 'SUBSTEP', 23, 20, 'Substep');
+    defineField(reg.PREL, regValue, 'YEAR',    19, 16, 'Year');
+    defineField(reg.PREL, regValue, 'MON',     15,  8, 'Month');
+    defineField(reg.PREL, regValue, 'DAY',      7,  0, 'Day');
+
+    const f = reg.PREL.fields;
 
     // 2. Generate human-readable register report
     reg.PREL.report.push({
       severityLevel: sevC.info, // info
       msg: `PREL: ${reg.PREL.name_long} (0x${reg.PREL.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[REL    ] Release  = 0x${reg.PREL.fields.REL.toString(16).toUpperCase()}\n` +
-           `[STEP   ] Step     = 0x${reg.PREL.fields.STEP.toString(16).toUpperCase()}\n` +
-           `[SUBSTEP] Substep  = 0x${reg.PREL.fields.SUBSTEP.toString(16).toUpperCase()}\n` +
-           `[YEAR   ] Year     = 0x${reg.PREL.fields.YEAR.toString(16).toUpperCase()}\n` +
-           `[MON    ] Month    = 0x${reg.PREL.fields.MON.toString(16).toUpperCase().padStart(2, '0')}\n` +
-           `[DAY    ] Day      = 0x${reg.PREL.fields.DAY.toString(16).toUpperCase().padStart(2, '0')}`
+           `[${f.REL.name_short.padEnd(7)}] ${f.REL.name_long.padEnd(8)} = 0x${f.REL.value.toString(16).toUpperCase()}\n` +
+           `[${f.STEP.name_short.padEnd(7)}] ${f.STEP.name_long.padEnd(8)} = 0x${f.STEP.value.toString(16).toUpperCase()}\n` +
+           `[${f.SUBSTEP.name_short.padEnd(7)}] ${f.SUBSTEP.name_long.padEnd(8)} = 0x${f.SUBSTEP.value.toString(16).toUpperCase()}\n` +
+           `[${f.YEAR.name_short.padEnd(7)}] ${f.YEAR.name_long.padEnd(8)} = 0x${f.YEAR.value.toString(16).toUpperCase()}\n` +
+           `[${f.MON.name_short.padEnd(7)}] ${f.MON.name_long.padEnd(8)} = 0x${f.MON.value.toString(16).toUpperCase().padStart(2, '0')}\n` +
+           `[${f.DAY.name_short.padEnd(7)}] ${f.DAY.name_long.padEnd(8)} = 0x${f.DAY.value.toString(16).toUpperCase().padStart(2, '0')}`
     });
 
     // Generate Version Report
     reg.PREL.report.push({
       severityLevel: sevC.infoBold,
-      msg: `PREL: PRT V${reg.PREL.fields.REL.toString(16).toUpperCase()}.${reg.PREL.fields.STEP.toString(16).toUpperCase()}.${reg.PREL.fields.SUBSTEP.toString(16).toUpperCase()}, Date ${reg.PREL.fields.DAY.toString(16).toUpperCase().padStart(2, '0')}.${reg.PREL.fields.MON.toString(16).toUpperCase().padStart(2, '0')}.202${reg.PREL.fields.YEAR.toString(16).toUpperCase()}`
+      msg: `PREL: PRT V${f.REL.value.toString(16).toUpperCase()}.${f.STEP.value.toString(16).toUpperCase()}.${f.SUBSTEP.value.toString(16).toUpperCase()}, Date ${f.DAY.value.toString(16).toUpperCase().padStart(2, '0')}.${f.MON.value.toString(16).toUpperCase().padStart(2, '0')}.202${f.YEAR.value.toString(16).toUpperCase()}`
     });
   }
 
@@ -565,61 +578,63 @@ export function procRegsPrtOther(reg) {
     reg.STAT.report = []; // Initialize report array
 
     // 1. Decode all individual bits of STAT register
-    reg.STAT.fields.TEC  = getBits(regValue, 31, 24); // Transmit Error Counter
-    reg.STAT.fields.RP   = getBits(regValue, 23, 23); // Receive Error Counter Carry Flag
-    reg.STAT.fields.REC  = getBits(regValue, 22, 16); // Receive Error Counter
-    reg.STAT.fields.TDCV = getBits(regValue, 15, 8);  // TDC Value
-    reg.STAT.fields.BO   = getBits(regValue, 7, 7);   // Bus Off State
-    reg.STAT.fields.EP   = getBits(regValue, 6, 6);   // Error Passive State
-    reg.STAT.fields.FIMA = getBits(regValue, 5, 5);   // Fault Injection Mode Active
-    reg.STAT.fields.CLKA = getBits(regValue, 4, 4);   // CLOCK_ACTIVE (1: active)
-    reg.STAT.fields.STP  = getBits(regValue, 3, 3);   // Stop (1: Waiting for End of current frame TX/RX)
-    reg.STAT.fields.INT  = getBits(regValue, 2, 2);   // Integrating (1: integrating into bus communication)
-    reg.STAT.fields.ACT  = getBits(regValue, 1, 0);   // Activity (00: inactive, 01: idle, 10: receiver, 11: transmitter)
+    defineField(reg.STAT, regValue, 'TEC',  31, 24, 'TX Error Counter');
+    defineField(reg.STAT, regValue, 'RP',   23, 23, 'RX Error Counter Carry Flag');
+    defineField(reg.STAT, regValue, 'REC',  22, 16, 'RX Error Counter');
+    defineField(reg.STAT, regValue, 'TDCV', 15,  8, 'TDC Value (=TLD+SSP_offset)');
+    defineField(reg.STAT, regValue, 'BO',    7,  7, 'Bus-Off State');
+    defineField(reg.STAT, regValue, 'EP',    6,  6, 'Error Passive State');
+    defineField(reg.STAT, regValue, 'FIMA',  5,  5, 'Fault Injection Module Active');
+    defineField(reg.STAT, regValue, 'CLKA',  4,  4, 'Clock Active');
+    defineField(reg.STAT, regValue, 'STP',   3,  3, 'Stop Request by user');
+    defineField(reg.STAT, regValue, 'INT',   2,  2, 'Integrating');
+    defineField(reg.STAT, regValue, 'ACT',   1,  0, 'Activity');
+
+    const f = reg.STAT.fields;
 
     // 2. Generate human-readable register report
     reg.STAT.report.push({
       severityLevel: sevC.info, // info
       msg: `STAT: ${reg.STAT.name_long} (0x${reg.STAT.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[TEC ] TX Error Counter              = ${reg.STAT.fields.TEC}\n` +
-           `[RP  ] RX Error Counter Carry Flag   = ${reg.STAT.fields.RP}\n` +
-           `[REC ] RX Error Counter              = ${reg.STAT.fields.REC}\n` +
-           `[TDCV] TDC Value (=TLD+SSP_offset)   = ${reg.STAT.fields.TDCV} cycles = ${reg.STAT.fields.TDCV * reg.general.clk_period} ns\n` +
-           `[BO  ] Bus-Off State                 = ${reg.STAT.fields.BO}\n` +
-           `[EP  ] Error Passive State           = ${reg.STAT.fields.EP}\n` +
-           `[FIMA] Fault Injection Module Active = ${reg.STAT.fields.FIMA}\n` +
-           `[CLKA] Clock Active                  = ${reg.STAT.fields.CLKA}\n` +
-           `[STP ] Stop Request by user          = ${reg.STAT.fields.STP}\n` +
-           `[INT ] Integrating                   = ${reg.STAT.fields.INT}\n` +
-           `[ACT ] Activity                      = ${reg.STAT.fields.ACT} (0: inactive, 1: idle, 2: receiver, 3: transmitter))`
+           `[${f.TEC.name_short.padEnd(4)}] ${f.TEC.name_long.padEnd(29)} = ${f.TEC.value}\n` +
+           `[${f.RP.name_short.padEnd(4)}] ${f.RP.name_long.padEnd(29)} = ${f.RP.value}\n` +
+           `[${f.REC.name_short.padEnd(4)}] ${f.REC.name_long.padEnd(29)} = ${f.REC.value}\n` +
+           `[${f.TDCV.name_short.padEnd(4)}] ${f.TDCV.name_long.padEnd(29)} = ${f.TDCV.value} cycles = ${f.TDCV.value * reg.general.clk_period} ns\n` +
+           `[${f.BO.name_short.padEnd(4)}] ${f.BO.name_long.padEnd(29)} = ${f.BO.value}\n` +
+           `[${f.EP.name_short.padEnd(4)}] ${f.EP.name_long.padEnd(29)} = ${f.EP.value}\n` +
+           `[${f.FIMA.name_short.padEnd(4)}] ${f.FIMA.name_long.padEnd(29)} = ${f.FIMA.value}\n` +
+           `[${f.CLKA.name_short.padEnd(4)}] ${f.CLKA.name_long.padEnd(29)} = ${f.CLKA.value}\n` +
+           `[${f.STP.name_short.padEnd(4)}] ${f.STP.name_long.padEnd(29)} = ${f.STP.value}\n` +
+           `[${f.INT.name_short.padEnd(4)}] ${f.INT.name_long.padEnd(29)} = ${f.INT.value}\n` +
+           `[${f.ACT.name_short.padEnd(4)}] ${f.ACT.name_long.padEnd(29)} = ${f.ACT.value} (0: inactive, 1: idle, 2: receiver, 3: transmitter))`
     });
 
     // 3. Add status-specific warnings/errors
-    if (reg.STAT.fields.BO === 1) {
+    if (f.BO.value === 1) {
       reg.STAT.report.push({
         severityLevel: sevC.warning, // warning
         msg: `CAN controller is in Bus-Off state`
       });
     }
-    if (reg.STAT.fields.EP === 1) {
+    if (f.EP.value === 1) {
       reg.STAT.report.push({
         severityLevel: sevC.warning, // warning
         msg: `CAN controller is in Error Passive state`
       });
     }
-    if (reg.STAT.fields.TEC > 0) {
+    if (f.TEC.value > 0) {
       reg.STAT.report.push({
         severityLevel: sevC.warning,
-        msg: `Transmit Error Counter (${reg.STAT.fields.TEC}) > 0: Transmit Errors seen recently.`
+        msg: `Transmit Error Counter (${f.TEC.value}) > 0: Transmit Errors seen recently.`
       });
     }
-    if (reg.STAT.fields.REC > 0) {
+    if (f.REC.value > 0) {
       reg.STAT.report.push({
         severityLevel: sevC.warning,
-        msg: `Receive Error Counter (${reg.STAT.fields.REC}) > 0. Receive Errors seen recently.`
+        msg: `Receive Error Counter (${f.REC.value}) > 0. Receive Errors seen recently.`
       });
     }
-    if (reg.STAT.fields.RP === 1) {
+    if (f.RP.value === 1) {
       reg.STAT.report.push({
         severityLevel: sevC.warning,
         msg: `Receive Error Passive flag is set. CAN controller is in error passive state for receive.`
@@ -636,39 +651,41 @@ export function procRegsPrtOther(reg) {
     reg.EVNT.report = []; // Initialize report array
 
     // 1. Decode all individual bits of EVNT register (MSB -> LSB)
-    reg.EVNT.fields.ABO = getBits(regValue, 13, 13); // TX stopped by user at MH/PRT Interface
-    reg.EVNT.fields.IFR = getBits(regValue, 12, 12); // Invalid Frame Format (TX message)
-    reg.EVNT.fields.USO = getBits(regValue, 11, 11); // Unexpected Sequence Start at MH/PRT Interface
-    reg.EVNT.fields.DU  = getBits(regValue, 10, 10); // Data Underrun (TX_MSG)
-    reg.EVNT.fields.PXE = getBits(regValue, 9, 9);   // Protocol Exception Event occurred
-    reg.EVNT.fields.TXF = getBits(regValue, 8, 8);   // TX Frame successfully
-    reg.EVNT.fields.RXF = getBits(regValue, 7, 7);   // RX Frame successfully
-    reg.EVNT.fields.DO  = getBits(regValue, 6, 6);   // Data Overflow (RX_MSG)
-    reg.EVNT.fields.STE = getBits(regValue, 5, 5);   // Stuff Error
-    reg.EVNT.fields.FRE = getBits(regValue, 4, 4);   // Form Error / error counting rule f)
-    reg.EVNT.fields.AKE = getBits(regValue, 3, 3);   // Acknowledge Error
-    reg.EVNT.fields.B1E = getBits(regValue, 2, 2);   // Bit1 Error
-    reg.EVNT.fields.B0E = getBits(regValue, 1, 1);   // Bit0 Error
-    reg.EVNT.fields.CRE = getBits(regValue, 0, 0);   // CRC Error
+    defineField(reg.EVNT, regValue, 'ABO', 13, 13, 'TX stopped by user (MH/PRT TX IF)');
+    defineField(reg.EVNT, regValue, 'IFR', 12, 12, 'Invalid Frame Format (TX message)');
+    defineField(reg.EVNT, regValue, 'USO', 11, 11, 'Unexpected Seq Start (MH/PRT TX IF)');
+    defineField(reg.EVNT, regValue, 'DU',  10, 10, 'Data Underrun (MH/PRT TX IF)');
+    defineField(reg.EVNT, regValue, 'PXE',  9,  9, 'Protocol Exception Event');
+    defineField(reg.EVNT, regValue, 'TXF',  8,  8, 'TX Frame successfully');
+    defineField(reg.EVNT, regValue, 'RXF',  7,  7, 'RX Frame successfully');
+    defineField(reg.EVNT, regValue, 'DO',   6,  6, 'Data Overflow (MH/PRT RX IF)');
+    defineField(reg.EVNT, regValue, 'STE',  5,  5, 'Stuff Error');
+    defineField(reg.EVNT, regValue, 'FRE',  4,  4, 'Form Error');
+    defineField(reg.EVNT, regValue, 'AKE',  3,  3, 'Acknowledge Error');
+    defineField(reg.EVNT, regValue, 'B1E',  2,  2, 'Bit1 Error');
+    defineField(reg.EVNT, regValue, 'B0E',  1,  1, 'Bit0 Error');
+    defineField(reg.EVNT, regValue, 'CRE',  0,  0, 'CRC Error');
+
+    const f = reg.EVNT.fields;
 
     // 2. Generate human-readable register report (MSB -> LSB)
     reg.EVNT.report.push({
       severityLevel: sevC.info,
       msg: `EVNT: ${reg.EVNT.name_long} (0x${reg.EVNT.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[ABO] TX stopped by user (MH/PRT TX IF)   = ${reg.EVNT.fields.ABO}\n` +
-           `[IFR] Invalid Frame Format (TX message)   = ${reg.EVNT.fields.IFR}\n` +
-           `[USO] Unexpected Seq Start (MH/PRT TX IF) = ${reg.EVNT.fields.USO}\n` +
-           `[DU ] Data Underrun (MH/PRT TX IF)        = ${reg.EVNT.fields.DU}\n` +
-           `[PXE] Protocol Exception Event            = ${reg.EVNT.fields.PXE}\n` +
-           `[TXF] TX Frame successfully               = ${reg.EVNT.fields.TXF}\n` +
-           `[RXF] RX Frame successfully               = ${reg.EVNT.fields.RXF}\n` +
-           `[DO ] Data Overflow (MH/PRT RX IF)        = ${reg.EVNT.fields.DO}\n` +
-           `[STE] Stuff Error                         = ${reg.EVNT.fields.STE}\n` +
-           `[FRE] Form Error                          = ${reg.EVNT.fields.FRE}\n` +
-           `[AKE] Acknowledge Error                   = ${reg.EVNT.fields.AKE}\n` +
-           `[B1E] Bit1 Error                          = ${reg.EVNT.fields.B1E}\n` +
-           `[B0E] Bit0 Error                          = ${reg.EVNT.fields.B0E}\n` +
-           `[CRE] CRC Error                           = ${reg.EVNT.fields.CRE}`
+           `[${f.ABO.name_short.padEnd(3)}] ${f.ABO.name_long.padEnd(35)} = ${f.ABO.value}\n` +
+           `[${f.IFR.name_short.padEnd(3)}] ${f.IFR.name_long.padEnd(35)} = ${f.IFR.value}\n` +
+           `[${f.USO.name_short.padEnd(3)}] ${f.USO.name_long.padEnd(35)} = ${f.USO.value}\n` +
+           `[${f.DU.name_short.padEnd(3)}] ${f.DU.name_long.padEnd(35)} = ${f.DU.value}\n` +
+           `[${f.PXE.name_short.padEnd(3)}] ${f.PXE.name_long.padEnd(35)} = ${f.PXE.value}\n` +
+           `[${f.TXF.name_short.padEnd(3)}] ${f.TXF.name_long.padEnd(35)} = ${f.TXF.value}\n` +
+           `[${f.RXF.name_short.padEnd(3)}] ${f.RXF.name_long.padEnd(35)} = ${f.RXF.value}\n` +
+           `[${f.DO.name_short.padEnd(3)}] ${f.DO.name_long.padEnd(35)} = ${f.DO.value}\n` +
+           `[${f.STE.name_short.padEnd(3)}] ${f.STE.name_long.padEnd(35)} = ${f.STE.value}\n` +
+           `[${f.FRE.name_short.padEnd(3)}] ${f.FRE.name_long.padEnd(35)} = ${f.FRE.value}\n` +
+           `[${f.AKE.name_short.padEnd(3)}] ${f.AKE.name_long.padEnd(35)} = ${f.AKE.value}\n` +
+           `[${f.B1E.name_short.padEnd(3)}] ${f.B1E.name_long.padEnd(35)} = ${f.B1E.value}\n` +
+           `[${f.B0E.name_short.padEnd(3)}] ${f.B0E.name_long.padEnd(35)} = ${f.B0E.value}\n` +
+           `[${f.CRE.name_short.padEnd(3)}] ${f.CRE.name_long.padEnd(35)} = ${f.CRE.value}`
     });
 
     // 3. Additional summary/reporting
@@ -683,15 +700,17 @@ export function procRegsPrtOther(reg) {
     reg.LOCK.report = []; // Initialize report array
 
     // 1. Decode all individual bits of LOCK register (MSB -> LSB)
-    reg.LOCK.fields.TMK = getBits(regValue, 31, 16); // Test Mode Key
-    reg.LOCK.fields.ULK = getBits(regValue, 15, 0);  // Unlock Key
+    defineField(reg.LOCK, regValue, 'TMK', 31, 16, 'Test Mode Key');
+    defineField(reg.LOCK, regValue, 'ULK', 15,  0, 'Unlock Key');
+
+    const f = reg.LOCK.fields;
 
     // 2. Generate human-readable register report (MSB -> LSB)
     reg.LOCK.report.push({
       severityLevel: sevC.info,
       msg: `LOCK (PRT): ${reg.LOCK.name_long} (0x${reg.LOCK.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[TMK] Test Mode Key = 0x${reg.LOCK.fields.TMK.toString(16).toUpperCase().padStart(4, '0')}\n` +
-           `[ULK] Unlock Key    = 0x${reg.LOCK.fields.ULK.toString(16).toUpperCase().padStart(4, '0')}`
+           `[${f.TMK.name_short.padEnd(3)}] ${f.TMK.name_long.padEnd(13)} = 0x${f.TMK.value.toString(16).toUpperCase().padStart(4, '0')}\n` +
+           `[${f.ULK.name_short.padEnd(3)}] ${f.ULK.name_long.padEnd(13)} = 0x${f.ULK.value.toString(16).toUpperCase().padStart(4, '0')}`
     });
 
     // 3. Additional checks/warnings
@@ -712,21 +731,23 @@ export function procRegsPrtOther(reg) {
     reg.CTRL.report = []; // Initialize report array
 
     // 1. Decode all individual bits of CTRL register (MSB -> LSB)
-    reg.CTRL.fields.TEST = getBits(regValue, 12, 12); // Enable Test Mode Command (needs TMK)
-    reg.CTRL.fields.SRES = getBits(regValue, 8, 8);   // Software Reset Command (no unlock needed)
-    reg.CTRL.fields.STRT = getBits(regValue, 4, 4);   // Start Command
-    reg.CTRL.fields.IMMD = getBits(regValue, 1, 1);   // Stop Immediate Command (with STOP only)
-    reg.CTRL.fields.STOP = getBits(regValue, 0, 0);   // Stop Command (needs ULK)
+    defineField(reg.CTRL, regValue, 'TEST', 12, 12, 'Enable Test Mode Command');
+    defineField(reg.CTRL, regValue, 'SRES',  8,  8, 'Software Reset Command');
+    defineField(reg.CTRL, regValue, 'STRT',  4,  4, 'Start Command');
+    defineField(reg.CTRL, regValue, 'IMMD',  1,  1, 'Stop Immediate Command');
+    defineField(reg.CTRL, regValue, 'STOP',  0,  0, 'Stop Command');
+
+    const f = reg.CTRL.fields;
 
     // 2. Generate human-readable register report (MSB -> LSB)
     reg.CTRL.report.push({
       severityLevel: sevC.info,
       msg: `CTRL: ${reg.CTRL.name_long} (0x${reg.CTRL.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')}) a write-only register\n` +
-           `[TEST] Enable Test Mode Command = ${reg.CTRL.fields.TEST}\n` +
-           `[SRES] Software Reset Command   = ${reg.CTRL.fields.SRES}\n` +
-           `[STRT] Start Command            = ${reg.CTRL.fields.STRT}\n` +
-           `[IMMD] Stop Immediate Command   = ${reg.CTRL.fields.IMMD}\n` +
-           `[STOP] Stop Command             = ${reg.CTRL.fields.STOP}`
+           `[${f.TEST.name_short.padEnd(4)}] ${f.TEST.name_long.padEnd(24)} = ${f.TEST.value}\n` +
+           `[${f.SRES.name_short.padEnd(4)}] ${f.SRES.name_long.padEnd(24)} = ${f.SRES.value}\n` +
+           `[${f.STRT.name_short.padEnd(4)}] ${f.STRT.name_long.padEnd(24)} = ${f.STRT.value}\n` +
+           `[${f.IMMD.name_short.padEnd(4)}] ${f.IMMD.name_long.padEnd(24)} = ${f.IMMD.value}\n` +
+           `[${f.STOP.name_short.padEnd(4)}] ${f.STOP.name_long.padEnd(24)} = ${f.STOP.value}`
     });
 
     // 3. Additional checks/warnings
@@ -747,13 +768,15 @@ export function procRegsPrtOther(reg) {
     reg.FIMC.report = []; // Initialize report array
 
     // 1. Decode all individual bits of FIMC register (MSB -> LSB of defined fields)
-    reg.FIMC.fields.FIP = getBits(regValue, 14, 0); // Fault Injection (Bit) Position
+    defineField(reg.FIMC, regValue, 'FIP', 14, 0, 'Fault Injection Bit Position');
+
+    const f = reg.FIMC.fields;
 
     // 2. Generate human-readable register report (MSB -> LSB)
     reg.FIMC.report.push({
       severityLevel: sevC.info,
       msg: `FIMC: ${reg.FIMC.name_long} (0x${reg.FIMC.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[FIP] Fault Injection Bit Position = ${reg.FIMC.fields.FIP}`
+           `[${f.FIP.name_short.padEnd(3)}] ${f.FIP.name_long.padEnd(28)} = ${f.FIP.value}`
     });
   }
 
@@ -766,70 +789,72 @@ export function procRegsPrtOther(reg) {
     reg.TEST.report = []; // Initialize report array
 
     // 1. Decode all individual bits of TEST register (MSB -> LSB)
-    reg.TEST.fields.BUS_OFF  = getBits(regValue, 27, 27); // Trigger for IR (for testing)
-    reg.TEST.fields.BUS_ON   = getBits(regValue, 26, 26); // Trigger for IR (for testing)
-    reg.TEST.fields.E_PASSIVE= getBits(regValue, 25, 25); // Trigger for IR (for testing)
-    reg.TEST.fields.E_ACTIVE = getBits(regValue, 24, 24); // Trigger for IR (for testing)
-    reg.TEST.fields.BUS_ERR  = getBits(regValue, 23, 23); // Trigger for IR (for testing)
-    reg.TEST.fields.RX_EVT   = getBits(regValue, 22, 22); // Trigger for IR (for testing)
-    reg.TEST.fields.TX_EVT   = getBits(regValue, 21, 21); // Trigger for IR (for testing)
-    reg.TEST.fields.IFF_RQ   = getBits(regValue, 20, 20); // Trigger for IR (for testing)
-    reg.TEST.fields.RX_DO    = getBits(regValue, 19, 19); // Trigger for IR (for testing)
-    reg.TEST.fields.TX_DU    = getBits(regValue, 18, 18); // Trigger for IR (for testing)
-    reg.TEST.fields.USOS     = getBits(regValue, 17, 17); // Trigger for IR (for testing)
-    reg.TEST.fields.ABORTED  = getBits(regValue, 16, 16); // Trigger for IR (for testing)
-    reg.TEST.fields.HWT      = getBits(regValue, 15, 15); // Hardware Test Mode enabled
-    reg.TEST.fields.TXC      = getBits(regValue, 5, 4);   // TX Signal Control
-    reg.TEST.fields.RXD      = getBits(regValue, 3, 3);   // RX Signal value
-    reg.TEST.fields.LBCK     = getBits(regValue, 0, 0);   // Loop-back mode
+    defineField(reg.TEST, regValue, 'BUS_OFF',   27, 27, 'Trigger IR BUS_OFF');
+    defineField(reg.TEST, regValue, 'BUS_ON',    26, 26, 'Trigger IR BUS_ON');
+    defineField(reg.TEST, regValue, 'E_PASSIVE', 25, 25, 'Trigger IR E_PASSIV');
+    defineField(reg.TEST, regValue, 'E_ACTIVE',  24, 24, 'Trigger IR E_ACTIVE');
+    defineField(reg.TEST, regValue, 'BUS_ERR',   23, 23, 'Trigger IR BUS_ERR');
+    defineField(reg.TEST, regValue, 'RX_EVT',    22, 22, 'Trigger IR RX_EVT');
+    defineField(reg.TEST, regValue, 'TX_EVT',    21, 21, 'Trigger IR TX_EVT');
+    defineField(reg.TEST, regValue, 'IFF_RQ',    20, 20, 'Trigger IR IFF_RQ');
+    defineField(reg.TEST, regValue, 'RX_DO',     19, 19, 'Trigger IR RX_DO');
+    defineField(reg.TEST, regValue, 'TX_DU',     18, 18, 'Trigger IR TX_DU');
+    defineField(reg.TEST, regValue, 'USOS',      17, 17, 'Trigger IR USOS');
+    defineField(reg.TEST, regValue, 'ABORTED',   16, 16, 'Trigger IR ABORTED');
+    defineField(reg.TEST, regValue, 'HWT',       15, 15, 'Hardware Test Mode');
+    defineField(reg.TEST, regValue, 'TXC',        5,  4, 'TX Signal Control');
+    defineField(reg.TEST, regValue, 'RXD',        3,  3, 'RX Signal value');
+    defineField(reg.TEST, regValue, 'LBCK',       0,  0, 'Loop-back mode');
+
+    const f = reg.TEST.fields;
 
     // 2. Generate human-readable register report (MSB -> LSB)
     const txdMap = ['Normal', 'Normal (RX ignored)', 'TX forced 0', 'TX forced 1'];
     reg.TEST.report.push({
       severityLevel: sevC.info,
       msg: `TEST: ${reg.TEST.name_long} (0x${reg.TEST.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[BUS_OFF ] Trigger IR BUS_OFF  = ${reg.TEST.fields.BUS_OFF}\n` +
-           `[BUS_ON  ] Trigger IR BUS_ON   = ${reg.TEST.fields.BUS_ON}\n` +
-           `[E_PASSIV] Trigger IR E_PASSIV = ${reg.TEST.fields.E_PASSIVE}\n` +
-           `[E_ACTIVE] Trigger IR E_ACTIVE = ${reg.TEST.fields.E_ACTIVE}\n` +
-           `[BUS_ERR ] Trigger IR BUS_ERR  = ${reg.TEST.fields.BUS_ERR}\n` +
-           `[RX_EVT  ] Trigger IR RX_EVT   = ${reg.TEST.fields.RX_EVT}\n` +
-           `[TX_EVT  ] Trigger IR TX_EVT   = ${reg.TEST.fields.TX_EVT}\n` +
-           `[IFF_RQ  ] Trigger IR IFF_RQ   = ${reg.TEST.fields.IFF_RQ}\n` +
-           `[RX_DO   ] Trigger IR RX_DO    = ${reg.TEST.fields.RX_DO}\n` +
-           `[TX_DU   ] Trigger IR TX_DU    = ${reg.TEST.fields.TX_DU}\n` +
-           `[USOS    ] Trigger IR USOS     = ${reg.TEST.fields.USOS}\n` +
-           `[ABORTED ] Trigger IR ABORTED  = ${reg.TEST.fields.ABORTED}\n` +
-           `[HWT     ] Hardware Test Mode  = ${reg.TEST.fields.HWT}\n` +
-           `[TXC     ] TX Signal Control   = ${reg.TEST.fields.TXC} (0: normal, 1: normal for loopback (RX ignored), 2: output=0, 3: output=1)\n` +
-           `[RXD     ] RX Signal value     = ${reg.TEST.fields.RXD}\n` +
-           `[LBCK    ] Loop-back mode      = ${reg.TEST.fields.LBCK}`
+           `[${f.BUS_OFF.name_short.padEnd(8).slice(0, 8)}] ${f.BUS_OFF.name_long.padEnd(19)} = ${f.BUS_OFF.value}\n` +
+           `[${f.BUS_ON.name_short.padEnd(8).slice(0, 8)}] ${f.BUS_ON.name_long.padEnd(19)} = ${f.BUS_ON.value}\n` +
+           `[${f.E_PASSIVE.name_short.padEnd(8).slice(0, 8)}] ${f.E_PASSIVE.name_long.padEnd(19)} = ${f.E_PASSIVE.value}\n` +
+           `[${f.E_ACTIVE.name_short.padEnd(8).slice(0, 8)}] ${f.E_ACTIVE.name_long.padEnd(19)} = ${f.E_ACTIVE.value}\n` +
+           `[${f.BUS_ERR.name_short.padEnd(8).slice(0, 8)}] ${f.BUS_ERR.name_long.padEnd(19)} = ${f.BUS_ERR.value}\n` +
+           `[${f.RX_EVT.name_short.padEnd(8).slice(0, 8)}] ${f.RX_EVT.name_long.padEnd(19)} = ${f.RX_EVT.value}\n` +
+           `[${f.TX_EVT.name_short.padEnd(8).slice(0, 8)}] ${f.TX_EVT.name_long.padEnd(19)} = ${f.TX_EVT.value}\n` +
+           `[${f.IFF_RQ.name_short.padEnd(8).slice(0, 8)}] ${f.IFF_RQ.name_long.padEnd(19)} = ${f.IFF_RQ.value}\n` +
+           `[${f.RX_DO.name_short.padEnd(8).slice(0, 8)}] ${f.RX_DO.name_long.padEnd(19)} = ${f.RX_DO.value}\n` +
+           `[${f.TX_DU.name_short.padEnd(8).slice(0, 8)}] ${f.TX_DU.name_long.padEnd(19)} = ${f.TX_DU.value}\n` +
+           `[${f.USOS.name_short.padEnd(8).slice(0, 8)}] ${f.USOS.name_long.padEnd(19)} = ${f.USOS.value}\n` +
+           `[${f.ABORTED.name_short.padEnd(8).slice(0, 8)}] ${f.ABORTED.name_long.padEnd(19)} = ${f.ABORTED.value}\n` +
+           `[${f.HWT.name_short.padEnd(8).slice(0, 8)}] ${f.HWT.name_long.padEnd(19)} = ${f.HWT.value}\n` +
+           `[${f.TXC.name_short.padEnd(8).slice(0, 8)}] ${f.TXC.name_long.padEnd(19)} = ${f.TXC.value} (0: normal, 1: normal for loopback (RX ignored), 2: output=0, 3: output=1)\n` +
+           `[${f.RXD.name_short.padEnd(8).slice(0, 8)}] ${f.RXD.name_long.padEnd(19)} = ${f.RXD.value}\n` +
+           `[${f.LBCK.name_short.padEnd(8).slice(0, 8)}] ${f.LBCK.name_long.padEnd(19)} = ${f.LBCK.value}`
     });
 
     // 3. Additional checks/warnings
-    if (reg.TEST.fields.LBCK === 1) {
-      if (reg.TEST.fields.TXC === 0) {
+    if (f.LBCK.value === 1) {
+      if (f.TXC.value === 0) {
         reg.TEST.report.push({
           severityLevel: sevC.error,
-          msg: `TEST: Loop-back mode enabled (LBCK = ${reg.TEST.fields.LBCK}) but TXC = ${reg.TEST.fields.TXC}. Loop-back configuration is not functional.\n` +
+          msg: `TEST: Loop-back mode enabled (LBCK = ${f.LBCK.value}) but TXC = ${f.TXC.value}. Loop-back configuration is not functional.\n` +
                `In Loop-back mode TXC must be set to\n` +
                `TXC=1: external loop-back (TX shows frame, RX ignored)\n` +
                `TXC=3: internal loop-back (TX forced 1).`
         });
-      } else if (reg.TEST.fields.TXC === 1) { // External Loop-back
+      } else if (f.TXC.value === 1) { // External Loop-back
         reg.TEST.report.push({
           severityLevel: sevC.warning,
-          msg: `TEST: External Loop-back mode enabled (LBCK = ${reg.TEST.fields.LBCK} and TXC = ${reg.TEST.fields.TXC}). TX shows frame, RX ignored.`
+          msg: `TEST: External Loop-back mode enabled (LBCK = ${f.LBCK.value} and TXC = ${f.TXC.value}). TX shows frame, RX ignored.`
         });
-      } else if (reg.TEST.fields.TXC === 2) {
+      } else if (f.TXC.value === 2) {
         reg.TEST.report.push({
           severityLevel: sevC.warning,
-          msg: `TEST: Internal Loop-back mode enabled (LBCK = ${reg.TEST.fields.LBCK} and TXC = ${reg.TEST.fields.TXC}). ATTENTION: TX forced 0, RX ignored.`
+          msg: `TEST: Internal Loop-back mode enabled (LBCK = ${f.LBCK.value} and TXC = ${f.TXC.value}). ATTENTION: TX forced 0, RX ignored.`
         });
-      } else if (reg.TEST.fields.TXC === 3) {
+      } else if (f.TXC.value === 3) {
         reg.TEST.report.push({
           severityLevel: sevC.warning,
-          msg: `TEST: Internal Loop-back mode enabled (LBCK = ${reg.TEST.fields.LBCK} and TXC = ${reg.TEST.fields.TXC}). TX forced 1, RX ignored.`
+          msg: `TEST: Internal Loop-back mode enabled (LBCK = ${f.LBCK.value} and TXC = ${f.TXC.value}). TX forced 1, RX ignored.`
         });
       }
     } // if

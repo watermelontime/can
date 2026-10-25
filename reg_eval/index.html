@@ -7,6 +7,7 @@
   <title>CAN Register Evaluator</title>
   <!-- <link rel="manifest" href="manifest.json" /> -->
   <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="style_reg_eval.css" />
   <link rel="icon" href="../favicon.ico" type="image/x-icon" />
   <script data-goatcounter="https://can.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
@@ -293,18 +294,30 @@ Reserved Addresses: Memory dump can contain also reserved addresses. They will b
       <!-- Column 3: Validation Report -->
       <div class="column report-column">
         <h3 class="report-headline">Evaluation Report
-          <div class="inline-control" role="group" aria-label="Report filters">
+          <div class="inline-control" role="group" aria-label="Report actions">
+            <a href="#" id="downloadReportLink" class="report-download-link" aria-label="Download report">&#x21E9; download</a>
+          </div>
+        </h3>
+
+        <!-- Tabs: normal / compact -->
+        <div class="report-tabs" role="tablist" aria-label="Report views">
+          <button type="button" class="report-tab active" id="reportTabNormal" data-report-tab="normal" role="tab"
+            aria-selected="true">normal</button>
+          <button type="button" class="report-tab" id="reportTabCompact" data-report-tab="compact" role="tab"
+            aria-selected="false">compact</button>
+        </div>
+
+        <!-- Tab panel: normal (current report view + all filters) -->
+        <div class="report-tabpanel" data-report-tabpanel="normal" role="tabpanel">
+          <div class="inline-control report-filters" role="group" aria-label="Report filters">
             <input type="checkbox" id="par_report_info" checked /> info
             <input type="checkbox" id="par_report_infoVerbose" /> info verbose
             <input type="checkbox" id="par_report_infoBold" checked /> info bold&amp;calc
             <!--<input type="checkbox" id="par_report_calculation" checked/> calculation-->
             <input type="checkbox" id="par_report_warning" checked /> warning
             <input type="checkbox" id="par_report_error" checked /> error
-            <a href="#" id="downloadReportLink" class="report-download-link" aria-label="Download report">&#x21E9; download</a>
-
           </div>
-        </h3>
-        <pre id="reportTextArea" class="register-textarea report-textarea" readonly>The "Register evaluations report" will appear here after processing ...
+          <pre id="reportTextArea" class="register-textarea report-textarea" readonly>The "Register evaluations report" will appear here after processing ...
 
 === HOW TO USE THIS REGISTER EVALUTOR? ========================
 Step 1:  Set the "CAN clock frequency" (e.g. 160 MHz for CAN XL, 80 MHz for CAN FD).
@@ -313,6 +326,27 @@ Step 2a: Copy the memory dump of your CAN Module to "Register Values" text area.
 Step 2b: Alternatively, load example memory dump for your selected CAN Module.
 Step 3:  Press button "process register values" to generate the evaluation report.
         </pre>
+        </div>
+
+        <!-- Tab panel: compact (visual register/bit layout) -->
+        <div class="report-tabpanel" data-report-tabpanel="compact" role="tabpanel" hidden>
+          <div class="inline-control report-filters" role="group" aria-label="Compact view options">
+            <button type="button" id="btnSelectRegisters" class="cv-config-toggle">select registers</button>
+            <label><input type="checkbox" id="par_compact_highlight_nonzero" checked /> highlight non-zero values</label>
+            <label><input type="checkbox" id="par_compact_show_longnames" checked /> Field description on mouse-over</label>
+          </div>
+          <div id="compactConfigControls" hidden>
+            <div class="cv-config-title">Configure: Select the registers you want to see in compact view</div>
+            <div class="cv-config-buttons">
+              <button type="button" id="btnApplySubset" class="cv-config-btn">apply subset view</button>
+              <button type="button" id="btnSetAll" class="cv-config-btn">set all</button>
+              <button type="button" id="btnClearAll" class="cv-config-btn">clear all</button>
+            </div>
+          </div>
+          <div id="compactView" class="compact-view cv-highlight cv-longnames">
+            <p class="compact-note">Process a register dump to see the compact register view.</p>
+          </div>
+        </div>
       </div>
 
     </div>

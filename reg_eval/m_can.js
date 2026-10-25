@@ -5,6 +5,7 @@
 // ===================================================================================
 
 import { getBits } from './help_functions.js';
+import { defineField } from './help_functions.js';
 import { sevC } from './help_functions.js';
 import { getBinaryLineData } from './help_functions.js';
 
@@ -202,26 +203,28 @@ function procRegsPrtBitTiming(reg) {
     reg.CCCR.report = []; // Initialize report array
 
     // 1. Decode all individual bits of CCCR register (M_CAN CC Control Register)
-    reg.CCCR.fields.NISO = getBits(regValue, 15, 15);  // Non ISO Operation
-    reg.CCCR.fields.TXP  = getBits(regValue, 14, 14);  // Transmit Pause
-    reg.CCCR.fields.EFBI = getBits(regValue, 13, 13);  // Edge Filtering during Bus Integration
-    reg.CCCR.fields.PXHD = getBits(regValue, 12, 12);  // Protocol Exception Handling Disable
-    reg.CCCR.fields.WMM  = getBits(regValue, 11, 11);  // Wide Message Marker
-    reg.CCCR.fields.UTSU = getBits(regValue, 10, 10);  // Use Timestamping Unit
-    reg.CCCR.fields.BRSE = getBits(regValue, 9, 9);    // Bit Rate Switch Enable
-    reg.CCCR.fields.FDOE = getBits(regValue, 8, 8);    // FD Operation Enable
-    reg.CCCR.fields.TEST = getBits(regValue, 7, 7);    // Test Mode Enable
-    reg.CCCR.fields.DAR  = getBits(regValue, 6, 6);    // Disable Automatic Retransmission
-    reg.CCCR.fields.MON  = getBits(regValue, 5, 5);    // Bus Monitoring Mode
-    reg.CCCR.fields.CSR  = getBits(regValue, 4, 4);    // Clock Stop Request
-    reg.CCCR.fields.CSA  = getBits(regValue, 3, 3);    // Clock Stop Acknowledge
-    reg.CCCR.fields.ASM  = getBits(regValue, 2, 2);    // Restricted Operation Mode
-    reg.CCCR.fields.CCE  = getBits(regValue, 1, 1);    // Configuration Change Enable
-    reg.CCCR.fields.INIT = getBits(regValue, 0, 0);    // Initialization
-    
+    defineField(reg.CCCR, regValue, 'NISO', 15, 15, 'Non ISO Operation');
+    defineField(reg.CCCR, regValue, 'TXP',  14, 14, 'Transmit Pause');
+    defineField(reg.CCCR, regValue, 'EFBI', 13, 13, 'Edge Filtering during Bus Integration');
+    defineField(reg.CCCR, regValue, 'PXHD', 12, 12, 'Protocol Exception Handling Disable');
+    defineField(reg.CCCR, regValue, 'WMM',  11, 11, 'Wide Message Marker');
+    defineField(reg.CCCR, regValue, 'UTSU', 10, 10, 'Use Timestamping Unit (TSU)');
+    defineField(reg.CCCR, regValue, 'BRSE', 9, 9, 'Bit Rate Switch Enable');
+    defineField(reg.CCCR, regValue, 'FDOE', 8, 8, 'FD Operation Enable');
+    defineField(reg.CCCR, regValue, 'TEST', 7, 7, 'Test Mode Enable');
+    defineField(reg.CCCR, regValue, 'DAR',  6, 6, 'Disable Automatic Retransmission');
+    defineField(reg.CCCR, regValue, 'MON',  5, 5, 'Bus Monitoring Mode');
+    defineField(reg.CCCR, regValue, 'CSR',  4, 4, 'Clock Stop Request');
+    defineField(reg.CCCR, regValue, 'CSA',  3, 3, 'Clock Stop Acknowledge');
+    defineField(reg.CCCR, regValue, 'ASM',  2, 2, 'Restricted Operation Mode');
+    defineField(reg.CCCR, regValue, 'CCE',  1, 1, 'Configuration Change Enable');
+    defineField(reg.CCCR, regValue, 'INIT', 0, 0, 'Initialization');
+
+    const f = reg.CCCR.fields;
+
     // 2. Store CCCR-related bit timing settings in general structure
-    reg.general.bt_global.set.fd  = (reg.CCCR.fields.FDOE === 1); // FD Operation Enable when FDOE=1
-    reg.general.bt_global.set.fdbrs = (reg.CCCR.fields.BRSE === 1); // FD Bit Rate Switch Enable when BRSE=1
+    reg.general.bt_global.set.fd  = (f.FDOE.value === 1); // FD Operation Enable when FDOE=1
+    reg.general.bt_global.set.fdbrs = (f.BRSE.value === 1); // FD Bit Rate Switch Enable when BRSE=1
     reg.general.bt_global.set.es  = true;  // Error signaling always enabled in standard M_CAN
     reg.general.bt_global.set.tms = false; // No TMS (Transceiver Mode Switching) in standard M_CAN
     reg.general.bt_global.set.xl  = false; // No XL support in standard M_CAN
@@ -230,26 +233,26 @@ function procRegsPrtBitTiming(reg) {
     reg.CCCR.report.push({
         severityLevel: sevC.info, // info
         msg: `CCCR: ${reg.CCCR.name_long} (0x${reg.CCCR.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `[NISO] Non ISO Operation                     = ${reg.CCCR.fields.NISO}\n` +
-             `[TXP ] Transmit Pause                        = ${reg.CCCR.fields.TXP}\n` +
-             `[EFBI] Edge Filtering during Bus Integration = ${reg.CCCR.fields.EFBI}\n` +
-             `[PXHD] Protocol Exception Handling Disable   = ${reg.CCCR.fields.PXHD}\n` +
-             `[WMM ] Wide Message Marker                   = ${reg.CCCR.fields.WMM} (0: 8 bit MM, 1: 16 bit MM)\n` +
-             `[UTSU] Use Timestamping Unit (TSU)           = ${reg.CCCR.fields.UTSU} (0: internal, 1: use TSU)\n` +
-             `[BRSE] Bit Rate Switch Enable                = ${reg.CCCR.fields.BRSE}\n` +
-             `[FDOE] FD Operation Enable                   = ${reg.CCCR.fields.FDOE}\n` +
-             `[TEST] Test Mode Enable                      = ${reg.CCCR.fields.TEST}\n` +
-             `[DAR ] Disable Automatic Retransmission      = ${reg.CCCR.fields.DAR}\n` +
-             `[MON ] Bus Monitoring Mode                   = ${reg.CCCR.fields.MON}\n` +
-             `[CSR ] Clock Stop Request                    = ${reg.CCCR.fields.CSR}\n` +
-             `[CSA ] Clock Stop Acknowledge                = ${reg.CCCR.fields.CSA}\n` +
-             `[ASM ] Restricted Operation Mode             = ${reg.CCCR.fields.ASM}\n` +
-             `[CCE ] Configuration Change Enable           = ${reg.CCCR.fields.CCE}\n` +
-             `[INIT] Initialization                        = ${reg.CCCR.fields.INIT}`
+             `[${f.NISO.name_short.padEnd(4)}] ${f.NISO.name_long.padEnd(37)} = ${f.NISO.value}\n` +
+             `[${f.TXP.name_short.padEnd(4)}] ${f.TXP.name_long.padEnd(37)} = ${f.TXP.value}\n` +
+             `[${f.EFBI.name_short.padEnd(4)}] ${f.EFBI.name_long.padEnd(37)} = ${f.EFBI.value}\n` +
+             `[${f.PXHD.name_short.padEnd(4)}] ${f.PXHD.name_long.padEnd(37)} = ${f.PXHD.value}\n` +
+             `[${f.WMM.name_short.padEnd(4)}] ${f.WMM.name_long.padEnd(37)} = ${f.WMM.value} (0: 8 bit MM, 1: 16 bit MM)\n` +
+             `[${f.UTSU.name_short.padEnd(4)}] ${f.UTSU.name_long.padEnd(37)} = ${f.UTSU.value} (0: internal, 1: use TSU)\n` +
+             `[${f.BRSE.name_short.padEnd(4)}] ${f.BRSE.name_long.padEnd(37)} = ${f.BRSE.value}\n` +
+             `[${f.FDOE.name_short.padEnd(4)}] ${f.FDOE.name_long.padEnd(37)} = ${f.FDOE.value}\n` +
+             `[${f.TEST.name_short.padEnd(4)}] ${f.TEST.name_long.padEnd(37)} = ${f.TEST.value}\n` +
+             `[${f.DAR.name_short.padEnd(4)}] ${f.DAR.name_long.padEnd(37)} = ${f.DAR.value}\n` +
+             `[${f.MON.name_short.padEnd(4)}] ${f.MON.name_long.padEnd(37)} = ${f.MON.value}\n` +
+             `[${f.CSR.name_short.padEnd(4)}] ${f.CSR.name_long.padEnd(37)} = ${f.CSR.value}\n` +
+             `[${f.CSA.name_short.padEnd(4)}] ${f.CSA.name_long.padEnd(37)} = ${f.CSA.value}\n` +
+             `[${f.ASM.name_short.padEnd(4)}] ${f.ASM.name_long.padEnd(37)} = ${f.ASM.value}\n` +
+             `[${f.CCE.name_short.padEnd(4)}] ${f.CCE.name_long.padEnd(37)} = ${f.CCE.value}\n` +
+             `[${f.INIT.name_short.padEnd(4)}] ${f.INIT.name_long.padEnd(37)} = ${f.INIT.value}`
     });
 
     // Check: FDOE and BRSE should both be set for FD operation
-    if (reg.CCCR.fields.FDOE === 1 && reg.CCCR.fields.BRSE === 0) {
+    if (f.FDOE.value === 1 && f.BRSE.value === 0) {
       reg.CCCR.report.push({
         severityLevel: sevC.recommendation,
         msg: `CCCR: FDOE is set but BRSE is not set. For full CAN FD operation, both FDOE and BRSE should be enabled.`
@@ -257,7 +260,7 @@ function procRegsPrtBitTiming(reg) {
     }
 
     // Check: Configuration should not be in initialization mode during normal operation
-    if (reg.CCCR.fields.INIT === 1 || reg.CCCR.fields.CCE === 1) {
+    if (f.INIT.value === 1 || f.CCE.value === 1) {
       reg.CCCR.report.push({
         severityLevel: sevC.warning,
         msg: `CCCR: M_CAN is not started (no RX/TX possible): (INIT=1) or (CCE=1).`
@@ -265,7 +268,7 @@ function procRegsPrtBitTiming(reg) {
     }
 
     // Check: Test mode indication
-    if (reg.CCCR.fields.TEST === 1) {
+    if (f.TEST.value === 1) {
       reg.CCCR.report.push({
         severityLevel: sevC.warning,
         msg: `CCCR: Test Mode is enabled (TEST=1). This should only be used for testing purposes.`
@@ -273,7 +276,7 @@ function procRegsPrtBitTiming(reg) {
     }
 
     // Check: Bus monitoring mode indication
-    if (reg.CCCR.fields.MON === 1) {
+    if (f.MON.value === 1) {
       reg.CCCR.report.push({
         severityLevel: sevC.warning,
         msg: `CCCR: Bus Monitoring Mode is active (MON=1). Controller will not transmit on TX pin at all, also no ACK or Error Frames.`
@@ -281,7 +284,7 @@ function procRegsPrtBitTiming(reg) {
     }
 
     // Check: Restricted operation mode
-    if (reg.CCCR.fields.ASM === 1) {
+    if (f.ASM.value === 1) {
       reg.CCCR.report.push({
         severityLevel: sevC.warning,
         msg: `CCCR: Restricted Operation Mode is active (ASM=1). Controller will not transmit frames, but it will transmit an ACK on successful reception.`
@@ -298,25 +301,27 @@ function procRegsPrtBitTiming(reg) {
     reg.NBTP.report = []; // Initialize report array
 
     // 1. Decode all individual bits of NBTP register (M_CAN specification)
-    reg.NBTP.fields.NSJW   = getBits(regValue, 31, 25) + 1; // Nominal Synchronization Jump Width (8 bits)
-    reg.NBTP.fields.NBRP   = getBits(regValue, 24, 16) + 1; // Nominal Bit Rate Prescaler (7 bits)
-    reg.NBTP.fields.NTSEG1 = getBits(regValue, 15, 8) + 1;  // Nominal Time Segment 1 (9 bits)
-    reg.NBTP.fields.NTSEG2 = getBits(regValue, 7, 0) + 1;   // Nominal Time Segment 2 (8 bits)
+    defineField(reg.NBTP, regValue, 'NSJW',   31, 25, 'Nominal SJW', r => r + 1);                // Nominal Synchronization Jump Width (8 bits)
+    defineField(reg.NBTP, regValue, 'NBRP',   24, 16, 'Nominal Bit Rate Prescaler', r => r + 1); // Nominal Bit Rate Prescaler (7 bits)
+    defineField(reg.NBTP, regValue, 'NTSEG1', 15,  8, 'Nominal Time Segment 1', r => r + 1);      // Nominal Time Segment 1 (9 bits)
+    defineField(reg.NBTP, regValue, 'NTSEG2',  7,  0, 'Nominal Time Segment 2', r => r + 1);      // Nominal Time Segment 2 (8 bits)
+
+    const f = reg.NBTP.fields;
 
     // 2. Store NBTP bit timing settings in general structure
-    reg.general.bt_arb.set.brp = reg.NBTP.fields.NBRP;
-    reg.general.bt_arb.set.prop_and_phaseseg1 = reg.NBTP.fields.NTSEG1;
-    reg.general.bt_arb.set.phaseseg2 = reg.NBTP.fields.NTSEG2;
-    reg.general.bt_arb.set.sjw = reg.NBTP.fields.NSJW;
+    reg.general.bt_arb.set.brp = f.NBRP.decoded;
+    reg.general.bt_arb.set.prop_and_phaseseg1 = f.NTSEG1.decoded;
+    reg.general.bt_arb.set.phaseseg2 = f.NTSEG2.decoded;
+    reg.general.bt_arb.set.sjw = f.NSJW.decoded;
 
     // 3. Generate human-readable register report
     reg.NBTP.report.push({
         severityLevel: sevC.info, // info
         msg: `NBTP: ${reg.NBTP.name_long} (0x${reg.NBTP.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `[NSJW  ] Nominal SJW                = ${reg.NBTP.fields.NSJW.toString(10).padStart(3,' ')} (range: 1-128) TQ\n` +
-             `[NBRP  ] Nominal Bit Rate Prescaler = ${reg.NBTP.fields.NBRP.toString(10).padStart(3,' ')} (range: 1-128)\n` +
-             `[NTSEG1] Nominal Time Segment 1     = ${reg.NBTP.fields.NTSEG1.toString(10).padStart(3,' ')} (range: 1-256) TQ\n` +
-             `[NTSEG2] Nominal Time Segment 2     = ${reg.NBTP.fields.NTSEG2.toString(10).padStart(3,' ')} (range: 1-128) TQ`
+             `[${f.NSJW.name_short.padEnd(6)}] ${f.NSJW.name_long.padEnd(26)} = ${f.NSJW.decoded.toString(10).padStart(3,' ')} (range: 1-128) TQ\n` +
+             `[${f.NBRP.name_short.padEnd(6)}] ${f.NBRP.name_long.padEnd(26)} = ${f.NBRP.decoded.toString(10).padStart(3,' ')} (range: 1-128)\n` +
+             `[${f.NTSEG1.name_short.padEnd(6)}] ${f.NTSEG1.name_long.padEnd(26)} = ${f.NTSEG1.decoded.toString(10).padStart(3,' ')} (range: 1-256) TQ\n` +
+             `[${f.NTSEG2.name_short.padEnd(6)}] ${f.NTSEG2.name_long.padEnd(26)} = ${f.NTSEG2.decoded.toString(10).padStart(3,' ')} (range: 1-128) TQ`
     });
 
     // 4. Calculate arbitration phase results and store in general structure
@@ -380,8 +385,10 @@ function procRegsPrtBitTiming(reg) {
 
     // 1. Decode all individual bits of TDCR register (M_CAN specification)
     // See Bosch M_CAN User's Manual v3.3.1, Page 19
-    reg.TDCR.fields.TDCF = getBits(regValue, 6, 0);    // Transmitter Delay Compensation Filter Window Length (7 bits)
-    reg.TDCR.fields.TDCO = getBits(regValue, 14, 8);   // Transmitter Delay Compensation SSP Offset (7 bits)
+    defineField(reg.TDCR, regValue, 'TDCF', 6, 0, 'TDC Filter Window Length');  // Transmitter Delay Compensation Filter Window Length (7 bits)
+    defineField(reg.TDCR, regValue, 'TDCO', 14, 8, 'TDC SSP Offset');           // Transmitter Delay Compensation SSP Offset (7 bits)
+
+    const f = reg.TDCR.fields;
 
     // only exclude processing register, if it is clear that a) FD operation is disabled OR b) BRS is disabled
     if (reg.general.bt_global.set.fd !== undefined && reg.general.bt_global.set.fd === false ||
@@ -395,14 +402,14 @@ function procRegsPrtBitTiming(reg) {
 
     } else {
       // 2. Store DBTP bit timing settings in general structure
-      reg.general.bt_fddata.set.ssp_offset = reg.TDCR.fields.TDCO;
+      reg.general.bt_fddata.set.ssp_offset = f.TDCO.value;
 
       // 3. Generate human-readable register report
       reg.TDCR.report.push({
         severityLevel: sevC.info, // info
         msg: `TDCR: ${reg.TDCR.name_long} (0x${reg.TDCR.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `[TDCF] TDC Filter Window Length = ${reg.TDCR.fields.TDCF}\n` +
-             `[TDCO] TDC SSP Offset           = ${reg.TDCR.fields.TDCO}`
+             `[${f.TDCF.name_short.padEnd(4)}] ${f.TDCF.name_long.padEnd(24)} = ${f.TDCF.value}\n` +
+             `[${f.TDCO.name_short.padEnd(4)}] ${f.TDCO.name_long.padEnd(24)} = ${f.TDCO.value}`
       });
     }
   } // end if TDCR
@@ -416,11 +423,13 @@ function procRegsPrtBitTiming(reg) {
     reg.DBTP.report = []; // Initialize report array
 
     // 1. Decode all individual bits of DBTP register (M_CAN specification)
-    reg.DBTP.fields.TDC    = getBits(regValue, 23, 23);     // Transmitter Delay Compensation (1 bit)
-    reg.DBTP.fields.DBRP   = getBits(regValue, 20, 16) + 1; // Data Bit Rate Prescaler (5 bits)
-    reg.DBTP.fields.DTSEG1 = getBits(regValue, 12, 8) + 1;  // Data Time Segment 1 (5 bits)
-    reg.DBTP.fields.DTSEG2 = getBits(regValue, 7, 4) + 1;   // Data Time Segment 2 (4 bits)
-    reg.DBTP.fields.DSJW   = getBits(regValue, 3, 0) + 1;   // Data Synchronization Jump Width (4 bits)
+    defineField(reg.DBTP, regValue, 'TDC',    23, 23, 'Transmitter Delay Compensation');  // Transmitter Delay Compensation (1 bit)
+    defineField(reg.DBTP, regValue, 'DBRP',   20, 16, 'Data Bit Rate Prescaler', r => r + 1); // Data Bit Rate Prescaler (5 bits)
+    defineField(reg.DBTP, regValue, 'DTSEG1', 12,  8, 'Data Time Segment 1', r => r + 1);      // Data Time Segment 1 (5 bits)
+    defineField(reg.DBTP, regValue, 'DTSEG2',  7,  4, 'Data Time Segment 2', r => r + 1);      // Data Time Segment 2 (4 bits)
+    defineField(reg.DBTP, regValue, 'DSJW',    3,  0, 'Data SJW', r => r + 1);                 // Data Synchronization Jump Width (4 bits)
+
+    const f = reg.DBTP.fields;
 
     // different output based on FD enabled yes/no
     if (reg.general.bt_global.set.fd !== undefined && reg.general.bt_global.set.fd === false ||
@@ -434,22 +443,22 @@ function procRegsPrtBitTiming(reg) {
 
     } else { // FD enabled (or CCCR register not present)
       // 2. Store DBTP bit timing settings in general structure
-      reg.general.bt_global.set.tdc = (reg.DBTP.fields.TDC === 1); // TDC enabled when TDC=1
-      reg.general.bt_fddata.set.prop_and_phaseseg1 = reg.DBTP.fields.DTSEG1;
-      reg.general.bt_fddata.set.phaseseg2 = reg.DBTP.fields.DTSEG2;
-      reg.general.bt_fddata.set.sjw = reg.DBTP.fields.DSJW;
+      reg.general.bt_global.set.tdc = (f.TDC.value === 1); // TDC enabled when TDC=1
+      reg.general.bt_fddata.set.prop_and_phaseseg1 = f.DTSEG1.decoded;
+      reg.general.bt_fddata.set.phaseseg2 = f.DTSEG2.decoded;
+      reg.general.bt_fddata.set.sjw = f.DSJW.decoded;
       // set brp (M_CAN uses separate data phase prescaler)
-      reg.general.bt_fddata.set.brp = reg.DBTP.fields.DBRP;
+      reg.general.bt_fddata.set.brp = f.DBRP.decoded;
       
       // 3. Generate human-readable register report
     reg.DBTP.report.push({
       severityLevel: sevC.info, // info
       msg: `DBTP: ${reg.DBTP.name_long} (0x${reg.DBTP.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[TDC   ] Transmitter Delay Compensation =  ${reg.DBTP.fields.TDC} (on/off)\n` +
-           `[DBRP  ] Data Bit Rate Prescaler        = ${reg.DBTP.fields.DBRP.toString(10).padStart(2,' ')} (range: 1-32)\n` +
-           `[DTSEG1] Data Time Segment 1            = ${reg.DBTP.fields.DTSEG1.toString(10).padStart(2,' ')} (range: 1-32) TQ\n` +
-           `[DTSEG2] Data Time Segment 2            = ${reg.DBTP.fields.DTSEG2.toString(10).padStart(2,' ')} (range: 1-16) TQ\n` +
-           `[DSJW  ] Data SJW                       = ${reg.DBTP.fields.DSJW.toString(10).padStart(2,' ')} (range: 1-16) TQ`
+           `[${f.TDC.name_short.padEnd(6)}] ${f.TDC.name_long.padEnd(30)} =  ${f.TDC.value} (on/off)\n` +
+           `[${f.DBRP.name_short.padEnd(6)}] ${f.DBRP.name_long.padEnd(30)} = ${f.DBRP.decoded.toString(10).padStart(2,' ')} (range: 1-32)\n` +
+           `[${f.DTSEG1.name_short.padEnd(6)}] ${f.DTSEG1.name_long.padEnd(30)} = ${f.DTSEG1.decoded.toString(10).padStart(2,' ')} (range: 1-32) TQ\n` +
+           `[${f.DTSEG2.name_short.padEnd(6)}] ${f.DTSEG2.name_long.padEnd(30)} = ${f.DTSEG2.decoded.toString(10).padStart(2,' ')} (range: 1-16) TQ\n` +
+           `[${f.DSJW.name_short.padEnd(6)}] ${f.DSJW.name_long.padEnd(30)} = ${f.DSJW.decoded.toString(10).padStart(2,' ')} (range: 1-16) TQ`
       });
 
       // 4. Calculate FD data phase results and store in general structure
@@ -549,29 +558,31 @@ function procRegsPrtOther(reg) {
     reg.CREL.report = []; // Initialize report array
 
     // 1. Decode all individual bits
-    reg.CREL.fields.REL = getBits(regValue, 31, 28); // Release
-    reg.CREL.fields.STEP = getBits(regValue, 27, 24); // Step
-    reg.CREL.fields.SUBSTEP = getBits(regValue, 23, 20); // Substep
-    reg.CREL.fields.YEAR = getBits(regValue, 19, 16); // Year
-    reg.CREL.fields.MON = getBits(regValue, 15, 8); // Month
-    reg.CREL.fields.DAY = getBits(regValue, 7, 0); // Day
-    
+    defineField(reg.CREL, regValue, 'REL',     31, 28, 'Release');
+    defineField(reg.CREL, regValue, 'STEP',    27, 24, 'Step');
+    defineField(reg.CREL, regValue, 'SUBSTEP', 23, 20, 'Substep');
+    defineField(reg.CREL, regValue, 'YEAR',    19, 16, 'Year');
+    defineField(reg.CREL, regValue, 'MON',     15,  8, 'Month');
+    defineField(reg.CREL, regValue, 'DAY',      7,  0, 'Day');
+
+    const f = reg.CREL.fields;
+
     // 2. Generate human-readable register report
     reg.CREL.report.push({
       severityLevel: sevC.info, // info
       msg: `CREL: ${reg.CREL.name_long} (0x${reg.CREL.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[REL    ] Release = 0x${reg.CREL.fields.REL.toString(16).toUpperCase()}\n` +
-           `[STEP   ] Step    = 0x${reg.CREL.fields.STEP.toString(16).toUpperCase()}\n` +
-           `[SUBSTEP] Substep = 0x${reg.CREL.fields.SUBSTEP.toString(16).toUpperCase()}\n` +
-           `[YEAR   ] Year    = 0x${reg.CREL.fields.YEAR.toString(16).toUpperCase()}\n` +
-           `[MON    ] Month   = 0x${reg.CREL.fields.MON.toString(16).toUpperCase().padStart(2, '0')}\n` +
-           `[DAY    ] Day     = 0x${reg.CREL.fields.DAY.toString(16).toUpperCase().padStart(2, '0')}`
+           `[${f.REL.name_short.padEnd(7)}] ${f.REL.name_long.padEnd(7)} = 0x${f.REL.value.toString(16).toUpperCase()}\n` +
+           `[${f.STEP.name_short.padEnd(7)}] ${f.STEP.name_long.padEnd(7)} = 0x${f.STEP.value.toString(16).toUpperCase()}\n` +
+           `[${f.SUBSTEP.name_short.padEnd(7)}] ${f.SUBSTEP.name_long.padEnd(7)} = 0x${f.SUBSTEP.value.toString(16).toUpperCase()}\n` +
+           `[${f.YEAR.name_short.padEnd(7)}] ${f.YEAR.name_long.padEnd(7)} = 0x${f.YEAR.value.toString(16).toUpperCase()}\n` +
+           `[${f.MON.name_short.padEnd(7)}] ${f.MON.name_long.padEnd(7)} = 0x${f.MON.value.toString(16).toUpperCase().padStart(2, '0')}\n` +
+           `[${f.DAY.name_short.padEnd(7)}] ${f.DAY.name_long.padEnd(7)} = 0x${f.DAY.value.toString(16).toUpperCase().padStart(2, '0')}`
     });
 
     // Generate Version Report
     reg.CREL.report.push({
       severityLevel: sevC.infoBold,
-      msg: `CREL: M_CAN V${reg.CREL.fields.REL.toString(16).toUpperCase()}.${reg.CREL.fields.STEP.toString(16).toUpperCase()}.${reg.CREL.fields.SUBSTEP.toString(16).toUpperCase()}, Date ${reg.CREL.fields.DAY.toString(16).toUpperCase().padStart(2, '0')}.${reg.CREL.fields.MON.toString(16).toUpperCase().padStart(2, '0')}.201${reg.CREL.fields.YEAR.toString(16).toUpperCase()}`
+      msg: `CREL: M_CAN V${f.REL.value.toString(16).toUpperCase()}.${f.STEP.value.toString(16).toUpperCase()}.${f.SUBSTEP.value.toString(16).toUpperCase()}, Date ${f.DAY.value.toString(16).toUpperCase().padStart(2, '0')}.${f.MON.value.toString(16).toUpperCase().padStart(2, '0')}.201${f.YEAR.value.toString(16).toUpperCase()}`
     });
   }
 
@@ -584,20 +595,22 @@ function procRegsPrtOther(reg) {
     reg.ENDN.report = []; // Initialize report array
 
     // 1. Decode ENDN register (simple 32-bit value)
-    reg.ENDN.fields.ETV = regValue; // Endianness Test Value
+    defineField(reg.ENDN, regValue, 'ETV', 31, 0, 'Endianness Test Value'); // whole 32-bit value
+
+    const f = reg.ENDN.fields;
 
     // 2. Generate human-readable register report
     if (regValue === 0x87654321) {
       reg.ENDN.report.push({
         severityLevel: sevC.info, // info
   msg: `ENDN: ${reg.ENDN.name_long} (0x${reg.ENDN.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `[ETV] Endianness Test Value = 0x${regValue.toString(16).toUpperCase().padStart(8, '0')} (Correct)`
+             `[${f.ETV.name_short}] ${f.ETV.name_long} = 0x${regValue.toString(16).toUpperCase().padStart(8, '0')} (Correct)`
       });
     } else {
       reg.ENDN.report.push({
         severityLevel: sevC.error, // error
         msg: `ENDN: ${reg.ENDN.name_long} (0x${reg.ENDN.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-             `[ETV] Endianness Test Value = 0x${regValue.toString(16).toUpperCase().padStart(8, '0')} (Expected: 0x87654321)`
+             `[${f.ETV.name_short}] ${f.ETV.name_long} = 0x${regValue.toString(16).toUpperCase().padStart(8, '0')} (Expected: 0x87654321)`
       });
     }
   } // ENDN
@@ -612,7 +625,7 @@ function procRegsPrtOther(reg) {
 
     // 1. Decode all individual bits of TEST register
     // but fields must contain value to be recognized as decoded by main function
-    reg.CUST.fields.BITS = regValue;
+    defineField(reg.CUST, regValue, 'BITS', 31, 0, 'Customer-specific value');
 
 
     // Generate human-readable register report
@@ -631,29 +644,31 @@ function procRegsPrtOther(reg) {
     reg.TEST.report = []; // Initialize report array
 
     // 1. Decode all individual bits of TEST register
-    reg.TEST.fields.SVAL  = getBits(regValue, 21, 21); // Started Valid
-    reg.TEST.fields.TXBNS = getBits(regValue, 20, 16); // TX Buffer Number Started
-    reg.TEST.fields.PVAL  = getBits(regValue, 13, 13); // Prepend Valid
-    reg.TEST.fields.TXBNP = getBits(regValue, 12,  8); // TX Buffer Number Prepend
-    reg.TEST.fields.RX    = getBits(regValue, 7, 7); // Receive Pin
-    reg.TEST.fields.TX    = getBits(regValue, 6, 5); // TX Pin Control
-    reg.TEST.fields.LBCK  = getBits(regValue, 4, 4); // Loop Back Mode
+    defineField(reg.TEST, regValue, 'SVAL',  21, 21, 'Started Valid');              // Started Valid
+    defineField(reg.TEST, regValue, 'TXBNS', 20, 16, 'TX Buffer Number Started');   // TX Buffer Number Started
+    defineField(reg.TEST, regValue, 'PVAL',  13, 13, 'Prepend Valid');              // Prepend Valid
+    defineField(reg.TEST, regValue, 'TXBNP', 12,  8, 'TX Buffer Number Prepared');  // TX Buffer Number Prepend
+    defineField(reg.TEST, regValue, 'RX',     7,  7, 'RX Pin');                     // Receive Pin
+    defineField(reg.TEST, regValue, 'TX',     6,  5, 'TX Pin Control');             // TX Pin Control
+    defineField(reg.TEST, regValue, 'LBCK',   4,  4, 'Loop Back Mode');             // Loop Back Mode
+
+    const f = reg.TEST.fields;
 
     // 2. Generate human-readable register report
     reg.TEST.report.push({
       severityLevel: sevC.info, // info
       msg: `TEST: ${reg.TEST.name_long} (0x${reg.TEST.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[SVAL ] Started Valid             = ${reg.TEST.fields.SVAL} (only in M_CAN V3.3.0 or later)\n` +
-           `[TXBNS] TX Buffer Number Started  = ${reg.TEST.fields.TXBNS} (only in M_CAN V3.3.0 or later)\n` +
-           `[PVAL ] Prepend Valid             = ${reg.TEST.fields.PVAL} (only in M_CAN V3.3.0 or later)\n` +
-           `[TXBNP] TX Buffer Number Prepared = ${reg.TEST.fields.TXBNP} (only in M_CAN V3.3.0 or later)\n` +
-           `[RX   ] RX Pin                    = ${reg.TEST.fields.RX}\n` +
-           `[TX   ] TX Pin Control            = ${reg.TEST.fields.TX} (0: PRT controlled, 1: SP monitor, 2: Dominant, 3: Recessive)\n` +
-           `[LBCK ] Loop Back Mode            = ${reg.TEST.fields.LBCK} (1: enabled)`
+           `[${f.SVAL.name_short.padEnd(5)}] ${f.SVAL.name_long.padEnd(25)} = ${f.SVAL.value} (only in M_CAN V3.3.0 or later)\n` +
+           `[${f.TXBNS.name_short.padEnd(5)}] ${f.TXBNS.name_long.padEnd(25)} = ${f.TXBNS.value} (only in M_CAN V3.3.0 or later)\n` +
+           `[${f.PVAL.name_short.padEnd(5)}] ${f.PVAL.name_long.padEnd(25)} = ${f.PVAL.value} (only in M_CAN V3.3.0 or later)\n` +
+           `[${f.TXBNP.name_short.padEnd(5)}] ${f.TXBNP.name_long.padEnd(25)} = ${f.TXBNP.value} (only in M_CAN V3.3.0 or later)\n` +
+           `[${f.RX.name_short.padEnd(5)}] ${f.RX.name_long.padEnd(25)} = ${f.RX.value}\n` +
+           `[${f.TX.name_short.padEnd(5)}] ${f.TX.name_long.padEnd(25)} = ${f.TX.value} (0: PRT controlled, 1: SP monitor, 2: Dominant, 3: Recessive)\n` +
+           `[${f.LBCK.name_short.padEnd(5)}] ${f.LBCK.name_long.padEnd(25)} = ${f.LBCK.value} (1: enabled)`
     });
 
     // 3. Report test mode information messages
-    if (reg.TEST.fields.LBCK === 1) {
+    if (f.LBCK.value === 1) {
       reg.TEST.report.push({
         severityLevel: sevC.warning,
         msg: `Loop Back Mode is active - for testing only\n` +
@@ -662,7 +677,7 @@ function procRegsPrtOther(reg) {
       });
     }
     
-    if (reg.TEST.fields.TX !== 0) {
+    if (f.TX.value !== 0) {
       reg.TEST.report.push({
         severityLevel: sevC.warning,
         msg: `Test Mode is active: TX Pin is under manual control! CAN messages cannot be transmitted.`
@@ -680,22 +695,24 @@ function procRegsPrtOther(reg) {
     reg.RWD.report = []; // Initialize report array
 
     // 1. Decode all individual bits of RWD register (M_CAN User Manual v3.3.1, page 10)
-    reg.RWD.fields.WDV = getBits(regValue, 15, 8);  // Watchdog Value (8 bits)
-    reg.RWD.fields.WDC = getBits(regValue, 7, 0);   // Watchdog Configuration (8 bits)
+    defineField(reg.RWD, regValue, 'WDV', 15, 8, 'Watchdog Value');          // Watchdog Value (8 bits)
+    defineField(reg.RWD, regValue, 'WDC',  7, 0, 'Watchdog Configuration');  // Watchdog Configuration (8 bits)
+
+    const f = reg.RWD.fields;
 
     // 2. Generate human-readable register report
     reg.RWD.report.push({
       severityLevel: sevC.info, // info
       msg: `RWD: ${reg.RWD.name_long} (0x${reg.RWD.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[WDV] Watchdog Value         = ${reg.RWD.fields.WDV} (current Watchdog counter value)\n` +
-           `[WDC] Watchdog Configuration = ${reg.RWD.fields.WDC} (0: disabled, else: start value of Watchdog down-counter)`
+           `[${f.WDV.name_short.padEnd(3)}] ${f.WDV.name_long.padEnd(22)} = ${f.WDV.value} (current Watchdog counter value)\n` +
+           `[${f.WDC.name_short.padEnd(3)}] ${f.WDC.name_long.padEnd(22)} = ${f.WDC.value} (0: disabled, else: start value of Watchdog down-counter)`
     });
 
     // 3. Add warnings or info if Watchdog Value is close to Configuration
-    if (reg.RWD.fields.WDC > 0) {
+    if (f.WDC.value > 0) {
       reg.RWD.report.push({
         severityLevel: sevC.infoBold,
-        msg: `RAM Watchdog is enabled. Configuration: WDC = ${reg.RWD.fields.WDC} Host Clock Cycles`
+        msg: `RAM Watchdog is enabled. Configuration: WDC = ${f.WDC.value} Host Clock Cycles`
       });
     }
   }
@@ -709,15 +726,17 @@ function procRegsPrtOther(reg) {
     reg.TSCC.report = []; // Initialize report array
 
     // 1. Decode all individual bits of TSCC register (M_CAN User Manual v3.3.1, page 14)
-    reg.TSCC.fields.TCP = getBits(regValue, 19, 16) + 1; // Timestamp Counter Prescaler (4 bits)
-    reg.TSCC.fields.TSS = getBits(regValue,  1,  0); // Timestamp Select (2 bits)
+    defineField(reg.TSCC, regValue, 'TCP', 19, 16, 'Timestamp Counter Prescaler', r => r + 1); // (4 bits)
+    defineField(reg.TSCC, regValue, 'TSS',  1,  0, 'Timestamp Select'); // (2 bits)
+
+    const f = reg.TSCC.fields;
 
     // 2. Generate human-readable register report
     reg.TSCC.report.push({
       severityLevel: sevC.info, // info
       msg: `TSCC: ${reg.TSCC.name_long} (0x${reg.TSCC.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[TCP] Timestamp Counter Prescaler = ${reg.TSCC.fields.TCP} (values 1..16)\n` +
-           `[TSS] Timestamp Select            = ${reg.TSCC.fields.TSS} (0: disabled, 1: TS counter internal, 2: TS counter external, 3: disabled)`
+           `[${f.TCP.name_short.padEnd(3)}] ${f.TCP.name_long.padEnd(27)} = ${f.TCP.decoded} (values 1..16)\n` +
+           `[${f.TSS.name_short.padEnd(3)}] ${f.TSS.name_long.padEnd(27)} = ${f.TSS.value} (0: disabled, 1: TS counter internal, 2: TS counter external, 3: disabled)`
     });
   } // TSCC
 
@@ -730,13 +749,15 @@ function procRegsPrtOther(reg) {
     reg.TSCV.report = []; // Initialize report array
 
     // 1. Decode all individual bits of TSCV register (M_CAN User Manual v3.3.1, page 14)
-    reg.TSCV.fields.TSC = getBits(regValue, 15, 0); // Timestamp Counter Value (16 bits)
+    defineField(reg.TSCV, regValue, 'TSC', 15, 0, 'Timestamp Counter Value'); // (16 bits)
+
+    const f = reg.TSCV.fields;
 
     // 2. Generate human-readable register report
     reg.TSCV.report.push({
       severityLevel: sevC.info, // info
       msg: `TSCV: ${reg.TSCV.name_long} (0x${reg.TSCV.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[TSC] Timestamp Counter Value = ${reg.TSCV.fields.TSC} (counter width: 16 bit)`
+           `[${f.TSC.name_short.padEnd(3)}] ${f.TSC.name_long.padEnd(23)} = ${f.TSC.value} (counter width: 16 bit)`
     });
   } // TSCV
 
@@ -749,17 +770,19 @@ function procRegsPrtOther(reg) {
     reg.TOCC.report = []; // Initialize report array
 
     // 1. Decode all individual bits of TOCC register (M_CAN User Manual v3.3.1, page 15)
-    reg.TOCC.fields.TOP  = getBits(regValue, 31, 16); // Timeout Period (16 bits)
-    reg.TOCC.fields.TOS  = getBits(regValue,  2,  1); // Timeout Select (2 bits)
-    reg.TOCC.fields.ETOC = getBits(regValue,  0,  0); // Enable Timeout Counter (1 bit)
+    defineField(reg.TOCC, regValue, 'TOP',  31, 16, 'Timeout Period');         // (16 bits)
+    defineField(reg.TOCC, regValue, 'TOS',   2,  1, 'Timeout Select');         // (2 bits)
+    defineField(reg.TOCC, regValue, 'ETOC',  0,  0, 'Enable Timeout Counter'); // (1 bit)
+
+    const f = reg.TOCC.fields;
 
     // 2. Generate human-readable register report
     reg.TOCC.report.push({
       severityLevel: sevC.info, // info
       msg: `TOCC: ${reg.TOCC.name_long} (0x${reg.TOCC.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[TOP ] Timeout Period         = ${reg.TOCC.fields.TOP}\n` +
-           `[TOS ] Timeout Select         = ${reg.TOCC.fields.TOS} (0: continuous, 1: TX Event FIFO, 2: RX FIFO0, 3: RX FIFO1)\n` +
-           `[ETOC] Enable Timeout Counter = ${reg.TOCC.fields.ETOC}`  
+           `[${f.TOP.name_short.padEnd(4)}] ${f.TOP.name_long.padEnd(22)} = ${f.TOP.value}\n` +
+           `[${f.TOS.name_short.padEnd(4)}] ${f.TOS.name_long.padEnd(22)} = ${f.TOS.value} (0: continuous, 1: TX Event FIFO, 2: RX FIFO0, 3: RX FIFO1)\n` +
+           `[${f.ETOC.name_short.padEnd(4)}] ${f.ETOC.name_long.padEnd(22)} = ${f.ETOC.value}`  
     });
   }
 
@@ -772,13 +795,15 @@ function procRegsPrtOther(reg) {
     reg.TOCV.report = []; // Initialize report array
 
     // 1. Decode all individual bits of TOCV register (M_CAN User Manual v3.3.1, page 15)
-    reg.TOCV.fields.TOC = getBits(regValue, 15, 0); // Timeout Counter Value (16 bits)
+    defineField(reg.TOCV, regValue, 'TOC', 15, 0, 'Timeout Counter Value'); // (16 bits)
+
+    const f = reg.TOCV.fields;
 
     // 2. Generate human-readable register report
     reg.TOCV.report.push({
       severityLevel: sevC.info, // info
       msg: `TOCV: ${reg.TOCV.name_long} (0x${reg.TOCV.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[TOC] Timeout Counter Value = ${reg.TOCV.fields.TOC} (counter width: 16 bit)`
+           `[${f.TOC.name_short.padEnd(3)}] ${f.TOC.name_long.padEnd(21)} = ${f.TOC.value} (counter width: 16 bit)`
     });
   }
 
@@ -791,35 +816,37 @@ function procRegsPrtOther(reg) {
     reg.ECR.report = []; // Initialize report array
 
     // 1. Decode all individual bits of ECR register (M_CAN User Manual v3.3.1, page 16)
-    reg.ECR.fields.CEL = getBits(regValue, 23, 16); // CAN Error Logging (8 bits)
-    reg.ECR.fields.RP  = getBits(regValue, 15, 15); // Receive Error Passive (1 bit)
-    reg.ECR.fields.REC = getBits(regValue, 14,  8); // Receive Error Counter (7 bits)
-    reg.ECR.fields.TEC = getBits(regValue,  7,  0); // Transmit Error Counter (8 bits)
+    defineField(reg.ECR, regValue, 'CEL', 23, 16, 'CAN Error Logging');           // (8 bits)
+    defineField(reg.ECR, regValue, 'RP',  15, 15, 'RX Error Counter Carry Flag'); // Receive Error Passive (1 bit)
+    defineField(reg.ECR, regValue, 'REC', 14,  8, 'RX Error Counter');            // Receive Error Counter (7 bits)
+    defineField(reg.ECR, regValue, 'TEC',  7,  0, 'TX Error Counter');            // Transmit Error Counter (8 bits)
+
+    const f = reg.ECR.fields;
 
     // 2. Generate human-readable register report
     reg.ECR.report.push({
       severityLevel: sevC.info, // info
       msg: `ECR: ${reg.ECR.name_long} (0x${reg.ECR.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[CEL] CAN Error Logging           = ${reg.ECR.fields.CEL}\n` +
-           `[RP ] RX Error Counter Carry Flag = ${reg.ECR.fields.RP} (1: REC reached Error Passive Level of 128)\n` +
-           `[REC] RX Error Counter            = ${reg.ECR.fields.REC}\n` +
-           `[TEC] TX Error Counter            = ${reg.ECR.fields.TEC}`
+           `[${f.CEL.name_short.padEnd(3)}] ${f.CEL.name_long.padEnd(27)} = ${f.CEL.value}\n` +
+           `[${f.RP.name_short.padEnd(3)}] ${f.RP.name_long.padEnd(27)} = ${f.RP.value} (1: REC reached Error Passive Level of 128)\n` +
+           `[${f.REC.name_short.padEnd(3)}] ${f.REC.name_long.padEnd(27)} = ${f.REC.value}\n` +
+           `[${f.TEC.name_short.padEnd(3)}] ${f.TEC.name_long.padEnd(27)} = ${f.TEC.value}`
     });
 
     // 3. Add warnings if error counters are high
-    if (reg.ECR.fields.TEC > 0) {
+    if (f.TEC.value > 0) {
       reg.ECR.report.push({
         severityLevel: sevC.warning,
-        msg: `Transmit Error Counter (${reg.ECR.fields.TEC}) > 0: Transmit Errors seen recently.`
+        msg: `Transmit Error Counter (${f.TEC.value}) > 0: Transmit Errors seen recently.`
       });
     }
-    if (reg.ECR.fields.REC > 0) {
+    if (f.REC.value > 0) {
       reg.ECR.report.push({
         severityLevel: sevC.warning,
-        msg: `Receive Error Counter (${reg.ECR.fields.REC}) > 0. Receive Errors seen recently.`
+        msg: `Receive Error Counter (${f.REC.value}) > 0. Receive Errors seen recently.`
       });
     }
-    if (reg.ECR.fields.RP === 1) {
+    if (f.RP.value === 1) {
       reg.ECR.report.push({
         severityLevel: sevC.warning,
         msg: `Receive Error Passive flag is set. CAN controller is in error passive state for receive.`
@@ -836,56 +863,58 @@ function procRegsPrtOther(reg) {
     reg.PSR.report = []; // Initialize report array
 
     // 1. Decode all individual bits of PSR register (M_CAN User Manual v3.3.1, pages 17-18)
-    reg.PSR.fields.LEC   = getBits(regValue, 2, 0);    // Last Error Code (3 bits)
-    reg.PSR.fields.ACT   = getBits(regValue, 4, 3);    // Activity (2 bits)
-    reg.PSR.fields.EP    = getBits(regValue, 5, 5);    // Error Passive (1 bit)
-    reg.PSR.fields.EW    = getBits(regValue, 6, 6);    // Error Warning (1 bit)
-    reg.PSR.fields.BO    = getBits(regValue, 7, 7);    // Bus Off (1 bit)
-    reg.PSR.fields.DLEC  = getBits(regValue, 10, 8);   // Data Phase Last Error Code (3 bits)
-    reg.PSR.fields.RESI  = getBits(regValue, 11, 11);  // ESI flag of last received CAN FD message (1 bit)
-    reg.PSR.fields.RBRS  = getBits(regValue, 12, 12);  // BRS flag of last received CAN FD message (1 bit)
-    reg.PSR.fields.RFDF  = getBits(regValue, 13, 13);  // Received a CAN FD Message(1 bit)
-    reg.PSR.fields.TDCV  = getBits(regValue, 20, 16);  // Transmitter Delay Compensation Value (5 bits)
+    defineField(reg.PSR, regValue, 'LEC',   2,  0, 'Last Error Code Arb. Phase'); // Last Error Code (3 bits)
+    defineField(reg.PSR, regValue, 'ACT',   4,  3, 'Activity');                   // Activity (2 bits)
+    defineField(reg.PSR, regValue, 'EP',    5,  5, 'Error Passive');              // Error Passive (1 bit)
+    defineField(reg.PSR, regValue, 'EW',    6,  6, 'Error Warning');              // Error Warning (1 bit)
+    defineField(reg.PSR, regValue, 'BO',    7,  7, 'Bus-Off');                    // Bus Off (1 bit)
+    defineField(reg.PSR, regValue, 'DLEC', 10,  8, 'Last Error Code Data Phase'); // Data Phase Last Error Code (3 bits)
+    defineField(reg.PSR, regValue, 'RESI', 11, 11, 'ESI flag of last CAN FD msg');// ESI flag of last received CAN FD message (1 bit)
+    defineField(reg.PSR, regValue, 'RBRS', 12, 12, 'BRS flag of last CAN FD msg');// BRS flag of last received CAN FD message (1 bit)
+    defineField(reg.PSR, regValue, 'RFDF', 13, 13, 'Received a CAN FD Message');  // Received a CAN FD Message(1 bit)
+    defineField(reg.PSR, regValue, 'TDCV', 20, 16, 'TDC Value (=TLD+SSP_offset)');// Transmitter Delay Compensation Value (5 bits)
+
+    const f = reg.PSR.fields;
 
     // 2. Generate human-readable register report
     reg.PSR.report.push({
       severityLevel: sevC.info,
       msg: `PSR: ${reg.PSR.name_long} (0x${reg.PSR.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[LEC ] Last Error Code Arb. Phase  = ${reg.PSR.fields.LEC} (0: No Error, 1: Stuff, 2: Form, 3: Ack, 4: Bit1, 5: Bit0, 6: CRC, 7: No Change)\n` +
-           `[ACT ] Activity                    = ${reg.PSR.fields.ACT} (0: Synchronizing, 1: Idle, 2: Receiver, 3: Transmitter)\n` +
-           `[EP  ] Error Passive               = ${reg.PSR.fields.EP}\n` +
-           `[EW  ] Error Warning               = ${reg.PSR.fields.EW}\n` +
-           `[BO  ] Bus-Off                     = ${reg.PSR.fields.BO}\n` +
-           `[DLEC] Last Error Code Data Phase  = ${reg.PSR.fields.DLEC} (0: No Error, 1: Stuff, 2: Form, 3: Ack, 4: Bit1, 5: Bit0, 6: CRC, 7: No Change)\n` +
-           `[RESI] ESI flag of last CAN FD msg = ${reg.PSR.fields.RESI}\n` +
-           `[RBRS] BRS flag of last CAN FD msg = ${reg.PSR.fields.RBRS}\n` +
-           `[RFDF] Received a CAN FD Message   = ${reg.PSR.fields.RFDF}\n` +
-           `[TDCV] TDC Value (=TLD+SSP_offset) = ${reg.PSR.fields.TDCV} => ${reg.PSR.fields.TDCV*reg.general.clk_period} ns`
+           `[${f.LEC.name_short.padEnd(4)}] ${f.LEC.name_long.padEnd(27)} = ${f.LEC.value} (0: No Error, 1: Stuff, 2: Form, 3: Ack, 4: Bit1, 5: Bit0, 6: CRC, 7: No Change)\n` +
+           `[${f.ACT.name_short.padEnd(4)}] ${f.ACT.name_long.padEnd(27)} = ${f.ACT.value} (0: Synchronizing, 1: Idle, 2: Receiver, 3: Transmitter)\n` +
+           `[${f.EP.name_short.padEnd(4)}] ${f.EP.name_long.padEnd(27)} = ${f.EP.value}\n` +
+           `[${f.EW.name_short.padEnd(4)}] ${f.EW.name_long.padEnd(27)} = ${f.EW.value}\n` +
+           `[${f.BO.name_short.padEnd(4)}] ${f.BO.name_long.padEnd(27)} = ${f.BO.value}\n` +
+           `[${f.DLEC.name_short.padEnd(4)}] ${f.DLEC.name_long.padEnd(27)} = ${f.DLEC.value} (0: No Error, 1: Stuff, 2: Form, 3: Ack, 4: Bit1, 5: Bit0, 6: CRC, 7: No Change)\n` +
+           `[${f.RESI.name_short.padEnd(4)}] ${f.RESI.name_long.padEnd(27)} = ${f.RESI.value}\n` +
+           `[${f.RBRS.name_short.padEnd(4)}] ${f.RBRS.name_long.padEnd(27)} = ${f.RBRS.value}\n` +
+           `[${f.RFDF.name_short.padEnd(4)}] ${f.RFDF.name_long.padEnd(27)} = ${f.RFDF.value}\n` +
+           `[${f.TDCV.name_short.padEnd(4)}] ${f.TDCV.name_long.padEnd(27)} = ${f.TDCV.value} => ${f.TDCV.value*reg.general.clk_period} ns`
     });
 
     // 3. Add status-specific warnings/errors
-    if (reg.PSR.fields.BO === 1) {
+    if (f.BO.value === 1) {
       reg.PSR.report.push({
         severityLevel: sevC.warning,
         msg: `CAN controller is in Bus-Off state`
       });
     }
-    if (reg.PSR.fields.EP === 1) {
+    if (f.EP.value === 1) {
       reg.PSR.report.push({
         severityLevel: sevC.warning,
         msg: `CAN controller is in Error Passive state`
       });
     }
-    if (reg.PSR.fields.LEC > 0 && reg.PSR.fields.LEC < 7) {
+    if (f.LEC.value > 0 && f.LEC.value < 7) {
       reg.PSR.report.push({
         severityLevel: sevC.warning,
-        msg: `Last Error Code (Arbitration Phase) indicates a recent error: ${reg.PSR.fields.LEC}`
+        msg: `Last Error Code (Arbitration Phase) indicates a recent error: ${f.LEC.value}`
       });
     }
-    if (reg.PSR.fields.DLEC > 0 && reg.PSR.fields.DLEC < 7) {
+    if (f.DLEC.value > 0 && f.DLEC.value < 7) {
       reg.PSR.report.push({
         severityLevel: sevC.warning,
-        msg: `Last Error Code (Data Phase) indicates a recent error: ${reg.PSR.fields.DLEC}`
+        msg: `Last Error Code (Data Phase) indicates a recent error: ${f.DLEC.value}`
       });
     }
   } // PSR
@@ -899,71 +928,73 @@ function procRegsPrtOther(reg) {
     reg.IR.report = []; // Initialize report array
 
     // 1. Decode all individual bits of IR register (M_CAN User Manual v3.3.1, pages 20-24)
-    reg.IR.fields.ARA  = getBits(regValue, 29, 29); // Access to Reserved Address
-    reg.IR.fields.PED  = getBits(regValue, 28, 28); // Protocol Error in Data Phase
-    reg.IR.fields.PEA  = getBits(regValue, 27, 27); // Protocol Error in Arbitration Phase
-    reg.IR.fields.WDI  = getBits(regValue, 26, 26); // Watchdog Interrupt
-    reg.IR.fields.BO   = getBits(regValue, 25, 25); // Bus_Off Status
-    reg.IR.fields.EW   = getBits(regValue, 24, 24); // Warning Status
-    reg.IR.fields.EP   = getBits(regValue, 23, 23); // Error Passive
-    reg.IR.fields.ELO  = getBits(regValue, 22, 22); // Error Logging Overflow
-    reg.IR.fields.BEU  = getBits(regValue, 21, 21); // Bit Error Uncorrected
-    reg.IR.fields.BEC  = getBits(regValue, 20, 20); // Bit Error Corrected
-    reg.IR.fields.DRX  = getBits(regValue, 19, 19); // Message stored to Dedicated RX Buffer
-    reg.IR.fields.TOO  = getBits(regValue, 18, 18); // Timeout Occurred
-    reg.IR.fields.MRAF = getBits(regValue, 17, 17); // Message RAM Access Failure
-    reg.IR.fields.TSW  = getBits(regValue, 16, 16); // Timestamp Wraparound
-    reg.IR.fields.TEFL = getBits(regValue, 15, 15); // Tx Event FIFO Element Lost
-    reg.IR.fields.TEFF = getBits(regValue, 14, 14); // Tx Event FIFO Full
-    reg.IR.fields.TEFW = getBits(regValue, 13, 13); // Tx Event FIFO Watermark Reached
-    reg.IR.fields.TEFN = getBits(regValue, 12, 12); // Tx Event FIFO New Entry
-    reg.IR.fields.TFE  = getBits(regValue, 11, 11); // Tx FIFO Empty
-    reg.IR.fields.TCF  = getBits(regValue, 10, 10); // Transmission Cancellation Finished
-    reg.IR.fields.TC   = getBits(regValue, 9, 9);   // Transmission Completed
-    reg.IR.fields.HPM  = getBits(regValue, 8, 8);   // High Priority Message
-    reg.IR.fields.RF1L = getBits(regValue, 7, 7);   // Rx FIFO 1 Message Lost
-    reg.IR.fields.RF1F = getBits(regValue, 6, 6);   // Rx FIFO 1 Full
-    reg.IR.fields.RF1W = getBits(regValue, 5, 5);   // Rx FIFO 1 Watermark Reached
-    reg.IR.fields.RF1N = getBits(regValue, 4, 4);   // Rx FIFO 1 New Message
-    reg.IR.fields.RF0L = getBits(regValue, 3, 3);   // Rx FIFO 0 Message Lost
-    reg.IR.fields.RF0F = getBits(regValue, 2, 2);   // Rx FIFO 0 Full
-    reg.IR.fields.RF0W = getBits(regValue, 1, 1);   // Rx FIFO 0 Watermark Reached
-    reg.IR.fields.RF0N = getBits(regValue, 0, 0);   // Rx FIFO 0 New Message
+    defineField(reg.IR, regValue, 'ARA',  29, 29, 'Access to Reserved Address');
+    defineField(reg.IR, regValue, 'PED',  28, 28, 'Protocol Error Data Phase');
+    defineField(reg.IR, regValue, 'PEA',  27, 27, 'Protocol Error Arbitration');
+    defineField(reg.IR, regValue, 'WDI',  26, 26, 'Watchdog Interrupt');
+    defineField(reg.IR, regValue, 'BO',   25, 25, 'Bus_Off Status');
+    defineField(reg.IR, regValue, 'EW',   24, 24, 'Warning Status');
+    defineField(reg.IR, regValue, 'EP',   23, 23, 'Error Passive');
+    defineField(reg.IR, regValue, 'ELO',  22, 22, 'Error Logging Overflow');
+    defineField(reg.IR, regValue, 'BEU',  21, 21, 'Bit Error Uncorrected');
+    defineField(reg.IR, regValue, 'BEC',  20, 20, 'Bit Error Corrected');
+    defineField(reg.IR, regValue, 'DRX',  19, 19, 'Msg stored at Dedic. RX Buffer');
+    defineField(reg.IR, regValue, 'TOO',  18, 18, 'Timeout Occurred');
+    defineField(reg.IR, regValue, 'MRAF', 17, 17, 'Message RAM Access Failure');
+    defineField(reg.IR, regValue, 'TSW',  16, 16, 'Timestamp Wraparound');
+    defineField(reg.IR, regValue, 'TEFL', 15, 15, 'Tx Event FIFO Element Lost');
+    defineField(reg.IR, regValue, 'TEFF', 14, 14, 'Tx Event FIFO Full');
+    defineField(reg.IR, regValue, 'TEFW', 13, 13, 'Tx Event FIFO Watermark Reached');
+    defineField(reg.IR, regValue, 'TEFN', 12, 12, 'Tx Event FIFO New Entry');
+    defineField(reg.IR, regValue, 'TFE',  11, 11, 'Tx FIFO Empty');
+    defineField(reg.IR, regValue, 'TCF',  10, 10, 'Transmission Cancellation Fin.');
+    defineField(reg.IR, regValue, 'TC',    9,  9, 'Transmission Completed');
+    defineField(reg.IR, regValue, 'HPM',   8,  8, 'High Priority Message');
+    defineField(reg.IR, regValue, 'RF1L',  7,  7, 'Rx FIFO 1 Message Lost');
+    defineField(reg.IR, regValue, 'RF1F',  6,  6, 'Rx FIFO 1 Full');
+    defineField(reg.IR, regValue, 'RF1W',  5,  5, 'Rx FIFO 1 Watermark Reached');
+    defineField(reg.IR, regValue, 'RF1N',  4,  4, 'Rx FIFO 1 New Message');
+    defineField(reg.IR, regValue, 'RF0L',  3,  3, 'Rx FIFO 0 Message Lost');
+    defineField(reg.IR, regValue, 'RF0F',  2,  2, 'Rx FIFO 0 Full');
+    defineField(reg.IR, regValue, 'RF0W',  1,  1, 'Rx FIFO 0 Watermark Reached');
+    defineField(reg.IR, regValue, 'RF0N',  0,  0, 'Rx FIFO 0 New Message');
+
+    const f = reg.IR.fields;
 
     // 2. Generate human-readable register report
     reg.IR.report.push({
       severityLevel: sevC.info,
       msg: `IR: ${reg.IR.name_long} (0x${reg.IR.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[ARA ] Access to Reserved Address      = ${reg.IR.fields.ARA}\n` +
-           `[PED ] Protocol Error Data Phase       = ${reg.IR.fields.PED}\n` +
-           `[PEA ] Protocol Error Arbitration      = ${reg.IR.fields.PEA}\n` +
-           `[WDI ] Watchdog Interrupt              = ${reg.IR.fields.WDI}\n` +
-           `[BO  ] Bus_Off Status                  = ${reg.IR.fields.BO}\n` +
-           `[EW  ] Warning Status                  = ${reg.IR.fields.EW}\n` +
-           `[EP  ] Error Passive                   = ${reg.IR.fields.EP}\n` +
-           `[ELO ] Error Logging Overflow          = ${reg.IR.fields.ELO}\n` +
-           `[BEU ] Bit Error Uncorrected           = ${reg.IR.fields.BEU}\n` +
-           `[BEC ] Bit Error Corrected             = ${reg.IR.fields.BEC}\n` +
-           `[DRX ] Msg stored at Dedic. RX Buffer  = ${reg.IR.fields.DRX}\n` +
-           `[TOO ] Timeout Occurred                = ${reg.IR.fields.TOO}\n` +
-           `[MRAF] Message RAM Access Failure      = ${reg.IR.fields.MRAF}\n` +
-           `[TSW ] Timestamp Wraparound            = ${reg.IR.fields.TSW}\n` +
-           `[TEFL] Tx Event FIFO Element Lost      = ${reg.IR.fields.TEFL}\n` +
-           `[TEFF] Tx Event FIFO Full              = ${reg.IR.fields.TEFF}\n` +
-           `[TEFW] Tx Event FIFO Watermark Reached = ${reg.IR.fields.TEFW}\n` +
-           `[TEFN] Tx Event FIFO New Entry         = ${reg.IR.fields.TEFN}\n` +
-           `[TFE ] Tx FIFO Empty                   = ${reg.IR.fields.TFE}\n` +
-           `[TCF ] Transmission Cancellation Fin.  = ${reg.IR.fields.TCF}\n` +
-           `[TC  ] Transmission Completed          = ${reg.IR.fields.TC}\n` +
-           `[HPM ] High Priority Message           = ${reg.IR.fields.HPM}\n` +
-           `[RF1L] Rx FIFO 1 Message Lost          = ${reg.IR.fields.RF1L}\n` +
-           `[RF1F] Rx FIFO 1 Full                  = ${reg.IR.fields.RF1F}\n` +
-           `[RF1W] Rx FIFO 1 Watermark Reached     = ${reg.IR.fields.RF1W}\n` +
-           `[RF1N] Rx FIFO 1 New Message           = ${reg.IR.fields.RF1N}\n` +
-           `[RF0L] Rx FIFO 0 Message Lost          = ${reg.IR.fields.RF0L}\n` +
-           `[RF0F] Rx FIFO 0 Full                  = ${reg.IR.fields.RF0F}\n` +
-           `[RF0W] Rx FIFO 0 Watermark Reached     = ${reg.IR.fields.RF0W}\n` +
-           `[RF0N] Rx FIFO 0 New Message           = ${reg.IR.fields.RF0N}`
+           `[${f.ARA.name_short.padEnd(4)}] ${f.ARA.name_long.padEnd(31)} = ${f.ARA.value}\n` +
+           `[${f.PED.name_short.padEnd(4)}] ${f.PED.name_long.padEnd(31)} = ${f.PED.value}\n` +
+           `[${f.PEA.name_short.padEnd(4)}] ${f.PEA.name_long.padEnd(31)} = ${f.PEA.value}\n` +
+           `[${f.WDI.name_short.padEnd(4)}] ${f.WDI.name_long.padEnd(31)} = ${f.WDI.value}\n` +
+           `[${f.BO.name_short.padEnd(4)}] ${f.BO.name_long.padEnd(31)} = ${f.BO.value}\n` +
+           `[${f.EW.name_short.padEnd(4)}] ${f.EW.name_long.padEnd(31)} = ${f.EW.value}\n` +
+           `[${f.EP.name_short.padEnd(4)}] ${f.EP.name_long.padEnd(31)} = ${f.EP.value}\n` +
+           `[${f.ELO.name_short.padEnd(4)}] ${f.ELO.name_long.padEnd(31)} = ${f.ELO.value}\n` +
+           `[${f.BEU.name_short.padEnd(4)}] ${f.BEU.name_long.padEnd(31)} = ${f.BEU.value}\n` +
+           `[${f.BEC.name_short.padEnd(4)}] ${f.BEC.name_long.padEnd(31)} = ${f.BEC.value}\n` +
+           `[${f.DRX.name_short.padEnd(4)}] ${f.DRX.name_long.padEnd(31)} = ${f.DRX.value}\n` +
+           `[${f.TOO.name_short.padEnd(4)}] ${f.TOO.name_long.padEnd(31)} = ${f.TOO.value}\n` +
+           `[${f.MRAF.name_short.padEnd(4)}] ${f.MRAF.name_long.padEnd(31)} = ${f.MRAF.value}\n` +
+           `[${f.TSW.name_short.padEnd(4)}] ${f.TSW.name_long.padEnd(31)} = ${f.TSW.value}\n` +
+           `[${f.TEFL.name_short.padEnd(4)}] ${f.TEFL.name_long.padEnd(31)} = ${f.TEFL.value}\n` +
+           `[${f.TEFF.name_short.padEnd(4)}] ${f.TEFF.name_long.padEnd(31)} = ${f.TEFF.value}\n` +
+           `[${f.TEFW.name_short.padEnd(4)}] ${f.TEFW.name_long.padEnd(31)} = ${f.TEFW.value}\n` +
+           `[${f.TEFN.name_short.padEnd(4)}] ${f.TEFN.name_long.padEnd(31)} = ${f.TEFN.value}\n` +
+           `[${f.TFE.name_short.padEnd(4)}] ${f.TFE.name_long.padEnd(31)} = ${f.TFE.value}\n` +
+           `[${f.TCF.name_short.padEnd(4)}] ${f.TCF.name_long.padEnd(31)} = ${f.TCF.value}\n` +
+           `[${f.TC.name_short.padEnd(4)}] ${f.TC.name_long.padEnd(31)} = ${f.TC.value}\n` +
+           `[${f.HPM.name_short.padEnd(4)}] ${f.HPM.name_long.padEnd(31)} = ${f.HPM.value}\n` +
+           `[${f.RF1L.name_short.padEnd(4)}] ${f.RF1L.name_long.padEnd(31)} = ${f.RF1L.value}\n` +
+           `[${f.RF1F.name_short.padEnd(4)}] ${f.RF1F.name_long.padEnd(31)} = ${f.RF1F.value}\n` +
+           `[${f.RF1W.name_short.padEnd(4)}] ${f.RF1W.name_long.padEnd(31)} = ${f.RF1W.value}\n` +
+           `[${f.RF1N.name_short.padEnd(4)}] ${f.RF1N.name_long.padEnd(31)} = ${f.RF1N.value}\n` +
+           `[${f.RF0L.name_short.padEnd(4)}] ${f.RF0L.name_long.padEnd(31)} = ${f.RF0L.value}\n` +
+           `[${f.RF0F.name_short.padEnd(4)}] ${f.RF0F.name_long.padEnd(31)} = ${f.RF0F.value}\n` +
+           `[${f.RF0W.name_short.padEnd(4)}] ${f.RF0W.name_long.padEnd(31)} = ${f.RF0W.value}\n` +
+           `[${f.RF0N.name_short.padEnd(4)}] ${f.RF0N.name_long.padEnd(31)} = ${f.RF0N.value}`
     });
   } // IR
 
@@ -976,71 +1007,73 @@ function procRegsPrtOther(reg) {
     reg.IE.report = []; // Initialize report array
 
     // 1. Decode all individual bits of IE register (M_CAN User Manual v3.3.1, pages 20-24)
-    reg.IE.fields.ARAE  = getBits(regValue, 29, 29); // Access to Reserved Address
-    reg.IE.fields.PEDE  = getBits(regValue, 28, 28); // Protocol Error in Data Phase
-    reg.IE.fields.PEAE  = getBits(regValue, 27, 27); // Protocol Error in Arbitration Phase
-    reg.IE.fields.WDIE  = getBits(regValue, 26, 26); // Watchdog Interrupt
-    reg.IE.fields.BOE   = getBits(regValue, 25, 25); // Bus_Off Status
-    reg.IE.fields.EWE   = getBits(regValue, 24, 24); // Warning Status
-    reg.IE.fields.EPE   = getBits(regValue, 23, 23); // Error Passive
-    reg.IE.fields.ELOE  = getBits(regValue, 22, 22); // Error Logging Overflow
-    reg.IE.fields.BEUE  = getBits(regValue, 21, 21); // Bit Error Uncorrected
-    reg.IE.fields.BECE  = getBits(regValue, 20, 20); // Bit Error Corrected
-    reg.IE.fields.DRXE  = getBits(regValue, 19, 19); // Message stored to Dedicated RX Buffer
-    reg.IE.fields.TOOE  = getBits(regValue, 18, 18); // Timeout Occurred
-    reg.IE.fields.MRAFE = getBits(regValue, 17, 17); // Message RAM Access Failure
-    reg.IE.fields.TSWE  = getBits(regValue, 16, 16); // Timestamp Wraparound
-    reg.IE.fields.TEFLE = getBits(regValue, 15, 15); // Tx Event FIFO Element Lost
-    reg.IE.fields.TEFFE = getBits(regValue, 14, 14); // Tx Event FIFO Full
-    reg.IE.fields.TEFWE = getBits(regValue, 13, 13); // Tx Event FIFO Watermark Reached
-    reg.IE.fields.TEFNE = getBits(regValue, 12, 12); // Tx Event FIFO New Entry
-    reg.IE.fields.TFEE  = getBits(regValue, 11, 11); // Tx FIFO Empty
-    reg.IE.fields.TCFE  = getBits(regValue, 10, 10); // Transmission Cancellation Finished
-    reg.IE.fields.TCE   = getBits(regValue, 9, 9);   // Transmission Completed
-    reg.IE.fields.HPME  = getBits(regValue, 8, 8);   // High Priority Message
-    reg.IE.fields.RF1LE = getBits(regValue, 7, 7);   // Rx FIFO 1 Message Lost
-    reg.IE.fields.RF1FE = getBits(regValue, 6, 6);   // Rx FIFO 1 Full
-    reg.IE.fields.RF1WE = getBits(regValue, 5, 5);   // Rx FIFO 1 Watermark Reached
-    reg.IE.fields.RF1NE = getBits(regValue, 4, 4);   // Rx FIFO 1 New Message
-    reg.IE.fields.RF0LE = getBits(regValue, 3, 3);   // Rx FIFO 0 Message Lost
-    reg.IE.fields.RF0FE = getBits(regValue, 2, 2);   // Rx FIFO 0 Full
-    reg.IE.fields.RF0WE = getBits(regValue, 1, 1);   // Rx FIFO 0 Watermark Reached
-    reg.IE.fields.RF0NE = getBits(regValue, 0, 0);   // Rx FIFO 0 New Message
+    defineField(reg.IE, regValue, 'ARAE',  29, 29, 'Access to Reserved Address');
+    defineField(reg.IE, regValue, 'PEDE',  28, 28, 'Protocol Error Data Phase');
+    defineField(reg.IE, regValue, 'PEAE',  27, 27, 'Protocol Error Arbitration');
+    defineField(reg.IE, regValue, 'WDIE',  26, 26, 'Watchdog Interrupt');
+    defineField(reg.IE, regValue, 'BOE',   25, 25, 'Bus_Off Status');
+    defineField(reg.IE, regValue, 'EWE',   24, 24, 'Warning Status');
+    defineField(reg.IE, regValue, 'EPE',   23, 23, 'Error Passive');
+    defineField(reg.IE, regValue, 'ELOE',  22, 22, 'Error Logging Overflow');
+    defineField(reg.IE, regValue, 'BEUE',  21, 21, 'Bit Error Uncorrected');
+    defineField(reg.IE, regValue, 'BECE',  20, 20, 'Bit Error Corrected');
+    defineField(reg.IE, regValue, 'DRXE',  19, 19, 'Msg stored at Dedic. RX Buffer');
+    defineField(reg.IE, regValue, 'TOOE',  18, 18, 'Timeout Occurred');
+    defineField(reg.IE, regValue, 'MRAFE', 17, 17, 'Message RAM Access Failure');
+    defineField(reg.IE, regValue, 'TSWE',  16, 16, 'Timestamp Wraparound');
+    defineField(reg.IE, regValue, 'TEFLE', 15, 15, 'Tx Event FIFO Element Lost');
+    defineField(reg.IE, regValue, 'TEFFE', 14, 14, 'Tx Event FIFO Full');
+    defineField(reg.IE, regValue, 'TEFWE', 13, 13, 'Tx Event FIFO Watermark Reached');
+    defineField(reg.IE, regValue, 'TEFNE', 12, 12, 'Tx Event FIFO New Entry');
+    defineField(reg.IE, regValue, 'TFEE',  11, 11, 'Tx FIFO Empty');
+    defineField(reg.IE, regValue, 'TCFE',  10, 10, 'Transmission Cancellation Fin.');
+    defineField(reg.IE, regValue, 'TCE',    9,  9, 'Transmission Completed');
+    defineField(reg.IE, regValue, 'HPME',   8,  8, 'High Priority Message');
+    defineField(reg.IE, regValue, 'RF1LE',  7,  7, 'Rx FIFO 1 Message Lost');
+    defineField(reg.IE, regValue, 'RF1FE',  6,  6, 'Rx FIFO 1 Full');
+    defineField(reg.IE, regValue, 'RF1WE',  5,  5, 'Rx FIFO 1 Watermark Reached');
+    defineField(reg.IE, regValue, 'RF1NE',  4,  4, 'Rx FIFO 1 New Message');
+    defineField(reg.IE, regValue, 'RF0LE',  3,  3, 'Rx FIFO 0 Message Lost');
+    defineField(reg.IE, regValue, 'RF0FE',  2,  2, 'Rx FIFO 0 Full');
+    defineField(reg.IE, regValue, 'RF0WE',  1,  1, 'Rx FIFO 0 Watermark Reached');
+    defineField(reg.IE, regValue, 'RF0NE',  0,  0, 'Rx FIFO 0 New Message');
+
+    const f = reg.IE.fields;
 
     // 2. Generate human-readable register report
     reg.IE.report.push({
       severityLevel: sevC.info,
       msg: `IE: ${reg.IE.name_long} (0x${reg.IE.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[ARAE ] Access to Reserved Address      = ${reg.IE.fields.ARAE}\n` +
-           `[PEDE ] Protocol Error Data Phase       = ${reg.IE.fields.PEDE}\n` +
-           `[PEAE ] Protocol Error Arbitration      = ${reg.IE.fields.PEAE}\n` +
-           `[WDIE ] Watchdog Interrupt              = ${reg.IE.fields.WDIE}\n` +
-           `[BOE  ] Bus_Off Status                  = ${reg.IE.fields.BOE}\n` +
-           `[EWE  ] Warning Status                  = ${reg.IE.fields.EWE}\n` +
-           `[EPE  ] Error Passive                   = ${reg.IE.fields.EPE}\n` +
-           `[ELOE ] Error Logging Overflow          = ${reg.IE.fields.ELOE}\n` +
-           `[BEUE ] Bit Error Uncorrected           = ${reg.IE.fields.BEUE}\n` +
-           `[BECE ] Bit Error Corrected             = ${reg.IE.fields.BECE}\n` +
-           `[DRXE ] Msg stored at Dedic. RX Buffer  = ${reg.IE.fields.DRXE}\n` +
-           `[TOOE ] Timeout Occurred                = ${reg.IE.fields.TOOE}\n` +
-           `[MRAFE] Message RAM Access Failure      = ${reg.IE.fields.MRAFE}\n` +
-           `[TSWE ] Timestamp Wraparound            = ${reg.IE.fields.TSWE}\n` +
-           `[TEFLE] Tx Event FIFO Element Lost      = ${reg.IE.fields.TEFLE}\n` +
-           `[TEFFE] Tx Event FIFO Full              = ${reg.IE.fields.TEFFE}\n` +
-           `[TEFWE] Tx Event FIFO Watermark Reached = ${reg.IE.fields.TEFWE}\n` +
-           `[TEFNE] Tx Event FIFO New Entry         = ${reg.IE.fields.TEFNE}\n` +
-           `[TFEE ] Tx FIFO Empty                   = ${reg.IE.fields.TFEE}\n` +
-           `[TCFE ] Transmission Cancellation Fin.  = ${reg.IE.fields.TCFE}\n` +
-           `[TCE  ] Transmission Completed          = ${reg.IE.fields.TCE}\n` +
-           `[HPME ] High Priority Message           = ${reg.IE.fields.HPME}\n` +
-           `[RF1LE] Rx FIFO 1 Message Lost          = ${reg.IE.fields.RF1LE}\n` +
-           `[RF1FE] Rx FIFO 1 Full                  = ${reg.IE.fields.RF1FE}\n` +
-           `[RF1WE] Rx FIFO 1 Watermark Reached     = ${reg.IE.fields.RF1WE}\n` +
-           `[RF1NE] Rx FIFO 1 New Message           = ${reg.IE.fields.RF1NE}\n` +
-           `[RF0LE] Rx FIFO 0 Message Lost          = ${reg.IE.fields.RF0LE}\n` +
-           `[RF0FE] Rx FIFO 0 Full                  = ${reg.IE.fields.RF0FE}\n` +
-           `[RF0WE] Rx FIFO 0 Watermark Reached     = ${reg.IE.fields.RF0WE}\n` +
-           `[RF0NE] Rx FIFO 0 New Message           = ${reg.IE.fields.RF0NE}`
+           `[${f.ARAE.name_short.padEnd(5)}] ${f.ARAE.name_long.padEnd(31)} = ${f.ARAE.value}\n` +
+           `[${f.PEDE.name_short.padEnd(5)}] ${f.PEDE.name_long.padEnd(31)} = ${f.PEDE.value}\n` +
+           `[${f.PEAE.name_short.padEnd(5)}] ${f.PEAE.name_long.padEnd(31)} = ${f.PEAE.value}\n` +
+           `[${f.WDIE.name_short.padEnd(5)}] ${f.WDIE.name_long.padEnd(31)} = ${f.WDIE.value}\n` +
+           `[${f.BOE.name_short.padEnd(5)}] ${f.BOE.name_long.padEnd(31)} = ${f.BOE.value}\n` +
+           `[${f.EWE.name_short.padEnd(5)}] ${f.EWE.name_long.padEnd(31)} = ${f.EWE.value}\n` +
+           `[${f.EPE.name_short.padEnd(5)}] ${f.EPE.name_long.padEnd(31)} = ${f.EPE.value}\n` +
+           `[${f.ELOE.name_short.padEnd(5)}] ${f.ELOE.name_long.padEnd(31)} = ${f.ELOE.value}\n` +
+           `[${f.BEUE.name_short.padEnd(5)}] ${f.BEUE.name_long.padEnd(31)} = ${f.BEUE.value}\n` +
+           `[${f.BECE.name_short.padEnd(5)}] ${f.BECE.name_long.padEnd(31)} = ${f.BECE.value}\n` +
+           `[${f.DRXE.name_short.padEnd(5)}] ${f.DRXE.name_long.padEnd(31)} = ${f.DRXE.value}\n` +
+           `[${f.TOOE.name_short.padEnd(5)}] ${f.TOOE.name_long.padEnd(31)} = ${f.TOOE.value}\n` +
+           `[${f.MRAFE.name_short.padEnd(5)}] ${f.MRAFE.name_long.padEnd(31)} = ${f.MRAFE.value}\n` +
+           `[${f.TSWE.name_short.padEnd(5)}] ${f.TSWE.name_long.padEnd(31)} = ${f.TSWE.value}\n` +
+           `[${f.TEFLE.name_short.padEnd(5)}] ${f.TEFLE.name_long.padEnd(31)} = ${f.TEFLE.value}\n` +
+           `[${f.TEFFE.name_short.padEnd(5)}] ${f.TEFFE.name_long.padEnd(31)} = ${f.TEFFE.value}\n` +
+           `[${f.TEFWE.name_short.padEnd(5)}] ${f.TEFWE.name_long.padEnd(31)} = ${f.TEFWE.value}\n` +
+           `[${f.TEFNE.name_short.padEnd(5)}] ${f.TEFNE.name_long.padEnd(31)} = ${f.TEFNE.value}\n` +
+           `[${f.TFEE.name_short.padEnd(5)}] ${f.TFEE.name_long.padEnd(31)} = ${f.TFEE.value}\n` +
+           `[${f.TCFE.name_short.padEnd(5)}] ${f.TCFE.name_long.padEnd(31)} = ${f.TCFE.value}\n` +
+           `[${f.TCE.name_short.padEnd(5)}] ${f.TCE.name_long.padEnd(31)} = ${f.TCE.value}\n` +
+           `[${f.HPME.name_short.padEnd(5)}] ${f.HPME.name_long.padEnd(31)} = ${f.HPME.value}\n` +
+           `[${f.RF1LE.name_short.padEnd(5)}] ${f.RF1LE.name_long.padEnd(31)} = ${f.RF1LE.value}\n` +
+           `[${f.RF1FE.name_short.padEnd(5)}] ${f.RF1FE.name_long.padEnd(31)} = ${f.RF1FE.value}\n` +
+           `[${f.RF1WE.name_short.padEnd(5)}] ${f.RF1WE.name_long.padEnd(31)} = ${f.RF1WE.value}\n` +
+           `[${f.RF1NE.name_short.padEnd(5)}] ${f.RF1NE.name_long.padEnd(31)} = ${f.RF1NE.value}\n` +
+           `[${f.RF0LE.name_short.padEnd(5)}] ${f.RF0LE.name_long.padEnd(31)} = ${f.RF0LE.value}\n` +
+           `[${f.RF0FE.name_short.padEnd(5)}] ${f.RF0FE.name_long.padEnd(31)} = ${f.RF0FE.value}\n` +
+           `[${f.RF0WE.name_short.padEnd(5)}] ${f.RF0WE.name_long.padEnd(31)} = ${f.RF0WE.value}\n` +
+           `[${f.RF0NE.name_short.padEnd(5)}] ${f.RF0NE.name_long.padEnd(31)} = ${f.RF0NE.value}`
     });
   } // IE
 
@@ -1053,71 +1086,73 @@ function procRegsPrtOther(reg) {
     reg.ILS.report = []; // Initialize report array
 
     // 1. Decode all individual bits of IE register (M_CAN User Manual v3.3.1, pages 20-24)
-    reg.ILS.fields.ARAL  = getBits(regValue, 29, 29); // Access to Reserved Address
-    reg.ILS.fields.PEDL  = getBits(regValue, 28, 28); // Protocol Error in Data Phase
-    reg.ILS.fields.PEAL  = getBits(regValue, 27, 27); // Protocol Error in Arbitration Phase
-    reg.ILS.fields.WDIL  = getBits(regValue, 26, 26); // Watchdog Interrupt
-    reg.ILS.fields.BOL   = getBits(regValue, 25, 25); // Bus_Off Status
-    reg.ILS.fields.EWL   = getBits(regValue, 24, 24); // Warning Status
-    reg.ILS.fields.EPL   = getBits(regValue, 23, 23); // Error Passive
-    reg.ILS.fields.ELOL  = getBits(regValue, 22, 22); // Error Logging Overflow
-    reg.ILS.fields.BEUL  = getBits(regValue, 21, 21); // Bit Error Uncorrected
-    reg.ILS.fields.BECL  = getBits(regValue, 20, 20); // Bit Error Corrected
-    reg.ILS.fields.DRXL  = getBits(regValue, 19, 19); // Message stored to Dedicated RX Buffer
-    reg.ILS.fields.TOOL  = getBits(regValue, 18, 18); // Timeout Occurred
-    reg.ILS.fields.MRAFL = getBits(regValue, 17, 17); // Message RAM Access Failure
-    reg.ILS.fields.TSWL  = getBits(regValue, 16, 16); // Timestamp Wraparound
-    reg.ILS.fields.TEFLL = getBits(regValue, 15, 15); // Tx Event FIFO Element Lost
-    reg.ILS.fields.TEFFL = getBits(regValue, 14, 14); // Tx Event FIFO Full
-    reg.ILS.fields.TEFWL = getBits(regValue, 13, 13); // Tx Event FIFO Watermark Reached
-    reg.ILS.fields.TEFNL = getBits(regValue, 12, 12); // Tx Event FIFO New Entry
-    reg.ILS.fields.TFEL  = getBits(regValue, 11, 11); // Tx FIFO Empty
-    reg.ILS.fields.TCFL  = getBits(regValue, 10, 10); // Transmission Cancellation Finished
-    reg.ILS.fields.TCL   = getBits(regValue, 9, 9);   // Transmission Completed
-    reg.ILS.fields.HPML  = getBits(regValue, 8, 8);   // High Priority Message
-    reg.ILS.fields.RF1LL = getBits(regValue, 7, 7);   // Rx FIFO 1 Message Lost
-    reg.ILS.fields.RF1FL = getBits(regValue, 6, 6);   // Rx FIFO 1 Full
-    reg.ILS.fields.RF1WL = getBits(regValue, 5, 5);   // Rx FIFO 1 Watermark Reached
-    reg.ILS.fields.RF1NL = getBits(regValue, 4, 4);   // Rx FIFO 1 New Message
-    reg.ILS.fields.RF0LL = getBits(regValue, 3, 3);   // Rx FIFO 0 Message Lost
-    reg.ILS.fields.RF0FL = getBits(regValue, 2, 2);   // Rx FIFO 0 Full
-    reg.ILS.fields.RF0WL = getBits(regValue, 1, 1);   // Rx FIFO 0 Watermark Reached
-    reg.ILS.fields.RF0NL = getBits(regValue, 0, 0);   // Rx FIFO 0 New Message
+    defineField(reg.ILS, regValue, 'ARAL',  29, 29, 'Access to Reserved Address');
+    defineField(reg.ILS, regValue, 'PEDL',  28, 28, 'Protocol Error Data Phase');
+    defineField(reg.ILS, regValue, 'PEAL',  27, 27, 'Protocol Error Arbitration');
+    defineField(reg.ILS, regValue, 'WDIL',  26, 26, 'Watchdog Interrupt');
+    defineField(reg.ILS, regValue, 'BOL',   25, 25, 'Bus_Off Status');
+    defineField(reg.ILS, regValue, 'EWL',   24, 24, 'Warning Status');
+    defineField(reg.ILS, regValue, 'EPL',   23, 23, 'Error Passive');
+    defineField(reg.ILS, regValue, 'ELOL',  22, 22, 'Error Logging Overflow');
+    defineField(reg.ILS, regValue, 'BEUL',  21, 21, 'Bit Error Uncorrected');
+    defineField(reg.ILS, regValue, 'BECL',  20, 20, 'Bit Error Corrected');
+    defineField(reg.ILS, regValue, 'DRXL',  19, 19, 'Msg stored at Dedic. RX Buffer');
+    defineField(reg.ILS, regValue, 'TOOL',  18, 18, 'Timeout Occurred');
+    defineField(reg.ILS, regValue, 'MRAFL', 17, 17, 'Message RAM Access Failure');
+    defineField(reg.ILS, regValue, 'TSWL',  16, 16, 'Timestamp Wraparound');
+    defineField(reg.ILS, regValue, 'TEFLL', 15, 15, 'Tx Event FIFO Element Lost');
+    defineField(reg.ILS, regValue, 'TEFFL', 14, 14, 'Tx Event FIFO Full');
+    defineField(reg.ILS, regValue, 'TEFWL', 13, 13, 'Tx Event FIFO Watermark Reached');
+    defineField(reg.ILS, regValue, 'TEFNL', 12, 12, 'Tx Event FIFO New Entry');
+    defineField(reg.ILS, regValue, 'TFEL',  11, 11, 'Tx FIFO Empty');
+    defineField(reg.ILS, regValue, 'TCFL',  10, 10, 'Transmission Cancellation Fin.');
+    defineField(reg.ILS, regValue, 'TCL',    9,  9, 'Transmission Completed');
+    defineField(reg.ILS, regValue, 'HPML',   8,  8, 'High Priority Message');
+    defineField(reg.ILS, regValue, 'RF1LL',  7,  7, 'Rx FIFO 1 Message Lost');
+    defineField(reg.ILS, regValue, 'RF1FL',  6,  6, 'Rx FIFO 1 Full');
+    defineField(reg.ILS, regValue, 'RF1WL',  5,  5, 'Rx FIFO 1 Watermark Reached');
+    defineField(reg.ILS, regValue, 'RF1NL',  4,  4, 'Rx FIFO 1 New Message');
+    defineField(reg.ILS, regValue, 'RF0LL',  3,  3, 'Rx FIFO 0 Message Lost');
+    defineField(reg.ILS, regValue, 'RF0FL',  2,  2, 'Rx FIFO 0 Full');
+    defineField(reg.ILS, regValue, 'RF0WL',  1,  1, 'Rx FIFO 0 Watermark Reached');
+    defineField(reg.ILS, regValue, 'RF0NL',  0,  0, 'Rx FIFO 0 New Message');
+
+    const f = reg.ILS.fields;
 
     // 2. Generate human-readable register report
     reg.ILS.report.push({
       severityLevel: sevC.info,
       msg: `ILS: ${reg.ILS.name_long} (0x${reg.ILS.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[ARAL ] Access to Reserved Address      = ${reg.ILS.fields.ARAL}\n` +
-           `[PEDL ] Protocol Error Data Phase       = ${reg.ILS.fields.PEDL}\n` +
-           `[PEAL ] Protocol Error Arbitration      = ${reg.ILS.fields.PEAL}\n` +
-           `[WDIL ] Watchdog Interrupt              = ${reg.ILS.fields.WDIL}\n` +
-           `[BOL  ] Bus_Off Status                  = ${reg.ILS.fields.BOL}\n` +
-           `[EWL  ] Warning Status                  = ${reg.ILS.fields.EWL}\n` +
-           `[EPL  ] Error Passive                   = ${reg.ILS.fields.EPL}\n` +
-           `[ELOL ] Error Logging Overflow          = ${reg.ILS.fields.ELOL}\n` +
-           `[BEUL ] Bit Error Uncorrected           = ${reg.ILS.fields.BEUL}\n` +
-           `[BECL ] Bit Error Corrected             = ${reg.ILS.fields.BECL}\n` +
-           `[DRXL ] Msg stored at Dedic. RX Buffer  = ${reg.ILS.fields.DRXL}\n` +
-           `[TOOL ] Timeout Occurred                = ${reg.ILS.fields.TOOL}\n` +
-           `[MRAFL] Message RAM Access Failure      = ${reg.ILS.fields.MRAFL}\n` +
-           `[TSWL ] Timestamp Wraparound            = ${reg.ILS.fields.TSWL}\n` +
-           `[TEFLL] Tx Event FIFO Element Lost      = ${reg.ILS.fields.TEFLL}\n` +
-           `[TEFFL] Tx Event FIFO Full              = ${reg.ILS.fields.TEFFL}\n` +
-           `[TEFWL] Tx Event FIFO Watermark Reached = ${reg.ILS.fields.TEFWL}\n` +
-           `[TEFNL] Tx Event FIFO New Entry         = ${reg.ILS.fields.TEFNL}\n` +
-           `[TFEL ] Tx FIFO Empty                   = ${reg.ILS.fields.TFEL}\n` +
-           `[TCFL ] Transmission Cancellation Fin.  = ${reg.ILS.fields.TCFL}\n` +
-           `[TCL  ] Transmission Completed          = ${reg.ILS.fields.TCL}\n` +
-           `[HPML ] High Priority Message           = ${reg.ILS.fields.HPML}\n` +
-           `[RF1LL] Rx FIFO 1 Message Lost          = ${reg.ILS.fields.RF1LL}\n` +
-           `[RF1FL] Rx FIFO 1 Full                  = ${reg.ILS.fields.RF1FL}\n` +
-           `[RF1WL] Rx FIFO 1 Watermark Reached     = ${reg.ILS.fields.RF1WL}\n` +
-           `[RF1NL] Rx FIFO 1 New Message           = ${reg.ILS.fields.RF1NL}\n` +
-           `[RF0LL] Rx FIFO 0 Message Lost          = ${reg.ILS.fields.RF0LL}\n` +
-           `[RF0FL] Rx FIFO 0 Full                  = ${reg.ILS.fields.RF0FL}\n` +
-           `[RF0WL] Rx FIFO 0 Watermark Reached     = ${reg.ILS.fields.RF0WL}\n` +
-           `[RF0NL] Rx FIFO 0 New Message           = ${reg.ILS.fields.RF0NL}`
+           `[${f.ARAL.name_short.padEnd(5)}] ${f.ARAL.name_long.padEnd(31)} = ${f.ARAL.value}\n` +
+           `[${f.PEDL.name_short.padEnd(5)}] ${f.PEDL.name_long.padEnd(31)} = ${f.PEDL.value}\n` +
+           `[${f.PEAL.name_short.padEnd(5)}] ${f.PEAL.name_long.padEnd(31)} = ${f.PEAL.value}\n` +
+           `[${f.WDIL.name_short.padEnd(5)}] ${f.WDIL.name_long.padEnd(31)} = ${f.WDIL.value}\n` +
+           `[${f.BOL.name_short.padEnd(5)}] ${f.BOL.name_long.padEnd(31)} = ${f.BOL.value}\n` +
+           `[${f.EWL.name_short.padEnd(5)}] ${f.EWL.name_long.padEnd(31)} = ${f.EWL.value}\n` +
+           `[${f.EPL.name_short.padEnd(5)}] ${f.EPL.name_long.padEnd(31)} = ${f.EPL.value}\n` +
+           `[${f.ELOL.name_short.padEnd(5)}] ${f.ELOL.name_long.padEnd(31)} = ${f.ELOL.value}\n` +
+           `[${f.BEUL.name_short.padEnd(5)}] ${f.BEUL.name_long.padEnd(31)} = ${f.BEUL.value}\n` +
+           `[${f.BECL.name_short.padEnd(5)}] ${f.BECL.name_long.padEnd(31)} = ${f.BECL.value}\n` +
+           `[${f.DRXL.name_short.padEnd(5)}] ${f.DRXL.name_long.padEnd(31)} = ${f.DRXL.value}\n` +
+           `[${f.TOOL.name_short.padEnd(5)}] ${f.TOOL.name_long.padEnd(31)} = ${f.TOOL.value}\n` +
+           `[${f.MRAFL.name_short.padEnd(5)}] ${f.MRAFL.name_long.padEnd(31)} = ${f.MRAFL.value}\n` +
+           `[${f.TSWL.name_short.padEnd(5)}] ${f.TSWL.name_long.padEnd(31)} = ${f.TSWL.value}\n` +
+           `[${f.TEFLL.name_short.padEnd(5)}] ${f.TEFLL.name_long.padEnd(31)} = ${f.TEFLL.value}\n` +
+           `[${f.TEFFL.name_short.padEnd(5)}] ${f.TEFFL.name_long.padEnd(31)} = ${f.TEFFL.value}\n` +
+           `[${f.TEFWL.name_short.padEnd(5)}] ${f.TEFWL.name_long.padEnd(31)} = ${f.TEFWL.value}\n` +
+           `[${f.TEFNL.name_short.padEnd(5)}] ${f.TEFNL.name_long.padEnd(31)} = ${f.TEFNL.value}\n` +
+           `[${f.TFEL.name_short.padEnd(5)}] ${f.TFEL.name_long.padEnd(31)} = ${f.TFEL.value}\n` +
+           `[${f.TCFL.name_short.padEnd(5)}] ${f.TCFL.name_long.padEnd(31)} = ${f.TCFL.value}\n` +
+           `[${f.TCL.name_short.padEnd(5)}] ${f.TCL.name_long.padEnd(31)} = ${f.TCL.value}\n` +
+           `[${f.HPML.name_short.padEnd(5)}] ${f.HPML.name_long.padEnd(31)} = ${f.HPML.value}\n` +
+           `[${f.RF1LL.name_short.padEnd(5)}] ${f.RF1LL.name_long.padEnd(31)} = ${f.RF1LL.value}\n` +
+           `[${f.RF1FL.name_short.padEnd(5)}] ${f.RF1FL.name_long.padEnd(31)} = ${f.RF1FL.value}\n` +
+           `[${f.RF1WL.name_short.padEnd(5)}] ${f.RF1WL.name_long.padEnd(31)} = ${f.RF1WL.value}\n` +
+           `[${f.RF1NL.name_short.padEnd(5)}] ${f.RF1NL.name_long.padEnd(31)} = ${f.RF1NL.value}\n` +
+           `[${f.RF0LL.name_short.padEnd(5)}] ${f.RF0LL.name_long.padEnd(31)} = ${f.RF0LL.value}\n` +
+           `[${f.RF0FL.name_short.padEnd(5)}] ${f.RF0FL.name_long.padEnd(31)} = ${f.RF0FL.value}\n` +
+           `[${f.RF0WL.name_short.padEnd(5)}] ${f.RF0WL.name_long.padEnd(31)} = ${f.RF0WL.value}\n` +
+           `[${f.RF0NL.name_short.padEnd(5)}] ${f.RF0NL.name_long.padEnd(31)} = ${f.RF0NL.value}`
     });
   } // ILS
 
@@ -1159,15 +1194,15 @@ function procRegsPrtOther(reg) {
     ];
     
     // Keep only enabled (IE.*E == 1)
-    const enabled = defs.filter(d => reg.IE.fields && reg.IE.fields[d.key + 'E'] === 1);
+    const enabled = defs.filter(d => reg.IE.fields && reg.IE.fields[d.key + 'E'] && reg.IE.fields[d.key + 'E'].value === 1);
     const nameWidth = Math.max(4, ...enabled.map(e => e.key.length));
     let lines;
     if (enabled.length === 0) {
       lines = 'No M_CAN interrupts enabled (all IE bits = 0)';
     } else {
       lines = enabled.map(d => {
-        const irV = (reg.IR.fields && reg.IR.fields[d.key] !== undefined) ? reg.IR.fields[d.key] : '-';
-        const ieV = reg.IE.fields[d.key + 'E'];
+        const irV = (reg.IR.fields && reg.IR.fields[d.key] !== undefined) ? reg.IR.fields[d.key].value : '-';
+        const ieV = reg.IE.fields[d.key + 'E'].value;
         return `${d.bit.toString().padStart(2,' ')}   ${d.key.padEnd(nameWidth,' ')}  ${String(irV)}  ${String(ieV)}   (${d.longName})`;
       }).join('\n');
     }
@@ -1188,15 +1223,17 @@ function procRegsPrtOther(reg) {
     reg.ILE.report = [];
 
     // 1. Decode all individual bits of ILE register (M_CAN User Manual v3.3.1, page 26)
-    reg.ILE.fields.EINT1 = getBits(regValue, 1, 1); // Enable Interrupt Line 1
-    reg.ILE.fields.EINT0 = getBits(regValue, 0, 0); // Enable Interrupt Line 0
+    defineField(reg.ILE, regValue, 'EINT1', 1, 1, 'Enable Interrupt Line 1');
+    defineField(reg.ILE, regValue, 'EINT0', 0, 0, 'Enable Interrupt Line 0');
+
+    const f = reg.ILE.fields;
 
     // 2. Generate human-readable register report
     reg.ILE.report.push({
       severityLevel: sevC.info,
   msg: `ILE: ${reg.ILE.name_long} (0x${reg.ILE.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[EINT0] Enable Interrupt Line 0 = ${reg.ILE.fields.EINT0}\n` +
-           `[EINT1] Enable Interrupt Line 1 = ${reg.ILE.fields.EINT1}`
+           `[${f.EINT0.name_short.padEnd(5)}] ${f.EINT0.name_long.padEnd(23)} = ${f.EINT0.value}\n` +
+           `[${f.EINT1.name_short.padEnd(5)}] ${f.EINT1.name_long.padEnd(23)} = ${f.EINT1.value}`
     });
   } // ILE
 
@@ -1209,21 +1246,22 @@ function procRegsPrtOther(reg) {
     reg.GFC.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 27)
-    reg.GFC.fields.ANFS = getBits(regValue, 5, 4); // Accept Non-matching Frames Standard (2 bits)
-    reg.GFC.fields.ANFE = getBits(regValue, 3, 2); // Accept Non-matching Frames Extended (2 bits)
-    reg.GFC.fields.RRFS = getBits(regValue, 1, 1); // Reject Remote Frames Standard
-    reg.GFC.fields.RRFE = getBits(regValue, 0, 0); // Reject Remote Frames Extended
+    defineField(reg.GFC, regValue, 'ANFS', 5, 4, 'Accept Non-matching Frames Standard');
+    defineField(reg.GFC, regValue, 'ANFE', 3, 2, 'Accept Non-matching Frames Extended');
+    defineField(reg.GFC, regValue, 'RRFS', 1, 1, 'Reject Remote Frames Standard');
+    defineField(reg.GFC, regValue, 'RRFE', 0, 0, 'Reject Remote Frames Extended');
 
     const decode = (v) => ['Accept in Rx FIFO 0','Accept in Rx FIFO 1','Reject','Reject'][v];
+    const f = reg.GFC.fields;
 
     // 2. Generate human-readable register report
     reg.GFC.report.push({
       severityLevel: sevC.info,
       msg: `GFC: ${reg.GFC.name_long} (0x${reg.GFC.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[ANFS] Accept Non-matching Frames Standard   = ${reg.GFC.fields.ANFS} (${decode(reg.GFC.fields.ANFS)})\n` +
-           `[ANFE] Accept Non-matching Frames Extended   = ${reg.GFC.fields.ANFE} (${decode(reg.GFC.fields.ANFE)})\n` +
-           `[RRFS] Reject Remote Frames Standard         = ${reg.GFC.fields.RRFS} (${reg.GFC.fields.RRFS ? 'Reject' : 'Filter remote frames'})\n` +
-           `[RRFE] Reject Remote Frames Extended         = ${reg.GFC.fields.RRFE} (${reg.GFC.fields.RRFE ? 'Reject' : 'Filter remote frames'})`
+           `[${f.ANFS.name_short.padEnd(4)}] ${f.ANFS.name_long.padEnd(37)} = ${f.ANFS.value} (${decode(f.ANFS.value)})\n` +
+           `[${f.ANFE.name_short.padEnd(4)}] ${f.ANFE.name_long.padEnd(37)} = ${f.ANFE.value} (${decode(f.ANFE.value)})\n` +
+           `[${f.RRFS.name_short.padEnd(4)}] ${f.RRFS.name_long.padEnd(37)} = ${f.RRFS.value} (${f.RRFS.value ? 'Reject' : 'Filter remote frames'})\n` +
+           `[${f.RRFE.name_short.padEnd(4)}] ${f.RRFE.name_long.padEnd(37)} = ${f.RRFE.value} (${f.RRFE.value ? 'Reject' : 'Filter remote frames'})`
           });
   } // GFC
 
@@ -1236,15 +1274,17 @@ function procRegsPrtOther(reg) {
     reg.SIDFC.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 28)
-    reg.SIDFC.fields.LSS   = getBits(regValue, 23, 16); // List Size Standard (8 bits)
-    reg.SIDFC.fields.FLSSA = getBits(regValue, 15,  2); // Filter List Standard Start Address (14 bits)
+    defineField(reg.SIDFC, regValue, 'LSS',   23, 16, 'List Size Standard');
+    defineField(reg.SIDFC, regValue, 'FLSSA', 15,  2, 'Filter List Std Start Address');
+
+    const f = reg.SIDFC.fields;
 
     // 2. Generate human-readable register report
     reg.SIDFC.report.push({
       severityLevel: sevC.info,
       msg: `SIDFC: ${reg.SIDFC.name_long} (0x${reg.SIDFC.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[LSS  ] List Size Standard            = ${reg.SIDFC.fields.LSS}\n` +
-           `[FLSSA] Filter List Std Start Address = 0x${(reg.SIDFC.fields.FLSSA << 2).toString(16).toUpperCase().padStart(4, '0')} (16 bit byte address, 2LSB=00)`
+           `[${f.LSS.name_short.padEnd(5)}] ${f.LSS.name_long.padEnd(29)} = ${f.LSS.value}\n` +
+           `[${f.FLSSA.name_short.padEnd(5)}] ${f.FLSSA.name_long.padEnd(29)} = 0x${(f.FLSSA.value << 2).toString(16).toUpperCase().padStart(4, '0')} (16 bit byte address, 2LSB=00)`
     });
   } // SIDFC
 
@@ -1257,15 +1297,17 @@ function procRegsPrtOther(reg) {
     reg.XIDFC.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 28)
-    reg.XIDFC.fields.LSE   = getBits(regValue, 22, 16); // List Size Extended (7 bits)
-    reg.XIDFC.fields.FLESA = getBits(regValue, 15,  2); // Filter List Extended Start Address (14 bits)
+    defineField(reg.XIDFC, regValue, 'LSE',   22, 16, 'List Size Extended');
+    defineField(reg.XIDFC, regValue, 'FLESA', 15,  2, 'Filter List Ext Start Address');
+
+    const f = reg.XIDFC.fields;
 
     // 2. Generate human-readable register report
     reg.XIDFC.report.push({
       severityLevel: sevC.info,
       msg: `XIDFC: ${reg.XIDFC.name_long} (0x${reg.XIDFC.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[LSE  ] List Size Extended            = ${reg.XIDFC.fields.LSE}\n` +
-           `[FLESA] Filter List Ext Start Address = 0x${(reg.XIDFC.fields.FLESA << 2).toString(16).toUpperCase().padStart(4, '0')} (16 bit byte address, 2LSB=00)`
+           `[${f.LSE.name_short.padEnd(5)}] ${f.LSE.name_long.padEnd(29)} = ${f.LSE.value}\n` +
+           `[${f.FLESA.name_short.padEnd(5)}] ${f.FLESA.name_long.padEnd(29)} = 0x${(f.FLESA.value << 2).toString(16).toUpperCase().padStart(4, '0')} (16 bit byte address, 2LSB=00)`
     });
   } // XIDFC
 
@@ -1278,13 +1320,15 @@ function procRegsPrtOther(reg) {
     reg.XIDAM.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 29)
-    reg.XIDAM.fields.XIDAM = getBits(regValue, 28, 0); // Extended ID AND Mask (29 bits)
+    defineField(reg.XIDAM, regValue, 'XIDAM', 28, 0, 'Extended ID AND Mask');
+
+    const f = reg.XIDAM.fields;
 
     // 2. Generate human-readable register report
     reg.XIDAM.report.push({
       severityLevel: sevC.info,
       msg: `XIDAM: ${reg.XIDAM.name_long} (0x${reg.XIDAM.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[XIDAM] Extended ID AND Mask = 0x${reg.XIDAM.fields.XIDAM.toString(16).toUpperCase().padStart(8, '0')} (use: message ID AND this mask, 1...1 => no impact)`
+           `[${f.XIDAM.name_short.padEnd(5)}] ${f.XIDAM.name_long.padEnd(20)} = 0x${f.XIDAM.value.toString(16).toUpperCase().padStart(8, '0')} (use: message ID AND this mask, 1...1 => no impact)`
     });
   } // XIDAM
 
@@ -1297,19 +1341,21 @@ function procRegsPrtOther(reg) {
     reg.HPMS.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 29)
-    reg.HPMS.fields.FLST = getBits(regValue, 15, 15); // Filter List (1 bit)
-    reg.HPMS.fields.FIDX = getBits(regValue, 14,  8);  // Filter Index (7 bits)
-    reg.HPMS.fields.MSI  = getBits(regValue,  7,  6);   // Message Storage Indicator (2 bits)
-    reg.HPMS.fields.BIDX = getBits(regValue,  5,  0);   // Buffer Index (6 bits)
+    defineField(reg.HPMS, regValue, 'FLST', 15, 15, 'Filter List');
+    defineField(reg.HPMS, regValue, 'FIDX', 14,  8, 'Filter Index');
+    defineField(reg.HPMS, regValue, 'MSI',   7,  6, 'Message Storage Indicator');
+    defineField(reg.HPMS, regValue, 'BIDX',  5,  0, 'Buffer Index');
+
+    const f = reg.HPMS.fields;
 
     // 2. Generate human-readable register report
     reg.HPMS.report.push({
       severityLevel: sevC.info,
       msg: `HPMS: ${reg.HPMS.name_long} (0x${reg.HPMS.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[FLST] Filter List               = ${reg.HPMS.fields.FLST} (0: Std, 1: Ext)\n` +
-           `[FIDX] Filter Index              = ${reg.HPMS.fields.FIDX}\n` +
-           `[MSI ] Message Storage Indicator = ${reg.HPMS.fields.MSI} (0: no FIFO sel, 1: FIFO msg lost, 2: Msg in FIFO0, 3: Msg in FIFO1)\n` +
-           `[BIDX] Buffer Index              = ${reg.HPMS.fields.BIDX} (only valid when MSI=2 or 3)`
+           `[${f.FLST.name_short.padEnd(4)}] ${f.FLST.name_long.padEnd(25)} = ${f.FLST.value} (0: Std, 1: Ext)\n` +
+           `[${f.FIDX.name_short.padEnd(4)}] ${f.FIDX.name_long.padEnd(25)} = ${f.FIDX.value}\n` +
+           `[${f.MSI.name_short.padEnd(4)}] ${f.MSI.name_long.padEnd(25)} = ${f.MSI.value} (0: no FIFO sel, 1: FIFO msg lost, 2: Msg in FIFO0, 3: Msg in FIFO1)\n` +
+           `[${f.BIDX.name_short.padEnd(4)}] ${f.BIDX.name_long.padEnd(25)} = ${f.BIDX.value} (only valid when MSI=2 or 3)`
     });
   } // HPMS
 
@@ -1323,7 +1369,7 @@ function procRegsPrtOther(reg) {
 
     // 1. Decode all individual bits (M_CAN User Manual v3.3.1, page 30)
     for (let i = 0; i < 32; i++) {
-      reg.NDAT1.fields[`ND${i}`] = getBits(regValue, i, i); // New Data flags for RX Buffer 0-31
+      defineField(reg.NDAT1, regValue, `ND${i}`, i, i, `New Data RX Buffer ${i}`); // New Data flags for RX Buffer 0-31
     }
 
     // 2. Generate human-readable register report
@@ -1349,7 +1395,7 @@ function procRegsPrtOther(reg) {
 
     // 1. Decode all individual bits (M_CAN User Manual v3.3.1, page 30)
     for (let i = 0; i < 32; i++) {
-      reg.NDAT2.fields[`ND${i+32}`] = getBits(regValue, i, i); // New Data flags for RX Buffer 32-63
+      defineField(reg.NDAT2, regValue, `ND${i+32}`, i, i, `New Data RX Buffer ${i+32}`); // New Data flags for RX Buffer 32-63
     }
 
     // 2. Generate human-readable register report
@@ -1372,19 +1418,21 @@ function procRegsPrtOther(reg) {
     reg.RXF0C.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 31)
-    reg.RXF0C.fields.F0OM = getBits(regValue, 31, 31); // FIFO 0 Operation Mode (1 bit)
-    reg.RXF0C.fields.F0WM = getBits(regValue, 30, 24); // Rx FIFO 0 Watermark (7 bits)
-    reg.RXF0C.fields.F0S  = getBits(regValue, 22, 16); // Rx FIFO 0 Size (6 bits)
-    reg.RXF0C.fields.F0SA = getBits(regValue, 15,  2); // Rx FIFO 0 Start Address (14 bits)
+    defineField(reg.RXF0C, regValue, 'F0OM', 31, 31, 'RX FIFO 0 Operation Mode');
+    defineField(reg.RXF0C, regValue, 'F0WM', 30, 24, 'Rx FIFO 0 Watermark');
+    defineField(reg.RXF0C, regValue, 'F0S',  22, 16, 'Rx FIFO 0 Size');
+    defineField(reg.RXF0C, regValue, 'F0SA', 15,  2, 'Rx FIFO 0 Start Address');
+
+    const f = reg.RXF0C.fields;
 
     // 2. Generate human-readable register report
     reg.RXF0C.report.push({
       severityLevel: sevC.info,
       msg: `RXF0C: ${reg.RXF0C.name_long} (0x${reg.RXF0C.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[F0OM] RX FIFO 0 Operation Mode = ${reg.RXF0C.fields.F0OM} (0: blocking, 1: overwrite)\n` +
-           `[F0WM] Rx FIFO 0 Watermark      = ${reg.RXF0C.fields.F0WM} (0: watermard disabled)\n` +
-           `[F0S ] Rx FIFO 0 Size           = ${reg.RXF0C.fields.F0S}\n` +
-           `[F0SA] Rx FIFO 0 Start Address  = 0x${(reg.RXF0C.fields.F0SA<<2).toString(16).toUpperCase().padStart(4, '0')} (16 bit byte address, 2LSB=00)`
+           `[${f.F0OM.name_short.padEnd(4)}] ${f.F0OM.name_long.padEnd(24)} = ${f.F0OM.value} (0: blocking, 1: overwrite)\n` +
+           `[${f.F0WM.name_short.padEnd(4)}] ${f.F0WM.name_long.padEnd(24)} = ${f.F0WM.value} (0: watermard disabled)\n` +
+           `[${f.F0S.name_short.padEnd(4)}] ${f.F0S.name_long.padEnd(24)} = ${f.F0S.value}\n` +
+           `[${f.F0SA.name_short.padEnd(4)}] ${f.F0SA.name_long.padEnd(24)} = 0x${(f.F0SA.value<<2).toString(16).toUpperCase().padStart(4, '0')} (16 bit byte address, 2LSB=00)`
     });
   } // RXF0C
 
@@ -1397,21 +1445,23 @@ function procRegsPrtOther(reg) {
     reg.RXF0S.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 32)
-    reg.RXF0S.fields.RF0L = getBits(regValue, 25, 25); // Rx FIFO 0 Message Lost (1 bit)
-    reg.RXF0S.fields.F0F  = getBits(regValue, 24, 24); // Rx FIFO 0 Full (1 bit)
-    reg.RXF0S.fields.F0PI = getBits(regValue, 21, 16); // Rx FIFO 0 Put Index (6 bits)
-    reg.RXF0S.fields.F0GI = getBits(regValue, 13,  8); // Rx FIFO 0 Get Index (6 bits)
-    reg.RXF0S.fields.F0FL = getBits(regValue,  6,  0); // Rx FIFO 0 Fill Level (7 bits)
+    defineField(reg.RXF0S, regValue, 'RF0L', 25, 25, 'Rx FIFO 0 Message Lost');
+    defineField(reg.RXF0S, regValue, 'F0F',  24, 24, 'Rx FIFO 0 Full');
+    defineField(reg.RXF0S, regValue, 'F0PI', 21, 16, 'Rx FIFO 0 Put Index');
+    defineField(reg.RXF0S, regValue, 'F0GI', 13,  8, 'Rx FIFO 0 Get Index');
+    defineField(reg.RXF0S, regValue, 'F0FL',  6,  0, 'Rx FIFO 0 Fill Level');
+
+    const f = reg.RXF0S.fields;
 
     // 2. Generate human-readable register report
     reg.RXF0S.report.push({
       severityLevel: sevC.info,
       msg: `RXF0S: ${reg.RXF0S.name_long} (0x${reg.RXF0S.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[RF0L] Rx FIFO 0 Message Lost = ${reg.RXF0S.fields.RF0L}\n` +
-           `[F0F ] Rx FIFO 0 Full         = ${reg.RXF0S.fields.F0F}\n` +
-           `[F0PI] Rx FIFO 0 Put Index    = ${reg.RXF0S.fields.F0PI}\n` +
-           `[F0GI] Rx FIFO 0 Get Index    = ${reg.RXF0S.fields.F0GI}\n` +
-           `[F0FL] Rx FIFO 0 Fill Level   = ${reg.RXF0S.fields.F0FL}`
+           `[${f.RF0L.name_short.padEnd(4)}] ${f.RF0L.name_long.padEnd(22)} = ${f.RF0L.value}\n` +
+           `[${f.F0F.name_short.padEnd(4)}] ${f.F0F.name_long.padEnd(22)} = ${f.F0F.value}\n` +
+           `[${f.F0PI.name_short.padEnd(4)}] ${f.F0PI.name_long.padEnd(22)} = ${f.F0PI.value}\n` +
+           `[${f.F0GI.name_short.padEnd(4)}] ${f.F0GI.name_long.padEnd(22)} = ${f.F0GI.value}\n` +
+           `[${f.F0FL.name_short.padEnd(4)}] ${f.F0FL.name_long.padEnd(22)} = ${f.F0FL.value}`
     });
   } // RXF0S
 
@@ -1424,13 +1474,15 @@ function procRegsPrtOther(reg) {
     reg.RXF0A.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 33)
-    reg.RXF0A.fields.F0AI = getBits(regValue, 5, 0); // Rx FIFO 0 Acknowledge Index (6 bits)
+    defineField(reg.RXF0A, regValue, 'F0AI', 5, 0, 'Rx FIFO 0 Acknowledge Index');
+
+    const f = reg.RXF0A.fields;
 
     // 2. Generate human-readable register report
     reg.RXF0A.report.push({
       severityLevel: sevC.info,
       msg: `RXF0A: ${reg.RXF0A.name_long} (0x${reg.RXF0A.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[F0AI] Rx FIFO 0 Acknowledge Index = ${reg.RXF0A.fields.F0AI}`
+           `[${f.F0AI.name_short.padEnd(4)}] ${f.F0AI.name_long.padEnd(27)} = ${f.F0AI.value}`
     });
   } // RXF0A
 
@@ -1443,13 +1495,15 @@ function procRegsPrtOther(reg) {
     reg.RXBC.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 33)
-    reg.RXBC.fields.RBSA = getBits(regValue, 15, 2); // Rx Buffer Start Address (14 bits)
+    defineField(reg.RXBC, regValue, 'RBSA', 15, 2, 'Rx Buffer Start Address');
+
+    const f = reg.RXBC.fields;
 
     // 2. Generate human-readable register report
     reg.RXBC.report.push({
       severityLevel: sevC.info,
       msg: `RXBC: ${reg.RXBC.name_long} (0x${reg.RXBC.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[RBSA] Rx Buffer Start Address = 0x${(reg.RXBC.fields.RBSA<<2).toString(16).toUpperCase().padStart(4, '0')} (16 bit byte address, 2LSB=00)`
+           `[${f.RBSA.name_short.padEnd(4)}] ${f.RBSA.name_long.padEnd(23)} = 0x${(f.RBSA.value<<2).toString(16).toUpperCase().padStart(4, '0')} (16 bit byte address, 2LSB=00)`
     });
   } // RXBC
 
@@ -1462,19 +1516,21 @@ function procRegsPrtOther(reg) {
     reg.RXF1C.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 31)
-  reg.RXF1C.fields.F1OM = getBits(regValue, 31, 31); // FIFO 1 Operation Mode (1 bit)
-  reg.RXF1C.fields.F1WM = getBits(regValue, 30, 24); // Rx FIFO 1 Watermark (7 bits)
-  reg.RXF1C.fields.F1S  = getBits(regValue, 21, 16); // Rx FIFO 1 Size (6 bits)
-  reg.RXF1C.fields.F1SA = getBits(regValue, 15,  2); // Rx FIFO 1 Start Address (14 bits)
+    defineField(reg.RXF1C, regValue, 'F1OM', 31, 31, 'Rx FIFO 1 Operation Mode');
+    defineField(reg.RXF1C, regValue, 'F1WM', 30, 24, 'Rx FIFO 1 Watermark');
+    defineField(reg.RXF1C, regValue, 'F1S',  21, 16, 'Rx FIFO 1 Size');
+    defineField(reg.RXF1C, regValue, 'F1SA', 15,  2, 'Rx FIFO 1 Start Address');
+
+    const f = reg.RXF1C.fields;
 
     // 2. Generate human-readable register report
     reg.RXF1C.report.push({
       severityLevel: sevC.info,
       msg: `RXF1C: ${reg.RXF1C.name_long} (0x${reg.RXF1C.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[F1OM] Rx FIFO 1 Operation Mode = ${reg.RXF1C.fields.F1OM}\n` +
-           `[F1WM] Rx FIFO 1 Watermark      = ${reg.RXF1C.fields.F1WM}\n` +
-           `[F1S ] Rx FIFO 1 Size           = ${reg.RXF1C.fields.F1S}\n` +
-           `[F1SA] Rx FIFO 1 Start Address  = 0x${(reg.RXF1C.fields.F1SA<<2).toString(16).toUpperCase().padStart(4, '0')} (16 bit byte address, 2LSB=00)`
+           `[${f.F1OM.name_short.padEnd(4)}] ${f.F1OM.name_long.padEnd(24)} = ${f.F1OM.value}\n` +
+           `[${f.F1WM.name_short.padEnd(4)}] ${f.F1WM.name_long.padEnd(24)} = ${f.F1WM.value}\n` +
+           `[${f.F1S.name_short.padEnd(4)}] ${f.F1S.name_long.padEnd(24)} = ${f.F1S.value}\n` +
+           `[${f.F1SA.name_short.padEnd(4)}] ${f.F1SA.name_long.padEnd(24)} = 0x${(f.F1SA.value<<2).toString(16).toUpperCase().padStart(4, '0')} (16 bit byte address, 2LSB=00)`
     });
   } // RXF1C
 
@@ -1487,21 +1543,23 @@ function procRegsPrtOther(reg) {
     reg.RXF1S.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 32)
-    reg.RXF1S.fields.RF1L = getBits(regValue, 25, 25); // Rx FIFO 1 Message Lost (1 bit)
-    reg.RXF1S.fields.F1F  = getBits(regValue, 24, 24); // Rx FIFO 1 Full (1 bit)
-    reg.RXF1S.fields.F1PI = getBits(regValue, 21, 16); // Rx FIFO 1 Put Index (6 bits)
-    reg.RXF1S.fields.F1GI = getBits(regValue, 13,  8); // Rx FIFO 1 Get Index (6 bits)
-    reg.RXF1S.fields.F1FL = getBits(regValue,  6,  0); // Rx FIFO 1 Fill Level (7 bits)
+    defineField(reg.RXF1S, regValue, 'RF1L', 25, 25, 'Rx FIFO 1 Message Lost');
+    defineField(reg.RXF1S, regValue, 'F1F',  24, 24, 'Rx FIFO 1 Full');
+    defineField(reg.RXF1S, regValue, 'F1PI', 21, 16, 'Rx FIFO 1 Put Index');
+    defineField(reg.RXF1S, regValue, 'F1GI', 13,  8, 'Rx FIFO 1 Get Index');
+    defineField(reg.RXF1S, regValue, 'F1FL',  6,  0, 'Rx FIFO 1 Fill Level');
+
+    const f = reg.RXF1S.fields;
 
     // 2. Generate human-readable register report
     reg.RXF1S.report.push({
       severityLevel: sevC.info,
       msg: `RXF1S: ${reg.RXF1S.name_long} (0x${reg.RXF1S.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[F1FL] Rx FIFO 1 Fill Level   = ${reg.RXF1S.fields.F1FL}\n` +
-           `[F1GI] Rx FIFO 1 Get Index    = ${reg.RXF1S.fields.F1GI}\n` +
-           `[F1PI] Rx FIFO 1 Put Index    = ${reg.RXF1S.fields.F1PI}\n` +
-           `[F1F ] Rx FIFO 1 Full         = ${reg.RXF1S.fields.F1F}\n` +
-           `[RF1L] Rx FIFO 1 Message Lost = ${reg.RXF1S.fields.RF1L}`
+           `[${f.F1FL.name_short.padEnd(4)}] ${f.F1FL.name_long.padEnd(22)} = ${f.F1FL.value}\n` +
+           `[${f.F1GI.name_short.padEnd(4)}] ${f.F1GI.name_long.padEnd(22)} = ${f.F1GI.value}\n` +
+           `[${f.F1PI.name_short.padEnd(4)}] ${f.F1PI.name_long.padEnd(22)} = ${f.F1PI.value}\n` +
+           `[${f.F1F.name_short.padEnd(4)}] ${f.F1F.name_long.padEnd(22)} = ${f.F1F.value}\n` +
+           `[${f.RF1L.name_short.padEnd(4)}] ${f.RF1L.name_long.padEnd(22)} = ${f.RF1L.value}`
     });
   } // RXF1S
 
@@ -1514,13 +1572,15 @@ function procRegsPrtOther(reg) {
     reg.RXF1A.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 33)
-  reg.RXF1A.fields.F1AI = getBits(regValue, 5, 0); // Rx FIFO 1 Acknowledge Index (6 bits)
+    defineField(reg.RXF1A, regValue, 'F1AI', 5, 0, 'Rx FIFO 1 Acknowledge Index');
+
+    const f = reg.RXF1A.fields;
 
     // 2. Generate human-readable register report
     reg.RXF1A.report.push({
       severityLevel: sevC.info,
       msg: `RXF1A: ${reg.RXF1A.name_long} (0x${reg.RXF1A.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[F1AI] Rx FIFO 1 Acknowledge Index = ${reg.RXF1A.fields.F1AI}`
+           `[${f.F1AI.name_short.padEnd(4)}] ${f.F1AI.name_long.padEnd(27)} = ${f.F1AI.value}`
     });
   } // RXF1A
 
@@ -1533,17 +1593,19 @@ function procRegsPrtOther(reg) {
     reg.RXESC.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 36)
-    reg.RXESC.fields.RBDS = getBits(regValue, 10, 8); // Rx Buffer Data Field Size (3 bits)
-    reg.RXESC.fields.F1DS = getBits(regValue, 6, 4); // Rx FIFO 1 Data Field Size (3 bits)
-    reg.RXESC.fields.F0DS = getBits(regValue, 3, 0); // Rx FIFO 0 Data Field Size (3 bits)
+    defineField(reg.RXESC, regValue, 'RBDS', 10, 8, 'Rx Buffer Data Field Size');
+    defineField(reg.RXESC, regValue, 'F1DS',  6, 4, 'Rx FIFO 1 Data Field Size');
+    defineField(reg.RXESC, regValue, 'F0DS',  3, 0, 'Rx FIFO 0 Data Field Size');
+
+    const f = reg.RXESC.fields;
 
     // 2. Generate human-readable register report (higher order bits first)
     reg.RXESC.report.push({
       severityLevel: sevC.info,
       msg: `RXESC: ${reg.RXESC.name_long} (0x${reg.RXESC.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[RBDS] Rx Buffer Data Field Size = ${reg.RXESC.fields.RBDS} (= ${decodeConfiguredDataFieldSizeInByte(reg.RXESC.fields.RBDS)} bytes)\n` +
-           `[F1DS] Rx FIFO 1 Data Field Size = ${reg.RXESC.fields.F1DS} (= ${decodeConfiguredDataFieldSizeInByte(reg.RXESC.fields.F1DS)} bytes)\n` +
-           `[F0DS] Rx FIFO 0 Data Field Size = ${reg.RXESC.fields.F0DS} (= ${decodeConfiguredDataFieldSizeInByte(reg.RXESC.fields.F0DS)} bytes)`
+           `[${f.RBDS.name_short.padEnd(4)}] ${f.RBDS.name_long.padEnd(25)} = ${f.RBDS.value} (= ${decodeConfiguredDataFieldSizeInByte(f.RBDS.value)} bytes)\n` +
+           `[${f.F1DS.name_short.padEnd(4)}] ${f.F1DS.name_long.padEnd(25)} = ${f.F1DS.value} (= ${decodeConfiguredDataFieldSizeInByte(f.F1DS.value)} bytes)\n` +
+           `[${f.F0DS.name_short.padEnd(4)}] ${f.F0DS.name_long.padEnd(25)} = ${f.F0DS.value} (= ${decodeConfiguredDataFieldSizeInByte(f.F0DS.value)} bytes)`
     });
   } // RXESC
 
@@ -1556,26 +1618,28 @@ function procRegsPrtOther(reg) {
     reg.TXBC.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 37)
-    reg.TXBC.fields.TFQM = getBits(regValue, 30, 30); // Tx FIFO/Queue Mode (1 bit)
-    reg.TXBC.fields.TFQS = getBits(regValue, 29, 24); // Tx FIFO/Queue Size (6 bits)
-    reg.TXBC.fields.NDTB = getBits(regValue, 21, 16); // Number of Dedicated Transmit Buffers (7 bits)
-    reg.TXBC.fields.TBSA = getBits(regValue, 15,  2); // Tx Buffers Start Address (14 bits)
+    defineField(reg.TXBC, regValue, 'TFQM', 30, 30, 'Tx FIFO/Queue Mode');
+    defineField(reg.TXBC, regValue, 'TFQS', 29, 24, 'Tx FIFO/Queue Size');
+    defineField(reg.TXBC, regValue, 'NDTB', 21, 16, 'Number of Dedicated Tx Buffers');
+    defineField(reg.TXBC, regValue, 'TBSA', 15,  2, 'Tx Buffers Start Address (byte)');
+
+    const f = reg.TXBC.fields;
 
     // 2. Generate human-readable register report (higher order bits first)
     reg.TXBC.report.push({
       severityLevel: sevC.info,
       msg: `TXBC: ${reg.TXBC.name_long} (0x${reg.TXBC.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[TFQM] Tx FIFO/Queue Mode                = ${reg.TXBC.fields.TFQM} (0: FIFO, 1: Queue)\n` +
-           `[TFQS] Tx FIFO/Queue Size                = ${reg.TXBC.fields.TFQS}\n` +
-           `[NDTB] Number of Dedicated Tx Buffers    = ${reg.TXBC.fields.NDTB}\n` +
-           `[TBSA] Tx Buffers Start Address (byte)   = 0x${(reg.TXBC.fields.TBSA<<2).toString(16).toUpperCase().padStart(4, '0')} (16 bit byte address, 2LSB=00)`
+           `[${f.TFQM.name_short.padEnd(4)}] ${f.TFQM.name_long.padEnd(33)} = ${f.TFQM.value} (0: FIFO, 1: Queue)\n` +
+           `[${f.TFQS.name_short.padEnd(4)}] ${f.TFQS.name_long.padEnd(33)} = ${f.TFQS.value}\n` +
+           `[${f.NDTB.name_short.padEnd(4)}] ${f.NDTB.name_long.padEnd(33)} = ${f.NDTB.value}\n` +
+           `[${f.TBSA.name_short.padEnd(4)}] ${f.TBSA.name_long.padEnd(33)} = 0x${(f.TBSA.value<<2).toString(16).toUpperCase().padStart(4, '0')} (16 bit byte address, 2LSB=00)`
     });
 
     // check if sum of Tx FIFO/Queue Size and Number of Dedicated Tx Buffers exceeds maximum
-    if ((reg.TXBC.fields.TFQS + reg.TXBC.fields.NDTB) > 32) {
+    if ((f.TFQS.value + f.NDTB.value) > 32) {
       reg.TXBC.report.push({
         severityLevel: sevC.error,
-        msg: `TXBC: Sum of Tx FIFO/Queue Size (${reg.TXBC.fields.TFQS}) and Number of Dedicated Tx Buffers (${reg.TXBC.fields.NDTB}) exceeds maximum (32)`
+        msg: `TXBC: Sum of Tx FIFO/Queue Size (${f.TFQS.value}) and Number of Dedicated Tx Buffers (${f.NDTB.value}) exceeds maximum (32)`
       });
     }
   } // TXBC
@@ -1589,19 +1653,21 @@ function procRegsPrtOther(reg) {
     reg.TXFQS.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 38)
-    reg.TXFQS.fields.TFQF  = getBits(regValue, 21, 21); // Tx FIFO/Queue Full (1 bit)
-    reg.TXFQS.fields.TFQPI = getBits(regValue, 20, 16); // Tx FIFO/Queue Put Index (5 bits)
-    reg.TXFQS.fields.TFGI  = getBits(regValue, 12,  8); // Tx FIFO/Queue Get Index (5 bits)
-    reg.TXFQS.fields.TFFL  = getBits(regValue,  5,  0); // Tx FIFO/Queue Fill Level (6 bits)
+    defineField(reg.TXFQS, regValue, 'TFQF',  21, 21, 'Tx FIFO/Queue Full');
+    defineField(reg.TXFQS, regValue, 'TFQPI', 20, 16, 'Tx FIFO/Queue Put Index');
+    defineField(reg.TXFQS, regValue, 'TFGI',  12,  8, 'Tx FIFO/Queue Get Index');
+    defineField(reg.TXFQS, regValue, 'TFFL',   5,  0, 'Tx FIFO/Queue Fill Level');
+
+    const f = reg.TXFQS.fields;
 
     // 2. Generate human-readable register report (higher order bits first)
     reg.TXFQS.report.push({
       severityLevel: sevC.info,
       msg: `TXFQS: ${reg.TXFQS.name_long} (0x${reg.TXFQS.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[TFQF ] Tx FIFO/Queue Full        = ${reg.TXFQS.fields.TFQF}\n` +
-           `[TFQPI] Tx FIFO/Queue Put Index   = ${reg.TXFQS.fields.TFQPI}\n` +
-           `[TFGI ] Tx FIFO/Queue Get Index   = ${reg.TXFQS.fields.TFGI}\n` +
-           `[TFFL ] Tx FIFO/Queue Fill Level  = ${reg.TXFQS.fields.TFFL}`
+           `[${f.TFQF.name_short.padEnd(5)}] ${f.TFQF.name_long.padEnd(25)} = ${f.TFQF.value}\n` +
+           `[${f.TFQPI.name_short.padEnd(5)}] ${f.TFQPI.name_long.padEnd(25)} = ${f.TFQPI.value}\n` +
+           `[${f.TFGI.name_short.padEnd(5)}] ${f.TFGI.name_long.padEnd(25)} = ${f.TFGI.value}\n` +
+           `[${f.TFFL.name_short.padEnd(5)}] ${f.TFFL.name_long.padEnd(25)} = ${f.TFFL.value}`
     });
   } // TXFQS
 
@@ -1614,13 +1680,15 @@ function procRegsPrtOther(reg) {
     reg.TXESC.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 39)
-    reg.TXESC.fields.TBDS = getBits(regValue, 3, 0); // Tx Buffer Data Field Size (4 bits)
+    defineField(reg.TXESC, regValue, 'TBDS', 3, 0, 'Tx Buffer Data Field Size');
+
+    const f = reg.TXESC.fields;
 
     // 2. Generate human-readable register report (higher order bits first)
     reg.TXESC.report.push({
       severityLevel: sevC.info,
       msg: `TXESC: ${reg.TXESC.name_long} (0x${reg.TXESC.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[TBDS] Tx Buffer Data Field Size = ${decodeConfiguredDataFieldSizeInByte(reg.TXESC.fields.TBDS)} bytes`
+           `[${f.TBDS.name_short.padEnd(4)}] ${f.TBDS.name_long.padEnd(25)} = ${decodeConfiguredDataFieldSizeInByte(f.TBDS.value)} bytes`
     });
   } // TXESC
 
@@ -1634,7 +1702,7 @@ function procRegsPrtOther(reg) {
 
     // 1. No bit field decoding required, just show as binary (like NDAT1)
     // but fields must contain value to be recognized as decoded by main function
-    reg.TXBRP.fields.BITS = regValue;
+    defineField(reg.TXBRP, regValue, 'BITS', 31, 0, 'Transmit Buffer Request Pending');
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
@@ -1655,7 +1723,7 @@ function procRegsPrtOther(reg) {
 
     // 1. No bit field decoding required, just show as binary (like NDAT1)
     // but fields must contain value to be recognized as decoded by main function
-    reg.TXBAR.fields.BITS = regValue;
+    defineField(reg.TXBAR, regValue, 'BITS', 31, 0, 'Transmit Buffer Add Request');
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
@@ -1676,7 +1744,7 @@ function procRegsPrtOther(reg) {
 
     // 1. No bit field decoding required, just show as binary (like NDAT1)
     // but fields must contain value to be recognized as decoded by main function
-    reg.TXBCR.fields.BITS = regValue;
+    defineField(reg.TXBCR, regValue, 'BITS', 31, 0, 'Transmit Buffer Cancellation Request');
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
@@ -1697,7 +1765,7 @@ function procRegsPrtOther(reg) {
 
     // 1. No bit field decoding required, just show as binary (like NDAT1)
     // but fields must contain value to be recognized as decoded by main function
-    reg.TXBTO.fields.BITS = regValue;
+    defineField(reg.TXBTO, regValue, 'BITS', 31, 0, 'Transmit Buffer Transmission Occurred');
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
@@ -1718,7 +1786,7 @@ function procRegsPrtOther(reg) {
 
     // 1. No bit field decoding required, just show as binary (like NDAT1)
     // but fields must contain value to be recognized as decoded by main function
-    reg.TXBCF.fields.BITS = regValue;
+    defineField(reg.TXBCF, regValue, 'BITS', 31, 0, 'Transmit Buffer Cancellation Finished');
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
@@ -1739,7 +1807,7 @@ function procRegsPrtOther(reg) {
 
     // 1. No bit field decoding required, just show as binary (like NDAT1)
     // but fields must contain value to be recognized as decoded by main function
-    reg.TXBTIE.fields.BITS = regValue;
+    defineField(reg.TXBTIE, regValue, 'BITS', 31, 0, 'Transmit Buffer Transmission Interrupt Enable');
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
@@ -1760,7 +1828,7 @@ function procRegsPrtOther(reg) {
 
     // 1. No bit field decoding required, just show as binary (like NDAT1)
     // but fields must contain value to be recognized as decoded by main function
-    reg.TXBCIE.fields.BITS = regValue;
+    defineField(reg.TXBCIE, regValue, 'BITS', 31, 0, 'Transmit Buffer Cancellation Finished Interrupt Enable');
 
     // 2. Generate human-readable register report (higher order bits first)
     let headline = "Bit: 31                  23                  15                  7               0\n";
@@ -1832,17 +1900,19 @@ function procRegsPrtOther(reg) {
     reg.TXEFC.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 44)
-    reg.TXEFC.fields.EFWM = getBits(regValue, 29, 24); // Event FIFO Watermark (6 bits)
-    reg.TXEFC.fields.EFS  = getBits(regValue, 21, 16); // Event FIFO Size (6 bits)
-    reg.TXEFC.fields.EFSA = getBits(regValue, 15,  2); // Event FIFO Start Address (14 bits)
+    defineField(reg.TXEFC, regValue, 'EFWM', 29, 24, 'Event FIFO Watermark');
+    defineField(reg.TXEFC, regValue, 'EFS',  21, 16, 'Event FIFO Size');
+    defineField(reg.TXEFC, regValue, 'EFSA', 15,  2, 'Event FIFO Start Address');
+
+    const f = reg.TXEFC.fields;
 
     // 2. Generate human-readable register report (higher order bits first)
     reg.TXEFC.report.push({
       severityLevel: sevC.info,
       msg: `TXEFC: ${reg.TXEFC.name_long} (0x${reg.TXEFC.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[EFWM] Event FIFO Watermark      = ${reg.TXEFC.fields.EFWM}\n` +
-           `[EFS ] Event FIFO Size           = ${reg.TXEFC.fields.EFS}\n` +
-           `[EFSA] Event FIFO Start Address  = 0x${(reg.TXEFC.fields.EFSA<<2).toString(16).toUpperCase().padStart(4, '0')} (16 bit byte address, 2LSB=00)`
+           `[${f.EFWM.name_short.padEnd(4)}] ${f.EFWM.name_long.padEnd(25)} = ${f.EFWM.value}\n` +
+           `[${f.EFS.name_short.padEnd(4)}] ${f.EFS.name_long.padEnd(25)} = ${f.EFS.value}\n` +
+           `[${f.EFSA.name_short.padEnd(4)}] ${f.EFSA.name_long.padEnd(25)} = 0x${(f.EFSA.value<<2).toString(16).toUpperCase().padStart(4, '0')} (16 bit byte address, 2LSB=00)`
     });
   }
 
@@ -1853,21 +1923,23 @@ function procRegsPrtOther(reg) {
     reg.TXEFS.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 45)
-    reg.TXEFS.fields.TEFL = getBits(regValue, 25, 25); // Tx Event FIFO Element Lost (1 bit)
-    reg.TXEFS.fields.EFF  = getBits(regValue, 24, 24); // Event FIFO Full (1 bit)
-    reg.TXEFS.fields.EFPI = getBits(regValue, 20, 16); // Event FIFO Put Index (5 bits)
-    reg.TXEFS.fields.EFGI = getBits(regValue, 12, 8);  // Event FIFO Get Index (5 bits)
-    reg.TXEFS.fields.EFFL = getBits(regValue,  5,  0); // Event FIFO Fill Level (6 bits)
+    defineField(reg.TXEFS, regValue, 'TEFL', 25, 25, 'Tx Event FIFO Element Lost');
+    defineField(reg.TXEFS, regValue, 'EFF',  24, 24, 'Event FIFO Full');
+    defineField(reg.TXEFS, regValue, 'EFPI', 20, 16, 'Event FIFO Put Index');
+    defineField(reg.TXEFS, regValue, 'EFGI', 12,  8, 'Event FIFO Get Index');
+    defineField(reg.TXEFS, regValue, 'EFFL',  5,  0, 'Event FIFO Fill Level');
+
+    const f = reg.TXEFS.fields;
 
     // 2. Generate human-readable register report (higher order bits first)
     reg.TXEFS.report.push({
       severityLevel: sevC.info,
       msg: `TXEFS: ${reg.TXEFS.name_long} (0x${reg.TXEFS.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[TEFL] Tx Event FIFO Element Lost = ${reg.TXEFS.fields.TEFL}\n` +
-           `[EFF ] Event FIFO Full            = ${reg.TXEFS.fields.EFF}\n` +
-           `[EFPI] Event FIFO Put Index       = ${reg.TXEFS.fields.EFPI}\n` +
-           `[EFGI] Event FIFO Get Index       = ${reg.TXEFS.fields.EFGI}\n` +
-           `[EFFL] Event FIFO Fill Level      = ${reg.TXEFS.fields.EFFL}`
+           `[${f.TEFL.name_short.padEnd(4)}] ${f.TEFL.name_long.padEnd(26)} = ${f.TEFL.value}\n` +
+           `[${f.EFF.name_short.padEnd(4)}] ${f.EFF.name_long.padEnd(26)} = ${f.EFF.value}\n` +
+           `[${f.EFPI.name_short.padEnd(4)}] ${f.EFPI.name_long.padEnd(26)} = ${f.EFPI.value}\n` +
+           `[${f.EFGI.name_short.padEnd(4)}] ${f.EFGI.name_long.padEnd(26)} = ${f.EFGI.value}\n` +
+           `[${f.EFFL.name_short.padEnd(4)}] ${f.EFFL.name_long.padEnd(26)} = ${f.EFFL.value}`
     });
   }
 
@@ -1878,13 +1950,15 @@ function procRegsPrtOther(reg) {
     reg.TXEFA.report = [];
 
     // 1. Decode all individual bits/fields (M_CAN User Manual v3.3.1, page 45)
-    reg.TXEFA.fields.EFAI = getBits(regValue, 4, 0); // Event FIFO Acknowledge Index (5 bits)
+    defineField(reg.TXEFA, regValue, 'EFAI', 4, 0, 'Event FIFO Acknowledge Index');
+
+    const f = reg.TXEFA.fields;
 
     // 2. Generate human-readable register report
     reg.TXEFA.report.push({
       severityLevel: sevC.info,
       msg: `TXEFA: ${reg.TXEFA.name_long} (0x${reg.TXEFA.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[EFAI] Event FIFO Acknowledge Index = ${reg.TXEFA.fields.EFAI}`
+           `[${f.EFAI.name_short.padEnd(4)}] ${f.EFAI.name_long.padEnd(28)} = ${f.EFAI.value}`
     });
   }
 }
@@ -1923,59 +1997,59 @@ function checkMcanMessageRamMap(reg) {
 
   // --- Standard ID Filter List ---
   if (reg.SIDFC && reg.SIDFC.fields) {
-    const enabled = (reg.SIDFC.fields.LSS > 0);
-    const startAddr = reg.SIDFC.fields.FLSSA << 2;
-    const elemNum = reg.SIDFC.fields.LSS;
+    const enabled = (reg.SIDFC.fields.LSS.value > 0);
+    const startAddr = reg.SIDFC.fields.FLSSA.value << 2;
+    const elemNum = reg.SIDFC.fields.LSS.value;
     const elemSize = 4;
-    const size = reg.SIDFC.fields.LSS * elemSize;
+    const size = reg.SIDFC.fields.LSS.value * elemSize;
   addStruct("STD Filter", enabled, startAddr, size, elemNum, elemSize);
   }
 
   // --- Extended ID Filter List ---
   if (reg.XIDFC && reg.XIDFC.fields) {
-    const enabled = (reg.XIDFC.fields.LSE > 0);
-    const startAddr = reg.XIDFC.fields.FLESA << 2;
-    const elemNum = reg.XIDFC.fields.LSE;
+    const enabled = (reg.XIDFC.fields.LSE.value > 0);
+    const startAddr = reg.XIDFC.fields.FLESA.value << 2;
+    const elemNum = reg.XIDFC.fields.LSE.value;
     const elemSize = 8;
-    const size = reg.XIDFC.fields.LSE * elemSize;
+    const size = reg.XIDFC.fields.LSE.value * elemSize;
     addStruct("EXT Filter", enabled, startAddr, size, elemNum, elemSize);
   }
 
   // --- RX FIFO 0 ---
   if (reg.RXF0C && reg.RXF0C.fields) {
-    const enabled = (reg.RXF0C.fields.F0S > 0);
-    const startAddr = reg.RXF0C.fields.F0SA << 2;
-    const elemNum = reg.RXF0C.fields.F0S;
+    const enabled = (reg.RXF0C.fields.F0S.value > 0);
+    const startAddr = reg.RXF0C.fields.F0SA.value << 2;
+    const elemNum = reg.RXF0C.fields.F0S.value;
     let elemSize = 4; // default: 2 bytes (header+data)
     if (reg.RXESC && reg.RXESC.fields) {
-      elemSize = 8 + decodeConfiguredDataFieldSizeInByte(reg.RXESC.fields.F0DS); // 8 bytes header + data
+      elemSize = 8 + decodeConfiguredDataFieldSizeInByte(reg.RXESC.fields.F0DS.value); // 8 bytes header + data
     }
-    const size = reg.RXF0C.fields.F0S * elemSize;
+    const size = reg.RXF0C.fields.F0S.value * elemSize;
     addStruct("RX FIFO 0", enabled, startAddr, size, elemNum, elemSize);
   }
 
   // --- RX FIFO 1 ---
   if (reg.RXF1C && reg.RXF1C.fields) {
-    const enabled = (reg.RXF1C.fields.F1S > 0);
-    const startAddr = reg.RXF1C.fields.F1SA << 2;
-    const elemNum = reg.RXF1C.fields.F1S;
+    const enabled = (reg.RXF1C.fields.F1S.value > 0);
+    const startAddr = reg.RXF1C.fields.F1SA.value << 2;
+    const elemNum = reg.RXF1C.fields.F1S.value;
     let elemSize = 4; // default: 2 bytes (header+data)
     if (reg.RXESC && reg.RXESC.fields) {
-      elemSize = 8 + decodeConfiguredDataFieldSizeInByte(reg.RXESC.fields.F1DS);
+      elemSize = 8 + decodeConfiguredDataFieldSizeInByte(reg.RXESC.fields.F1DS.value);
     }
-    const size = reg.RXF1C.fields.F1S * elemSize;
+    const size = reg.RXF1C.fields.F1S.value * elemSize;
     addStruct("RX FIFO 1", enabled, startAddr, size, elemNum, elemSize);
   }
 
   // --- RX dedicated Buffer ---
   if (reg.RXBC && reg.RXBC.fields) {
-    const enabled = (reg.RXBC.fields.RBSA > 0); // HINT: Assume it to be enabled if Address != 0
-    const startAddr = reg.RXBC.fields.RBSA << 2;
+    const enabled = (reg.RXBC.fields.RBSA.value > 0); // HINT: Assume it to be enabled if Address != 0
+    const startAddr = reg.RXBC.fields.RBSA.value << 2;
     // Number of RX buffers = sum of NDAT1/2 bits set, but spec: up to 64
     let elemNum = 1; // not configured in M_CAN; this is indirectly configured via the target in the RX filters
     let elemSize = 0; // default: 2 bytes (header+data)
     if (reg.RXESC && reg.RXESC.fields) {
-      elemSize = 8 + decodeConfiguredDataFieldSizeInByte(reg.RXESC.fields.RBDS);
+      elemSize = 8 + decodeConfiguredDataFieldSizeInByte(reg.RXESC.fields.RBDS.value);
     }
     const size = elemNum * elemSize;
     addStruct(RxBufferName, enabled, startAddr, size, elemNum, elemSize);
@@ -1983,13 +2057,13 @@ function checkMcanMessageRamMap(reg) {
 
   // --- TX dedicated Buffer ---
   if (reg.TXBC && reg.TXBC.fields) {
-    const enabled = (reg.TXBC.fields.NDTB > 0);
-    const startAddr = reg.TXBC.fields.TBSA << 2;
+    const enabled = (reg.TXBC.fields.NDTB.value > 0);
+    const startAddr = reg.TXBC.fields.TBSA.value << 2;
     // Number of TX buffers = NDTB
-    const elemNum = reg.TXBC.fields.NDTB;
+    const elemNum = reg.TXBC.fields.NDTB.value;
     let elemSize = 0;
     if (reg.TXESC && reg.TXESC.fields) {
-      elemSize = 8 + decodeConfiguredDataFieldSizeInByte(reg.TXESC.fields.TBDS);
+      elemSize = 8 + decodeConfiguredDataFieldSizeInByte(reg.TXESC.fields.TBDS.value);
     }
     const size = elemNum * elemSize;
     addStruct("TX Buffer ded.", enabled, startAddr, size, elemNum, elemSize);
@@ -1997,14 +2071,14 @@ function checkMcanMessageRamMap(reg) {
 
   // --- TX FIFO/Queue ---
   if (reg.TXBC && reg.TXBC.fields) {
-    const enabled = (reg.TXBC.fields.TFQS > 0);
+    const enabled = (reg.TXBC.fields.TFQS.value > 0);
     // Number of TX buffers = TFQS (dedicated + FIFO/Queue)
-    const elemNum = reg.TXBC.fields.TFQS;
+    const elemNum = reg.TXBC.fields.TFQS.value;
     let elemSize = 0;
     if (reg.TXESC && reg.TXESC.fields) {
-      elemSize = 8 + decodeConfiguredDataFieldSizeInByte(reg.TXESC.fields.TBDS);
+      elemSize = 8 + decodeConfiguredDataFieldSizeInByte(reg.TXESC.fields.TBDS.value);
     }
-    const startAddr = (reg.TXBC.fields.TBSA << 2) + (reg.TXBC.fields.NDTB * elemSize); // Start after dedicated buffers
+    const startAddr = (reg.TXBC.fields.TBSA.value << 2) + (reg.TXBC.fields.NDTB.value * elemSize); // Start after dedicated buffers
 
     const size = elemNum * elemSize;
     addStruct("TX FIFO/Queue", enabled, startAddr, size, elemNum, elemSize);
@@ -2012,9 +2086,9 @@ function checkMcanMessageRamMap(reg) {
 
   // --- TX Event FIFO ---
   if (reg.TXEFC && reg.TXEFC.fields) {
-    const enabled = (reg.TXEFC.fields.EFS > 0);
-    const startAddr = reg.TXEFC.fields.EFSA << 2;
-    const elemNum = reg.TXEFC.fields.EFS;
+    const enabled = (reg.TXEFC.fields.EFS.value > 0);
+    const startAddr = reg.TXEFC.fields.EFSA.value << 2;
+    const elemNum = reg.TXEFC.fields.EFS.value;
     const elemSize = 8; // Each event is 8 bytes
     const size = elemNum * elemSize;
     addStruct("TX Event FIFO", enabled, startAddr, size, elemNum, elemSize);

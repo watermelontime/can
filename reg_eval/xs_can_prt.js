@@ -3,7 +3,7 @@
 // All rights reserved. (c) 2026 //
 
 // XS_CAN: PRT register decoding
-import { getBits } from './help_functions.js';
+import { getBits, defineField } from './help_functions.js';
 import { sevC } from './help_functions.js';
 
 // ==================================================================================
@@ -38,18 +38,19 @@ export function procRegsPrtExtraXsCan(reg) {
     }
   
     // 1. Decode all individual bits of MODE register
-    reg.MODE.fields.TSSE = getBits(regValue, 13, 13);  // Transceiver Sharing Switch Mode Enable
-    reg.MODE.fields.LCHB = getBits(regValue, 12, 12);  // CAN FD Light Commander High Bit Rate Mode
+    defineField(reg.MODE, regValue, 'TSSE', 13, 13, 'Transceiver Sharing Switch Enable');
+    defineField(reg.MODE, regValue, 'LCHB', 12, 12, 'FD light Commander High Bit Rate mode');
 
     // 2. Store MODE-related bit timing settings in general structure
     //   (no extra settings yet for X_CANB)
 
     // 3. Generate human-readable register report
+    const f = reg.MODE.fields;
     reg.MODE.report.push({
       severityLevel: sevC.info, // info
           msg: `MODE part 2: ${reg.MODE.name_long} (0x${reg.MODE.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-               `[TSSE] Transceiver Sharing Switch Enable           = ${reg.MODE.fields.TSSE} (only present in XS_CAN V1.0.0)\n` +
-               `[LCHB] FD light Commander High Bit Rate mode       = ${reg.MODE.fields.LCHB} (0=disabled, 1=enabled)`
+               `[${f.TSSE.name_short.padEnd(4)}] ${f.TSSE.name_long.padEnd(43)} = ${f.TSSE.value} (only present in XS_CAN V1.0.0)\n` +
+               `[${f.LCHB.name_short.padEnd(4)}] ${f.LCHB.name_long.padEnd(43)} = ${f.LCHB.value} (0=disabled, 1=enabled)`
       });
 
   } // end if MODE
@@ -71,17 +72,18 @@ export function procRegsPrtExtraXsCan(reg) {
     reg.STAT1.report = []; // Initialize report array
 
     // 1. Decode STAT1 fields per XS_CAN template
-    reg.STAT1.fields.RX_TSS         = getBits(regValue, 6, 6); // RX Transmitter Sharing Suppress
-    reg.STAT1.fields.TX_FSM_STATUS  = getBits(regValue, 5, 3); // Tx FSM Status (xcan_prt_shr RTL)
-    reg.STAT1.fields.RX_FSM_STATUS  = getBits(regValue, 2, 0); // Rx FSM Status (xcan_prt_rxc RTL)
+    defineField(reg.STAT1, regValue, 'RX_TSS', 6, 6, 'RX Transceiver Sharing Suppress');
+    defineField(reg.STAT1, regValue, 'TX_FSM_STATUS', 5, 3, 'Tx FSM Status (xcan_prt_shr)');
+    defineField(reg.STAT1, regValue, 'RX_FSM_STATUS', 2, 0, 'Rx FSM Status (xcan_prt_rxc)');
 
     // 2. Generate human-readable STAT1 report
+    const f = reg.STAT1.fields;
     reg.STAT1.report.push({
       severityLevel: sevC.info, // info
       msg: `STAT1: ${reg.STAT1.name_long} (0x${reg.STAT1.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[RX_TSS       ] RX Transceiver Sharing Suppress = ${reg.STAT1.fields.RX_TSS} (1: suppress ACK/PWM)\n` +
-           `[TX_FSM_STATUS] Tx FSM Status (xcan_prt_shr)    = ${reg.STAT1.fields.TX_FSM_STATUS}\n` +
-           `[RX_FSM_STATUS] Rx FSM Status (xcan_prt_rxc)    = ${reg.STAT1.fields.RX_FSM_STATUS}`
+           `[${f.RX_TSS.name_short.padEnd(13)}] ${f.RX_TSS.name_long.padEnd(31)} = ${f.RX_TSS.value} (1: suppress ACK/PWM)\n` +
+           `[${f.TX_FSM_STATUS.name_short.padEnd(13)}] ${f.TX_FSM_STATUS.name_long.padEnd(31)} = ${f.TX_FSM_STATUS.value}\n` +
+           `[${f.RX_FSM_STATUS.name_short.padEnd(13)}] ${f.RX_FSM_STATUS.name_long.padEnd(31)} = ${f.RX_FSM_STATUS.value}`
     });
   }
 
@@ -94,19 +96,20 @@ export function procRegsPrtExtraXsCan(reg) {
     reg.STATISTIC_COUNTER.report = []; // Initialize report array
 
     // 1. Decode counters
-    reg.STATISTIC_COUNTER.fields.RX_UNSUCC = getBits(regValue, 31, 24); // RX unsuccessful receptions (ended in error)
-    reg.STATISTIC_COUNTER.fields.RX_SUCC   = getBits(regValue, 23, 16); // RX successful receptions
-    reg.STATISTIC_COUNTER.fields.TX_UNSUCC = getBits(regValue, 15, 8);  // TX unsuccessful attempts (error on bus)
-    reg.STATISTIC_COUNTER.fields.TX_SUCC   = getBits(regValue, 7, 0);   // TX successful messages
+    defineField(reg.STATISTIC_COUNTER, regValue, 'RX_UNSUCC', 31, 24, 'RX unsuccessful receptions');
+    defineField(reg.STATISTIC_COUNTER, regValue, 'RX_SUCC', 23, 16, 'RX successful receptions');
+    defineField(reg.STATISTIC_COUNTER, regValue, 'TX_UNSUCC', 15, 8, 'TX unsuccessful attempts');
+    defineField(reg.STATISTIC_COUNTER, regValue, 'TX_SUCC', 7, 0, 'TX successful messages');
 
     // 2. Generate human-readable register report
+    const f = reg.STATISTIC_COUNTER.fields;
     reg.STATISTIC_COUNTER.report.push({
       severityLevel: sevC.info, // info
       msg: `STATISTIC_COUNTER: ${reg.STATISTIC_COUNTER.name_long} (0x${reg.STATISTIC_COUNTER.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
-           `[RX_UNSUCC] RX unsuccessful receptions = ${reg.STATISTIC_COUNTER.fields.RX_UNSUCC}\n` +
-           `[RX_SUCC  ] RX successful receptions   = ${reg.STATISTIC_COUNTER.fields.RX_SUCC}\n` +
-           `[TX_UNSUCC] TX unsuccessful attempts   = ${reg.STATISTIC_COUNTER.fields.TX_UNSUCC} (excludes ARBLOST/HFI)\n` +
-           `[TX_SUCC  ] TX successful messages     = ${reg.STATISTIC_COUNTER.fields.TX_SUCC}`
+           `[${f.RX_UNSUCC.name_short.padEnd(9)}] ${f.RX_UNSUCC.name_long.padEnd(26)} = ${f.RX_UNSUCC.value}\n` +
+           `[${f.RX_SUCC.name_short.padEnd(9)}] ${f.RX_SUCC.name_long.padEnd(26)} = ${f.RX_SUCC.value}\n` +
+           `[${f.TX_UNSUCC.name_short.padEnd(9)}] ${f.TX_UNSUCC.name_long.padEnd(26)} = ${f.TX_UNSUCC.value} (excludes ARBLOST/HFI)\n` +
+           `[${f.TX_SUCC.name_short.padEnd(9)}] ${f.TX_SUCC.name_long.padEnd(26)} = ${f.TX_SUCC.value}`
     });
   }
 
@@ -125,16 +128,17 @@ export function procRegsPrtExtraXsCan(reg) {
     }
 
     // 1. Decode all individual bits of EVNT register (MSB -> LSB)
-    reg.EVNT.fields.TX_PARITY_ERR_TS = getBits(regValue, 15, 15); // Parity Error in TS of Tx MSG
-    reg.EVNT.fields.RX_PARITY_ERR_TS = getBits(regValue, 14, 14); // Parity Error in TS of Rx MSG
+    defineField(reg.EVNT, regValue, 'TX_PARITY_ERR_TS', 15, 15, 'Parity Error in TS of Tx MSG');
+    defineField(reg.EVNT, regValue, 'RX_PARITY_ERR_TS', 14, 14, 'Parity Error in TS of Rx MSG');
 
     // 2. Generate human-readable register report (MSB -> LSB)
+    const f = reg.EVNT.fields;
     reg.EVNT.report.push({
       severityLevel: sevC.info,
        msg: `EVNT: ${reg.EVNT.name_long} (0x${reg.EVNT.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')})\n` +
          `Part 2 of EVNT decoding. These bits are additional to ones in X_CAN.PRT.EVNT. Bits are reported separately to enable code reuse.\n` +
-         `[TX_PARITY_ERR_TS] Parity Error in TS of Tx MSG = ${reg.EVNT.fields.TX_PARITY_ERR_TS}\n` +
-         `[RX_PARITY_ERR_TS] Parity Error in TS of Rx MSG = ${reg.EVNT.fields.RX_PARITY_ERR_TS}`
+         `[${f.TX_PARITY_ERR_TS.name_short.padEnd(16)}] ${f.TX_PARITY_ERR_TS.name_long.padEnd(28)} = ${f.TX_PARITY_ERR_TS.value}\n` +
+         `[${f.RX_PARITY_ERR_TS.name_short.padEnd(16)}] ${f.RX_PARITY_ERR_TS.name_long.padEnd(28)} = ${f.RX_PARITY_ERR_TS.value}`
     });
   } // EVNT
 

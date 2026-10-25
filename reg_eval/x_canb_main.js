@@ -6,6 +6,7 @@
 
 import * as x_can_prt from './x_can_prt.js';
 import { getBits } from './help_functions.js';
+import { defineField } from './help_functions.js';
 import { sevC } from './help_functions.js';
 import { getBinaryLineData } from './help_functions.js';
 
@@ -220,18 +221,20 @@ function procRegsPrtBitTimingExtraXCanB(reg) {
     }
   
     // 1. Decode all individual bits of MODE register
-    reg.MODE.fields.TXSC = getBits(regValue, 31, 24);  // Transmit Traffic Shaping: Configuration
-    reg.MODE.fields.TXSM = getBits(regValue, 23, 22);  // Transmit Traffic Shaping: Operating Mode
-    reg.MODE.fields.EVAE = getBits(regValue, 21, 21);  // Transmit Traffic Shaping: Event Enable for Idle Bit
-    reg.MODE.fields.EVBE = getBits(regValue, 20, 20);  // Transmit Traffic Shaping: Event Enable for Rx Started
-    reg.MODE.fields.EVCE = getBits(regValue, 19, 19);  // Transmit Traffic Shaping: Event Enable for Rx Successful
-    reg.MODE.fields.EV1E = getBits(regValue, 18, 18);  // Transmit Traffic Shaping: Event Enable for Tx Started
-    reg.MODE.fields.EV2E = getBits(regValue, 17, 17);  // Transmit Traffic Shaping: Event Enable for Tx Error
-    reg.MODE.fields.EV3E = getBits(regValue, 16, 16);  // Transmit Traffic Shaping: Event Enable for Tx Successful
+    defineField(reg.MODE, regValue, 'TXSC', 31, 24, 'Tx Traffic Shaping Config (TX opportunities pause)');
+    defineField(reg.MODE, regValue, 'TXSM', 23, 22, 'Tx Traffic Shaping Mode');
+    defineField(reg.MODE, regValue, 'EVAE', 21, 21, 'Tx Traffic Shaping: Event Enable for Idle Bit');
+    defineField(reg.MODE, regValue, 'EVBE', 20, 20, 'Tx Traffic Shaping: Event Enable for Rx Started');
+    defineField(reg.MODE, regValue, 'EVCE', 19, 19, 'Tx Traffic Shaping: Event Enable for Rx Successful');
+    defineField(reg.MODE, regValue, 'EV1E', 18, 18, 'Tx Traffic Shaping: Event Enable for Tx Started');
+    defineField(reg.MODE, regValue, 'EV2E', 17, 17, 'Tx Traffic Shaping: Event Enable for Tx Error');
+    defineField(reg.MODE, regValue, 'EV3E', 16, 16, 'Tx Traffic Shaping: Event Enable for Tx Successful');
 
-    reg.MODE.fields.EAFF = getBits(regValue, 14, 14);  // Enable All Frame Formats
-    reg.MODE.fields.TSSE = getBits(regValue, 13, 13);  // Transceiver Sharing Switch Mode Enable
-    reg.MODE.fields.LCHB = getBits(regValue, 12, 12);  // CAN FD Light Commander High Bit Rate Mode
+    defineField(reg.MODE, regValue, 'EAFF', 14, 14, 'Enable All Frame Formats');
+    defineField(reg.MODE, regValue, 'TSSE', 13, 13, 'Transceiver Sharing Switch Enable');
+    defineField(reg.MODE, regValue, 'LCHB', 12, 12, 'FD light Commander High Bit Rate mode');
+
+    const f = reg.MODE.fields;
 
     // 2. Store MODE-related bit timing settings in general structure
     //   (no extra settings yet for X_CANB)
@@ -240,21 +243,21 @@ function procRegsPrtBitTimingExtraXCanB(reg) {
     reg.MODE.report.push({
       severityLevel: sevC.info, // info
           msg: `MODE part 2: ${reg.MODE.name_long} (0x${reg.MODE.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')}) - X_CANB V0.8.0 and later\n` +
-               `[TXSC] Tx Traffic Shaping Config (TX opportunities pause) = 0x${reg.MODE.fields.TXSC.toString(16).toUpperCase().padStart(2,'0')} (decimal: ${reg.MODE.fields.TXSC})\n` +
-               `[TXSM] Tx Traffic Shaping Mode                            = ${reg.MODE.fields.TXSM} (` +
-               `${reg.MODE.fields.TXSM === 0 ? 'Beacon Mode not active' :
-                  reg.MODE.fields.TXSM === 1 ? 'Beacon is CBFF' :
-                  reg.MODE.fields.TXSM === 2 ? 'Beacon is FBFF' :
-                  reg.MODE.fields.TXSM === 3 ? 'Beacon is XLFF' : 'reserved'})\n` +
-               `[EVAE] Tx Traffic Shaping: Event Enable for Idle Bit      = ${reg.MODE.fields.EVAE}\n` +
-               `[EVBE] Tx Traffic Shaping: Event Enable for Rx Started    = ${reg.MODE.fields.EVBE}\n` +
-               `[EVCE] Tx Traffic Shaping: Event Enable for Rx Successful = ${reg.MODE.fields.EVCE}\n` +
-               `[EV1E] Tx Traffic Shaping: Event Enable for Tx Started    = ${reg.MODE.fields.EV1E}\n` +
-               `[EV2E] Tx Traffic Shaping: Event Enable for Tx Error      = ${reg.MODE.fields.EV2E}\n` +
-               `[EV3E] Tx Traffic Shaping: Event Enable for Tx Successful = ${reg.MODE.fields.EV3E}\n` +
-               `[EAFF] Enable All Frame Formats                           = ${reg.MODE.fields.EAFF}\n` +
-               `[TSSE] Transceiver Sharing Switch Enable                  = ${reg.MODE.fields.TSSE}\n` +
-               `[LCHB] FD light Commander High Bit Rate mode              = ${reg.MODE.fields.LCHB}`
+               `[${f.TXSC.name_short.padEnd(4)}] ${f.TXSC.name_long.padEnd(50)} = 0x${f.TXSC.value.toString(16).toUpperCase().padStart(2,'0')} (decimal: ${f.TXSC.value})\n` +
+               `[${f.TXSM.name_short.padEnd(4)}] ${f.TXSM.name_long.padEnd(50)} = ${f.TXSM.value} (` +
+               `${f.TXSM.value === 0 ? 'Beacon Mode not active' :
+                  f.TXSM.value === 1 ? 'Beacon is CBFF' :
+                  f.TXSM.value === 2 ? 'Beacon is FBFF' :
+                  f.TXSM.value === 3 ? 'Beacon is XLFF' : 'reserved'})\n` +
+               `[${f.EVAE.name_short.padEnd(4)}] ${f.EVAE.name_long.padEnd(50)} = ${f.EVAE.value}\n` +
+               `[${f.EVBE.name_short.padEnd(4)}] ${f.EVBE.name_long.padEnd(50)} = ${f.EVBE.value}\n` +
+               `[${f.EVCE.name_short.padEnd(4)}] ${f.EVCE.name_long.padEnd(50)} = ${f.EVCE.value}\n` +
+               `[${f.EV1E.name_short.padEnd(4)}] ${f.EV1E.name_long.padEnd(50)} = ${f.EV1E.value}\n` +
+               `[${f.EV2E.name_short.padEnd(4)}] ${f.EV2E.name_long.padEnd(50)} = ${f.EV2E.value}\n` +
+               `[${f.EV3E.name_short.padEnd(4)}] ${f.EV3E.name_long.padEnd(50)} = ${f.EV3E.value}\n` +
+               `[${f.EAFF.name_short.padEnd(4)}] ${f.EAFF.name_long.padEnd(50)} = ${f.EAFF.value}\n` +
+               `[${f.TSSE.name_short.padEnd(4)}] ${f.TSSE.name_long.padEnd(50)} = ${f.TSSE.value}\n` +
+               `[${f.LCHB.name_short.padEnd(4)}] ${f.LCHB.name_long.padEnd(50)} = ${f.LCHB.value}`
       });
 
       // Check: Traffic Shaping meaningful configuration?
@@ -263,15 +266,15 @@ function procRegsPrtBitTimingExtraXCanB(reg) {
       //   EVBE = 1 (Rx Started)
       //   EV2E = 1 (Tx Error)
       //   EV3E = 1 (Tx Successful)
-      if (reg.MODE.fields.TXSC > 0 && // TX Shaping active
-          reg.MODE.fields.TXSM === 0  // No Beacon mode
+      if (f.TXSC.value > 0 && // TX Shaping active
+          f.TXSM.value === 0  // No Beacon mode
           ) {
-        if (reg.MODE.fields.EVAE === 1 && // ON  Idle Bit
-            reg.MODE.fields.EVBE === 1 && // ON  Rx Started
-            reg.MODE.fields.EVCE === 0 && // OFF Rx Successful
-            reg.MODE.fields.EV1E === 0 && // OFF Tx Started
-            reg.MODE.fields.EV2E === 1 && // ON  Tx Error
-            reg.MODE.fields.EV3E === 1    // ON  Tx Successful
+        if (f.EVAE.value === 1 && // ON  Idle Bit
+            f.EVBE.value === 1 && // ON  Rx Started
+            f.EVCE.value === 0 && // OFF Rx Successful
+            f.EV1E.value === 0 && // OFF Tx Started
+            f.EV2E.value === 1 && // ON  Tx Error
+            f.EV3E.value === 1    // ON  Tx Successful
         ) {
             // meaningful configuration
         } else {
@@ -280,12 +283,12 @@ function procRegsPrtBitTimingExtraXCanB(reg) {
             severityLevel: sevC.warning, // warning
             msg: `TX Traffic Shaping: Configuration might not be optimal.\n` +
                   `  In "No Beacon" mode the following events are recommended to be enabled:\n` +
-                  `    EVAE = 1 (Idle Bit)      [currently it is ${reg.MODE.fields.EVAE}]\n` +
-                  `    EVBE = 1 (Rx Started)    [currently it is ${reg.MODE.fields.EVBE}]\n` +
-                  `    EVCE = 0 (Rx Successful) [currently it is ${reg.MODE.fields.EVCE}]\n` +
-                  `    EV1E = 0 (Tx Started)    [currently it is ${reg.MODE.fields.EV1E}]\n` +
-                  `    EV2E = 1 (Tx Error)      [currently it is ${reg.MODE.fields.EV2E}]\n` +
-                  `    EV3E = 1 (Tx Successful) [currently it is ${reg.MODE.fields.EV3E}]`
+                  `    EVAE = 1 (Idle Bit)      [currently it is ${f.EVAE.value}]\n` +
+                  `    EVBE = 1 (Rx Started)    [currently it is ${f.EVBE.value}]\n` +
+                  `    EVCE = 0 (Rx Successful) [currently it is ${f.EVCE.value}]\n` +
+                  `    EV1E = 0 (Tx Started)    [currently it is ${f.EV1E.value}]\n` +
+                  `    EV2E = 1 (Tx Error)      [currently it is ${f.EV2E.value}]\n` +
+                  `    EV3E = 1 (Tx Successful) [currently it is ${f.EV3E.value}]`
           });
         }
       }
@@ -304,14 +307,16 @@ function procRegsPrtBitTimingExtraXCanB(reg) {
     }
 
     // 1. Decode all individual bits of PCFG register
-    reg.PCFG.fields.BCID_28_19 = getBits(regValue, 31, 22); // BCID[28:19]
-    reg.PCFG.fields.BCID_18    = getBits(regValue, 15, 15); // BCID[18] (LSB in PCFG)
-    reg.PCFG.fields.BRRS       = getBits(regValue, 14, 14); // Beacon RRS bit
-    reg.PCFG.fields.BCIE       = getBits(regValue, 7, 7);   // Enable BCID incl. RRS-bit
-    reg.PCFG.fields.BCRE       = getBits(regValue, 6, 6);   // Any message with RRS=1 is Beacon
+    defineField(reg.PCFG, regValue, 'BCID_28_19', 31, 22, 'BCID[28:19]');
+    defineField(reg.PCFG, regValue, 'BCID_18', 15, 15, 'BCID[18] (LSB in PCFG)');
+    defineField(reg.PCFG, regValue, 'BRRS', 14, 14, 'Beacon RRS bit');
+    defineField(reg.PCFG, regValue, 'BCIE', 7, 7, 'Enable BCID with RRS bit match');
+    defineField(reg.PCFG, regValue, 'BCRE', 6, 6, 'Enable any message with RRS=1 as Beacon');
+
+    const f = reg.PCFG.fields;
 
     // Helper: top 11 bits of BCID covered in PCFG (bits [28:19] and [18])
-    reg.PCFG.fields.BCID_full = (reg.PCFG.fields.BCID_28_19 << 1) | reg.PCFG.fields.BCID_18;
+    const bcidFull = (f.BCID_28_19.value << 1) | f.BCID_18.value;
 
     // 2. Store PWM settings in XL data structure
     reg.general.bt_xldata.set.pwm_offset = reg.PCFG.fields.PWMO;
@@ -322,10 +327,10 @@ function procRegsPrtBitTimingExtraXCanB(reg) {
     reg.PCFG.report.push({
       severityLevel: sevC.info, // info
         msg: `PCFG part 2: ${reg.PCFG.name_long} (0x${reg.PCFG.addr.toString(16).toUpperCase().padStart(3, '0')}: 0x${regValue.toString(16).toUpperCase().padStart(8, '0')}) - X_CANB V0.8.0 and later\n` +
-             `[BCID] Beacon ID [28:18] (11 bit)              = 0x${reg.PCFG.fields.BCID_full.toString(16).toUpperCase().padStart(3,'0')}\n` +
-             `[BRRS] Beacon RRS bit                          = ${reg.PCFG.fields.BRRS}\n` +
-             `[BCIE] Enable BCID with RRS bit match          = ${reg.PCFG.fields.BCIE} (${reg.PCFG.fields.BCIE ? 'BCID and BRRS must match' : 'only BCID must match CAN ID'})\n` +
-             `[BCRE] Enable any message with RRS=1 as Beacon = ${reg.PCFG.fields.BCRE}`
+             `[BCID] Beacon ID [28:18] (11 bit)              = 0x${bcidFull.toString(16).toUpperCase().padStart(3,'0')}\n` +
+             `[BRRS] Beacon RRS bit                          = ${f.BRRS.value}\n` +
+             `[BCIE] Enable BCID with RRS bit match          = ${f.BCIE.value} (${f.BCIE.value ? 'BCID and BRRS must match' : 'only BCID must match CAN ID'})\n` +
+             `[BCRE] Enable any message with RRS=1 as Beacon = ${f.BCRE.value}`
     });
 
   } // end if PCFG
@@ -359,7 +364,12 @@ function procMramCtrl(reg) {
     const DS  = getBits(v, 15, 10); // Data Size (encoded, value+1) in 8-word units
     const SA  = getBits(v,  9,  0); // Start Address (granularity: 16 words)
 
-    reg[fifoName].fields = { SA, DS, EGI, EPI, RSV, FS };
+    defineField(reg[fifoName], v, 'SA',  9,  0, 'Start Address');
+    defineField(reg[fifoName], v, 'DS', 15, 10, 'Data Size');
+    defineField(reg[fifoName], v, 'EGI', 20, 16, 'Element Get Index');
+    defineField(reg[fifoName], v, 'EPI', 30, 26, 'Element Put Index');
+    defineField(reg[fifoName], v, 'RSV', 31, 31, 'Reserved');
+    defineField(reg[fifoName], v, 'FS', 25, 21, 'FIFO Size');
 
     // 2. Derived metrics
     const byteAddr = SA * 16 * 4; // byte address in MRAM
@@ -513,7 +523,7 @@ function procRegsMh(reg) {
     reg.ENDN_MH.report = []; // Initialize report array
 
     // 1. Decode ENDN register (simple 32-bit value)
-    reg.ENDN_MH.fields.ETV = regValue;
+    defineField(reg.ENDN_MH, regValue, 'ETV', 31, 0, 'Endianness Test Value', r => r >>> 0);
 
     // 2. Generate human-readable register report
     if (regValue === 0x87654321) {
@@ -540,10 +550,10 @@ function procRegsMh(reg) {
     reg.HDP.report = []; // Initialize report array
 
     // 1. Decode used bits of register
-    reg.HDP.fields.HDP_SEL = getBits(regValue, 2, 0);
+    defineField(reg.HDP, regValue, 'HDP_SEL', 2, 0, 'Select');
 
     // 2. Generate human-readable register report
-    const sel = reg.HDP.fields.HDP_SEL;
+    const sel = reg.HDP.fields.HDP_SEL.value;
     const selDesc = (sel === 0)
       ? 'clamp HDP[15:0] to 0'
       : (sel >= 1 && sel <= 3)
@@ -566,13 +576,13 @@ function procRegsMh(reg) {
     reg.STATUS.report = []; // Initialize report array
 
     // 1. Decode used bits of register
-    reg.STATUS.fields.TMH_FIFO = getBits(regValue, 14, 12);
-    reg.STATUS.fields.TMH_LEC  = getBits(regValue, 9, 8);
-    reg.STATUS.fields.RMH_LEC  = getBits(regValue, 2, 0);
+    defineField(reg.STATUS, regValue, 'TMH_FIFO', 14, 12, 'TX FIFO number for TMH_LEC');
+    defineField(reg.STATUS, regValue, 'TMH_LEC', 9, 8, 'TX Last Error Code');
+    defineField(reg.STATUS, regValue, 'RMH_LEC', 2, 0, 'RX Last Error Code');
 
     // 2. Generate human-readable register report
-    const tmhLec = reg.STATUS.fields.TMH_LEC;
-    const rmhLec = reg.STATUS.fields.RMH_LEC;
+    const tmhLec = reg.STATUS.fields.TMH_LEC.value;
+    const rmhLec = reg.STATUS.fields.RMH_LEC.value;
     const tmhLecDesc = (
       tmhLec === 0 ? 'TX message successfully transmitted' :
       tmhLec === 1 ? 'TX message discarded due to CAN bus error (only possible if TCR.RET = 0)' :
@@ -592,7 +602,7 @@ function procRegsMh(reg) {
     reg.STATUS.report.push({
       severityLevel: sevC.info,
       msg: `STATUS: ${reg.STATUS.name_long} (0x${reg.STATUS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[TMH_FIFO] TX FIFO number for TMH_LEC = ${reg.STATUS.fields.TMH_FIFO}\n` +
+           `[TMH_FIFO] TX FIFO number for TMH_LEC = ${reg.STATUS.fields.TMH_FIFO.value}\n` +
            `[TMH_LEC ] TX Last Error Code         = ${tmhLec} (${tmhLecDesc})\n` +
            `[RMH_LEC ] RX Last Error Code         = ${rmhLec} (${rmhLecDesc})`
     });
@@ -607,13 +617,13 @@ function procRegsMh(reg) {
     reg.QCR.report = []; // Initialize report array
 
     // 1. Decode used bits of register
-    reg.QCR.fields.CMD = getBits(regValue, 1, 0);
+    defineField(reg.QCR, regValue, 'CMD', 1, 0, 'Queuing Command');
 
     // 2. Generate human-readable register report
     reg.QCR.report.push({
       severityLevel: sevC.info,
       msg: `QCR: ${reg.QCR.name_long} (0x${reg.QCR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[CMD] Queuing Command = ${reg.QCR.fields.CMD} (Note: Register is write-only; readback value may be undefined.)`
+           `[CMD] Queuing Command = ${reg.QCR.fields.CMD.value} (Note: Register is write-only; readback value may be undefined.)`
     });
   }
 
@@ -626,14 +636,14 @@ function procRegsMh(reg) {
     reg.TCR.report = []; // Initialize report array
 
     // 1. Decode used bits of register
-    reg.TCR.fields.RET = getBits(regValue, 0, 0);
+    defineField(reg.TCR, regValue, 'RET', 0, 0, 'Retransmission');
 
     // 2. Generate human-readable register report
     reg.TCR.report.push({
       severityLevel: sevC.info,
       msg: `TCR: ${reg.TCR.name_long} (0x${reg.TCR.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[RET] Retransmission = ${reg.TCR.fields.RET} (= ` +
-           `${reg.TCR.fields.RET ? 'unlimited times' : 'no retransmission'})`
+           `[RET] Retransmission = ${reg.TCR.fields.RET.value} (= ` +
+           `${reg.TCR.fields.RET.value ? 'unlimited times' : 'no retransmission'})`
     });
   }
 }
@@ -676,7 +686,7 @@ function procRegsIrc(reg) {
 
     // 1. Decode defined bits
     for (const d of defs) {
-      reg.IRC_RAW.fields[d.key] = getBits(regValue, d.bit, d.bit);
+      defineField(reg.IRC_RAW, regValue, d.key, d.bit, d.bit, d.desc);
     }
 
     // 2. Generate human-readable register report
@@ -686,35 +696,35 @@ function procRegsIrc(reg) {
            `[31 -        ] Reserved                                    = - \n`+
            `[30 -        ] Reserved                                    = - \n`+
            `[29 -        ] Reserved                                    = - \n`+
-           `[28 IFS_ERR  ] ${defs.find(d=>d.key==='IFS_ERR').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.IFS_ERR}\n`+
-           `[27 IAS_ERR  ] ${defs.find(d=>d.key==='IAS_ERR').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.IAS_ERR}\n`+
-           `[26 IRA_ERR  ] ${defs.find(d=>d.key==='IRA_ERR').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.IRA_ERR}\n`+
-           `[25 IWA_ERR  ] ${defs.find(d=>d.key==='IWA_ERR').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.IWA_ERR}\n`+
-           `[24 NSA_ERR  ] ${defs.find(d=>d.key==='NSA_ERR').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.NSA_ERR}\n`+
+           `[28 IFS_ERR  ] ${defs.find(d=>d.key==='IFS_ERR').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.IFS_ERR.value}\n`+
+           `[27 IAS_ERR  ] ${defs.find(d=>d.key==='IAS_ERR').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.IAS_ERR.value}\n`+
+           `[26 IRA_ERR  ] ${defs.find(d=>d.key==='IRA_ERR').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.IRA_ERR.value}\n`+
+           `[25 IWA_ERR  ] ${defs.find(d=>d.key==='IWA_ERR').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.IWA_ERR.value}\n`+
+           `[24 NSA_ERR  ] ${defs.find(d=>d.key==='NSA_ERR').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.NSA_ERR.value}\n`+
            `[23 -        ] Reserved                                    = - \n`+
            `[22 -        ] Reserved                                    = - \n`+
            `[21 -        ] Reserved                                    = - \n`+
-           `[20 ABORTED  ] ${defs.find(d=>d.key==='ABORTED').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.ABORTED}\n`+
-           `[19 IFF_RQ   ] ${defs.find(d=>d.key==='IFF_RQ').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.IFF_RQ}\n`+
-           `[18 USOS     ] ${defs.find(d=>d.key==='USOS').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.USOS}\n`+
-           `[17 TX_DU    ] ${defs.find(d=>d.key==='TX_DU').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.TX_DU}\n`+
-           `[16 RX_DO    ] ${defs.find(d=>d.key==='RX_DO').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.RX_DO}\n`+
+           `[20 ABORTED  ] ${defs.find(d=>d.key==='ABORTED').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.ABORTED.value}\n`+
+           `[19 IFF_RQ   ] ${defs.find(d=>d.key==='IFF_RQ').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.IFF_RQ.value}\n`+
+           `[18 USOS     ] ${defs.find(d=>d.key==='USOS').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.USOS.value}\n`+
+           `[17 TX_DU    ] ${defs.find(d=>d.key==='TX_DU').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.TX_DU.value}\n`+
+           `[16 RX_DO    ] ${defs.find(d=>d.key==='RX_DO').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.RX_DO.value}\n`+
            `[15 -        ] Reserved                                    = - \n`+
            `[14 -        ] Reserved                                    = - \n`+
-           `[13 TMH_ERR  ] ${defs.find(d=>d.key==='TMH_ERR').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.TMH_ERR}\n`+
-           `[12 TMH_ACK  ] ${defs.find(d=>d.key==='TMH_ACK').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.TMH_ACK}\n`+
-           `[11 RMH_ERR  ] ${defs.find(d=>d.key==='RMH_ERR').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.RMH_ERR}\n`+
-           `[10 RMH_ACK  ] ${defs.find(d=>d.key==='RMH_ACK').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.RMH_ACK}\n`+
-           `[ 9 TX_EVT   ] ${defs.find(d=>d.key==='TX_EVT').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.TX_EVT}\n`+
-           `[ 8 RX_EVT   ] ${defs.find(d=>d.key==='RX_EVT').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.RX_EVT}\n`+
+           `[13 TMH_ERR  ] ${defs.find(d=>d.key==='TMH_ERR').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.TMH_ERR.value}\n`+
+           `[12 TMH_ACK  ] ${defs.find(d=>d.key==='TMH_ACK').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.TMH_ACK.value}\n`+
+           `[11 RMH_ERR  ] ${defs.find(d=>d.key==='RMH_ERR').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.RMH_ERR.value}\n`+
+           `[10 RMH_ACK  ] ${defs.find(d=>d.key==='RMH_ACK').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.RMH_ACK.value}\n`+
+           `[ 9 TX_EVT   ] ${defs.find(d=>d.key==='TX_EVT').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.TX_EVT.value}\n`+
+           `[ 8 RX_EVT   ] ${defs.find(d=>d.key==='RX_EVT').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.RX_EVT.value}\n`+
            `[ 7 -        ] Reserved                                    = - \n`+
            `[ 6 -        ] Reserved                                    = - \n`+
            `[ 5 -        ] Reserved                                    = - \n`+
-           `[ 4 BUS_ERR  ] ${defs.find(d=>d.key==='BUS_ERR').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.BUS_ERR}\n`+
-           `[ 3 E_ACTIVE ] ${defs.find(d=>d.key==='E_ACTIVE').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.E_ACTIVE}\n`+
-           `[ 2 E_PASSIVE] ${defs.find(d=>d.key==='E_PASSIVE').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.E_PASSIVE}\n`+
-           `[ 1 BUS_ON   ] ${defs.find(d=>d.key==='BUS_ON').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.BUS_ON}\n`+
-           `[ 0 BUS_OFF  ] ${defs.find(d=>d.key==='BUS_OFF').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.BUS_OFF}`
+           `[ 4 BUS_ERR  ] ${defs.find(d=>d.key==='BUS_ERR').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.BUS_ERR.value}\n`+
+           `[ 3 E_ACTIVE ] ${defs.find(d=>d.key==='E_ACTIVE').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.E_ACTIVE.value}\n`+
+           `[ 2 E_PASSIVE] ${defs.find(d=>d.key==='E_PASSIVE').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.E_PASSIVE.value}\n`+
+           `[ 1 BUS_ON   ] ${defs.find(d=>d.key==='BUS_ON').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.BUS_ON.value}\n`+
+           `[ 0 BUS_OFF  ] ${defs.find(d=>d.key==='BUS_OFF').desc.padEnd(43,' ')} = ${reg.IRC_RAW.fields.BUS_OFF.value}`
     });
   }
 
@@ -728,7 +738,7 @@ function procRegsIrc(reg) {
 
     // 1. Decode defined bits
     // decoding makes no sense, because it is a Write-Only register
-    reg.IRC_CLR.fields.BITS = v;
+    defineField(reg.IRC_CLR, v, 'BITS', 31, 0, 'Raw Status Clear bits', r => r >>> 0);
 
     // 2. Generate human-readable register report
     reg.IRC_CLR.report.push({
@@ -755,7 +765,7 @@ function procRegsIrc(reg) {
 
     // 1. Decode bits individually
     for (const d of defs) {
-      reg.IRC_ENA.fields[d.key] = getBits(v, d.bit, d.bit);
+      defineField(reg.IRC_ENA, v, d.key, d.bit, d.bit, d.desc);
     }
 
     // 2. Generate human-readable register report
@@ -765,49 +775,49 @@ function procRegsIrc(reg) {
            `[31 -        ] Reserved                                    = - \n`+
            `[30 -        ] Reserved                                    = - \n`+
            `[29 -        ] Reserved                                    = - \n`+
-           `[28 IFS_ERR  ] ${defs.find(d=>d.key==='IFS_ERR').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.IFS_ERR}\n`+
-           `[27 IAS_ERR  ] ${defs.find(d=>d.key==='IAS_ERR').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.IAS_ERR}\n`+
-           `[26 IRA_ERR  ] ${defs.find(d=>d.key==='IRA_ERR').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.IRA_ERR}\n`+
-           `[25 IWA_ERR  ] ${defs.find(d=>d.key==='IWA_ERR').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.IWA_ERR}\n`+
-           `[24 NSA_ERR  ] ${defs.find(d=>d.key==='NSA_ERR').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.NSA_ERR}\n`+
+           `[28 IFS_ERR  ] ${defs.find(d=>d.key==='IFS_ERR').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.IFS_ERR.value}\n`+
+           `[27 IAS_ERR  ] ${defs.find(d=>d.key==='IAS_ERR').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.IAS_ERR.value}\n`+
+           `[26 IRA_ERR  ] ${defs.find(d=>d.key==='IRA_ERR').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.IRA_ERR.value}\n`+
+           `[25 IWA_ERR  ] ${defs.find(d=>d.key==='IWA_ERR').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.IWA_ERR.value}\n`+
+           `[24 NSA_ERR  ] ${defs.find(d=>d.key==='NSA_ERR').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.NSA_ERR.value}\n`+
            `[23 -        ] Reserved                                    = - \n`+
            `[22 -        ] Reserved                                    = - \n`+
            `[21 -        ] Reserved                                    = - \n`+
-           `[20 ABORTED  ] ${defs.find(d=>d.key==='ABORTED').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.ABORTED}\n`+
-           `[19 IFF_RQ   ] ${defs.find(d=>d.key==='IFF_RQ').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.IFF_RQ}\n`+
-           `[18 USOS     ] ${defs.find(d=>d.key==='USOS').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.USOS}\n`+
-           `[17 TX_DU    ] ${defs.find(d=>d.key==='TX_DU').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.TX_DU}\n`+
-           `[16 RX_DO    ] ${defs.find(d=>d.key==='RX_DO').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.RX_DO}\n`+
+           `[20 ABORTED  ] ${defs.find(d=>d.key==='ABORTED').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.ABORTED.value}\n`+
+           `[19 IFF_RQ   ] ${defs.find(d=>d.key==='IFF_RQ').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.IFF_RQ.value}\n`+
+           `[18 USOS     ] ${defs.find(d=>d.key==='USOS').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.USOS.value}\n`+
+           `[17 TX_DU    ] ${defs.find(d=>d.key==='TX_DU').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.TX_DU.value}\n`+
+           `[16 RX_DO    ] ${defs.find(d=>d.key==='RX_DO').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.RX_DO.value}\n`+
            `[15 -        ] Reserved                                    = - \n`+
            `[14 -        ] Reserved                                    = - \n`+
-           `[13 TMH_ERR  ] ${defs.find(d=>d.key==='TMH_ERR').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.TMH_ERR}\n`+
-           `[12 TMH_ACK  ] ${defs.find(d=>d.key==='TMH_ACK').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.TMH_ACK}\n`+
-           `[11 RMH_ERR  ] ${defs.find(d=>d.key==='RMH_ERR').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.RMH_ERR}\n`+
-           `[10 RMH_ACK  ] ${defs.find(d=>d.key==='RMH_ACK').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.RMH_ACK}\n`+
-           `[ 9 TX_EVT   ] ${defs.find(d=>d.key==='TX_EVT').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.TX_EVT}\n`+
-           `[ 8 RX_EVT   ] ${defs.find(d=>d.key==='RX_EVT').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.RX_EVT}\n`+
+           `[13 TMH_ERR  ] ${defs.find(d=>d.key==='TMH_ERR').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.TMH_ERR.value}\n`+
+           `[12 TMH_ACK  ] ${defs.find(d=>d.key==='TMH_ACK').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.TMH_ACK.value}\n`+
+           `[11 RMH_ERR  ] ${defs.find(d=>d.key==='RMH_ERR').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.RMH_ERR.value}\n`+
+           `[10 RMH_ACK  ] ${defs.find(d=>d.key==='RMH_ACK').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.RMH_ACK.value}\n`+
+           `[ 9 TX_EVT   ] ${defs.find(d=>d.key==='TX_EVT').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.TX_EVT.value}\n`+
+           `[ 8 RX_EVT   ] ${defs.find(d=>d.key==='RX_EVT').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.RX_EVT.value}\n`+
            `[ 7 -        ] Reserved                                    = - \n`+
            `[ 6 -        ] Reserved                                    = - \n`+
            `[ 5 -        ] Reserved                                    = - \n`+
-           `[ 4 BUS_ERR  ] ${defs.find(d=>d.key==='BUS_ERR').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.BUS_ERR}\n`+
-           `[ 3 E_ACTIVE ] ${defs.find(d=>d.key==='E_ACTIVE').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.E_ACTIVE}\n`+
-           `[ 2 E_PASSIVE] ${defs.find(d=>d.key==='E_PASSIVE').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.E_PASSIVE}\n`+
-           `[ 1 BUS_ON   ] ${defs.find(d=>d.key==='BUS_ON').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.BUS_ON}\n`+
-           `[ 0 BUS_OFF  ] ${defs.find(d=>d.key==='BUS_OFF').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.BUS_OFF}`
+           `[ 4 BUS_ERR  ] ${defs.find(d=>d.key==='BUS_ERR').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.BUS_ERR.value}\n`+
+           `[ 3 E_ACTIVE ] ${defs.find(d=>d.key==='E_ACTIVE').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.E_ACTIVE.value}\n`+
+           `[ 2 E_PASSIVE] ${defs.find(d=>d.key==='E_PASSIVE').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.E_PASSIVE.value}\n`+
+           `[ 1 BUS_ON   ] ${defs.find(d=>d.key==='BUS_ON').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.BUS_ON.value}\n`+
+           `[ 0 BUS_OFF  ] ${defs.find(d=>d.key==='BUS_OFF').desc.padEnd(43,' ')} = ${reg.IRC_ENA.fields.BUS_OFF.value}`
     });
   }
 
   // === IRC Interrupt Summary (enabled only) ==============================
   if (reg.IRC_RAW && reg.IRC_RAW.fields && reg.IRC_ENA && reg.IRC_ENA.fields) {
-    const enabled = defs.filter(d => reg.IRC_ENA.fields[d.key] === 1);
+    const enabled = defs.filter(d => reg.IRC_ENA.fields[d.key].value === 1);
     const nameWidth = enabled.length ? Math.max(4, ...enabled.map(e => e.key.length)) : 4;
     let lines;
     if (enabled.length === 0) {
       lines = 'No IRC interrupts enabled (all ENA bits = 0)';
     } else {
       lines = enabled.map(d => {
-        const rawV = reg.IRC_RAW.fields[d.key];
-        const enaV = reg.IRC_ENA.fields[d.key];
+        const rawV = reg.IRC_RAW.fields[d.key].value;
+        const enaV = reg.IRC_ENA.fields[d.key].value;
         return `${d.bit.toString().padStart(2,' ')}   ${d.key.padEnd(nameWidth,' ')}  ${String(rawV)}   ${String(enaV)}`;
       }).join('\n');
     }

@@ -2,6 +2,7 @@
 
 // X_CAN: MH register decoding
 import { getBits } from './help_functions.js';
+import { defineField } from './help_functions.js';
 import { sevC } from './help_functions.js';
 import { getBinaryLineData } from './help_functions.js';
 
@@ -17,30 +18,31 @@ export function procRegsMhGlobal(reg) {
     reg.VERSION.report = [];
 
     // 1. Decode all individual bits of MODE register
-    reg.VERSION.fields.REL     = getBits(regValue, 31, 28);
-    reg.VERSION.fields.STEP    = getBits(regValue, 27, 24);
-    reg.VERSION.fields.SUBSTEP = getBits(regValue, 23, 20);
-    reg.VERSION.fields.YEAR    = getBits(regValue, 19, 16);
-    reg.VERSION.fields.MON     = getBits(regValue, 15,  8);
-    reg.VERSION.fields.DAY     = getBits(regValue,  7,  0);
+    defineField(reg.VERSION, regValue, 'REL', 31, 28, 'Release');
+    defineField(reg.VERSION, regValue, 'STEP', 27, 24, 'Step');
+    defineField(reg.VERSION, regValue, 'SUBSTEP', 23, 20, 'Substep');
+    defineField(reg.VERSION, regValue, 'YEAR', 19, 16, 'Year');
+    defineField(reg.VERSION, regValue, 'MON', 15, 8, 'Month');
+    defineField(reg.VERSION, regValue, 'DAY', 7, 0, 'Day');
+    const f = reg.VERSION.fields;
 
   // 1. Decode all individual bits of MODE register
   // Bit fields (BCD-coded date fields per spec)
     reg.VERSION.report.push({
       severityLevel: sevC.info,
       msg: `VERSION: ${reg.VERSION.name_long} (0x${reg.VERSION.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[REL    ] Release  = 0x${reg.VERSION.fields.REL.toString(16).toUpperCase()}\n` +
-           `[STEP   ] Step     = 0x${reg.VERSION.fields.STEP.toString(16).toUpperCase()}\n` +
-           `[SUBSTEP] Substep  = 0x${reg.VERSION.fields.SUBSTEP.toString(16).toUpperCase()}\n` +
-           `[YEAR   ] Year     = 0x${reg.VERSION.fields.YEAR.toString(16).toUpperCase()}\n` +
-           `[MON    ] Month    = 0x${reg.VERSION.fields.MON.toString(16).toUpperCase().padStart(2,'0')}\n` +
-           `[DAY    ] Day      = 0x${reg.VERSION.fields.DAY.toString(16).toUpperCase().padStart(2,'0')}`
+           `[${f.REL.name_short.padEnd(7)}] ${f.REL.name_long.padEnd(8)} = 0x${f.REL.value.toString(16).toUpperCase()}\n` +
+           `[${f.STEP.name_short.padEnd(7)}] ${f.STEP.name_long.padEnd(8)} = 0x${f.STEP.value.toString(16).toUpperCase()}\n` +
+           `[${f.SUBSTEP.name_short.padEnd(7)}] ${f.SUBSTEP.name_long.padEnd(8)} = 0x${f.SUBSTEP.value.toString(16).toUpperCase()}\n` +
+           `[${f.YEAR.name_short.padEnd(7)}] ${f.YEAR.name_long.padEnd(8)} = 0x${f.YEAR.value.toString(16).toUpperCase()}\n` +
+           `[${f.MON.name_short.padEnd(7)}] ${f.MON.name_long.padEnd(8)} = 0x${f.MON.value.toString(16).toUpperCase().padStart(2,'0')}\n` +
+           `[${f.DAY.name_short.padEnd(7)}] ${f.DAY.name_long.padEnd(8)} = 0x${f.DAY.value.toString(16).toUpperCase().padStart(2,'0')}`
     });
 
     // 2. Generate human-readable register report
     reg.VERSION.report.push({
       severityLevel: sevC.infoBold,
-      msg: `VERSION: X_CAN MH V${reg.VERSION.fields.REL.toString(16).toUpperCase()}.${reg.VERSION.fields.STEP.toString(16).toUpperCase()}.${reg.VERSION.fields.SUBSTEP.toString(16).toUpperCase()}, Date ${reg.VERSION.fields.DAY.toString(16).toUpperCase().padStart(2,'0')}.${reg.VERSION.fields.MON.toString(16).toUpperCase().padStart(2,'0')}.202${reg.VERSION.fields.YEAR.toString(16).toUpperCase()}`
+      msg: `VERSION: X_CAN MH V${f.REL.value.toString(16).toUpperCase()}.${f.STEP.value.toString(16).toUpperCase()}.${f.SUBSTEP.value.toString(16).toUpperCase()}, Date ${f.DAY.value.toString(16).toUpperCase().padStart(2,'0')}.${f.MON.value.toString(16).toUpperCase().padStart(2,'0')}.202${f.YEAR.value.toString(16).toUpperCase()}`
     });
   } // VERSION
 
@@ -53,13 +55,14 @@ export function procRegsMhGlobal(reg) {
     reg.MH_CTRL.report = [];
 
     // 1. Decode all individual bits of MODE register
-    reg.MH_CTRL.fields.START = getBits(regValue, 0, 0);
+    defineField(reg.MH_CTRL, regValue, 'START', 0, 0, 'Start MH');
+    const f = reg.MH_CTRL.fields;
 
     // 2. Generate human-readable register report
     reg.MH_CTRL.report.push({
       severityLevel: sevC.info,
       msg: `MH_CTRL: ${reg.MH_CTRL.name_long} (0x${reg.MH_CTRL.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[START] Start MH = ${reg.MH_CTRL.fields.START} (1: started and MH config. regs. locked)`
+           `[${f.START.name_short.padEnd(5)}] ${f.START.name_long.padEnd(8)} = ${f.START.value} (1: started and MH config. regs. locked)`
     });
   } // MH_CTRL
 
@@ -72,17 +75,18 @@ export function procRegsMhGlobal(reg) {
     reg.MH_CFG.report = [];
 
     // 1. Decode all individual bits of MODE register
-    reg.MH_CFG.fields.INS_NUM     = getBits(regValue, 18, 16);
-    reg.MH_CFG.fields.MAX_RETRANS = getBits(regValue, 10, 8);
-    reg.MH_CFG.fields.RX_CONT_DC  = getBits(regValue, 0, 0);
+    defineField(reg.MH_CFG, regValue, 'INST_NUM', 18, 16, 'Instance Number (of X_CAN IP)');
+    defineField(reg.MH_CFG, regValue, 'MAX_RETRANS', 10, 8, 'Maximum TX re-transmissions');
+    defineField(reg.MH_CFG, regValue, 'RX_CONT_DC', 0, 0, 'RX Continuous Data Container mode');
+    const f = reg.MH_CFG.fields;
 
     // 2. Generate human-readable register report
     reg.MH_CFG.report.push({
       severityLevel: sevC.info,
       msg: `MH_CFG: ${reg.MH_CFG.name_long} (0x${reg.MH_CFG.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[INST_NUM   ] Instance Number (of X_CAN IP)     = ${reg.MH_CFG.fields.INS_NUM}\n` +
-           `[MAX_RETRANS] Maximum TX re-transmissions       = ${reg.MH_CFG.fields.MAX_RETRANS} (0: NO, 1-6: 1-6, 7: unlimited)\n` +
-           `[RX_CONT_DC ] RX Continuous Data Container mode = ${reg.MH_CFG.fields.RX_CONT_DC}`
+           `[${f.INST_NUM.name_short.padEnd(11)}] ${f.INST_NUM.name_long.padEnd(33)} = ${f.INST_NUM.value}\n` +
+           `[${f.MAX_RETRANS.name_short.padEnd(11)}] ${f.MAX_RETRANS.name_long.padEnd(33)} = ${f.MAX_RETRANS.value} (0: NO, 1-6: 1-6, 7: unlimited)\n` +
+           `[${f.RX_CONT_DC.name_short.padEnd(11)}] ${f.RX_CONT_DC.name_long.padEnd(33)} = ${f.RX_CONT_DC.value}`
     });
   } // MH_CFG
 
@@ -95,17 +99,18 @@ export function procRegsMhGlobal(reg) {
     reg.MH_STS.report = [];
 
     // 1. Decode all individual bits of MODE register
-    reg.MH_STS.fields.CLOCK_ACTIVE  = getBits(regValue, 8, 8);
-    reg.MH_STS.fields.ENABLE        = getBits(regValue, 4, 4);
-    reg.MH_STS.fields.BUSY          = getBits(regValue, 0, 0);
+    defineField(reg.MH_STS, regValue, 'CLOCK_ACTIVE', 8, 8, 'MH Core Clock Active');
+    defineField(reg.MH_STS, regValue, 'ENABLE', 4, 4, 'PRT Enable Signal');
+    defineField(reg.MH_STS, regValue, 'BUSY', 0, 0, 'General Busy Flag');
+    const f = reg.MH_STS.fields;
 
     // 2. Generate human-readable register report
     reg.MH_STS.report.push({
       severityLevel: sevC.info,
       msg: `MH_STS: ${reg.MH_STS.name_long} (0x${reg.MH_STS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[CLOCK_ACTIVE] MH Core Clock Active = ${reg.MH_STS.fields.CLOCK_ACTIVE} (1: clock active)\n` +
-           `[ENABLE      ] PRT Enable Signal    = ${reg.MH_STS.fields.ENABLE} (1: PRT is started)\n` +
-           `[BUSY        ] General Busy Flag    = ${reg.MH_STS.fields.BUSY}`
+           `[${f.CLOCK_ACTIVE.name_short.padEnd(12)}] ${f.CLOCK_ACTIVE.name_long.padEnd(20)} = ${f.CLOCK_ACTIVE.value} (1: clock active)\n` +
+           `[${f.ENABLE.name_short.padEnd(12)}] ${f.ENABLE.name_long.padEnd(20)} = ${f.ENABLE.value} (1: PRT is started)\n` +
+           `[${f.BUSY.name_short.padEnd(12)}] ${f.BUSY.name_long.padEnd(20)} = ${f.BUSY.value}`
     });
   }
 
@@ -118,19 +123,20 @@ export function procRegsMhGlobal(reg) {
     reg.MH_SFTY_CFG.report = [];
 
     // 1. Decode all individual bits of MODE register
-    reg.MH_SFTY_CFG.fields.PRESCALER  = getBits(regValue, 31, 30);
-    reg.MH_SFTY_CFG.fields.PRT_TO_VAL = getBits(regValue, 29, 16);
-    reg.MH_SFTY_CFG.fields.MEM_TO_VAL = getBits(regValue, 15, 8);
-    reg.MH_SFTY_CFG.fields.DMA_TO_VAL = getBits(regValue, 7, 0);
+    defineField(reg.MH_SFTY_CFG, regValue, 'PRESCALER', 31, 30, 'Watchdog Tick Prescaler');
+    defineField(reg.MH_SFTY_CFG, regValue, 'PRT_TO_VAL', 29, 16, 'PRT/MH IF Timeout Ticks');
+    defineField(reg.MH_SFTY_CFG, regValue, 'MEM_TO_VAL', 15, 8, 'MEM AXI Timeout Ticks');
+    defineField(reg.MH_SFTY_CFG, regValue, 'DMA_TO_VAL', 7, 0, 'DMA AXI Timeout Ticks');
+    const f = reg.MH_SFTY_CFG.fields;
 
     // 2. Generate human-readable register report
     reg.MH_SFTY_CFG.report.push({
       severityLevel: sevC.info,
       msg: `MH_SFTY_CFG: ${reg.MH_SFTY_CFG.name_long} (0x${reg.MH_SFTY_CFG.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[PRESCALER ] Watchdog Tick Prescaler = ${reg.MH_SFTY_CFG.fields.PRESCALER} (0: clk/32, 1: clk/64, 2: clk/128, 3: clk/512)\n` +
-           `[PRT_TO_VAL] PRT/MH IF Timeout Ticks = ${reg.MH_SFTY_CFG.fields.PRT_TO_VAL}\n` +
-           `[MEM_TO_VAL] MEM AXI Timeout Ticks   = ${reg.MH_SFTY_CFG.fields.MEM_TO_VAL}\n` +
-           `[DMA_TO_VAL] DMA AXI Timeout Ticks   = ${reg.MH_SFTY_CFG.fields.DMA_TO_VAL}`
+           `[${f.PRESCALER.name_short.padEnd(10)}] ${f.PRESCALER.name_long.padEnd(23)} = ${f.PRESCALER.value} (0: clk/32, 1: clk/64, 2: clk/128, 3: clk/512)\n` +
+           `[${f.PRT_TO_VAL.name_short.padEnd(10)}] ${f.PRT_TO_VAL.name_long.padEnd(23)} = ${f.PRT_TO_VAL.value}\n` +
+           `[${f.MEM_TO_VAL.name_short.padEnd(10)}] ${f.MEM_TO_VAL.name_long.padEnd(23)} = ${f.MEM_TO_VAL.value}\n` +
+           `[${f.DMA_TO_VAL.name_short.padEnd(10)}] ${f.DMA_TO_VAL.name_long.padEnd(23)} = ${f.DMA_TO_VAL.value}`
     });
   }
 
@@ -143,46 +149,47 @@ export function procRegsMhGlobal(reg) {
     reg.MH_SFTY_CTRL.report = [];
 
     // 1. Decode all individual bits of MODE register
-    reg.MH_SFTY_CTRL.fields.PRT_TO_EN      = getBits(regValue,10,10);
-    reg.MH_SFTY_CTRL.fields.MEM_TO_EN      = getBits(regValue, 9, 9);
-    reg.MH_SFTY_CTRL.fields.DMA_TO_EN      = getBits(regValue, 8, 8);
-    reg.MH_SFTY_CTRL.fields.DMA_CH_CHK_EN  = getBits(regValue, 7, 7);
-    reg.MH_SFTY_CTRL.fields.RX_AP_PARITY_EN= getBits(regValue, 6, 6);
-    reg.MH_SFTY_CTRL.fields.TX_AP_PARITY_EN= getBits(regValue, 5, 5);
-    reg.MH_SFTY_CTRL.fields.TX_DP_PARITY_EN= getBits(regValue, 4, 4);
-    reg.MH_SFTY_CTRL.fields.RX_DP_PARITY_EN= getBits(regValue, 3, 3);
-    reg.MH_SFTY_CTRL.fields.MEM_PROT_EN    = getBits(regValue, 2, 2);
-    reg.MH_SFTY_CTRL.fields.RX_DESC_CRC_EN = getBits(regValue, 1, 1);
-    reg.MH_SFTY_CTRL.fields.TX_DESC_CRC_EN = getBits(regValue, 0, 0);
+    defineField(reg.MH_SFTY_CTRL, regValue, 'PRT_TO_EN', 10, 10, 'PRT IF  Watchdog Enable');
+    defineField(reg.MH_SFTY_CTRL, regValue, 'MEM_TO_EN', 9, 9, 'MEM AXI Watchdog Enable');
+    defineField(reg.MH_SFTY_CTRL, regValue, 'DMA_TO_EN', 8, 8, 'DMA AXI Watchdog Enable');
+    defineField(reg.MH_SFTY_CTRL, regValue, 'DMA_CH_CHK_EN', 7, 7, 'DMA Channel Routing Check Enable');
+    defineField(reg.MH_SFTY_CTRL, regValue, 'RX_AP_PARITY_EN', 6, 6, 'RX Address Path Parity Enable');
+    defineField(reg.MH_SFTY_CTRL, regValue, 'TX_AP_PARITY_EN', 5, 5, 'TX Address Path Parity Enable');
+    defineField(reg.MH_SFTY_CTRL, regValue, 'TX_DP_PARITY_EN', 4, 4, 'TX Data Path Parity Enable');
+    defineField(reg.MH_SFTY_CTRL, regValue, 'RX_DP_PARITY_EN', 3, 3, 'RX Data Path Parity Enable');
+    defineField(reg.MH_SFTY_CTRL, regValue, 'MEM_PROT_EN', 2, 2, 'Memory Protection Enable');
+    defineField(reg.MH_SFTY_CTRL, regValue, 'RX_DESC_CRC_EN', 1, 1, 'RX Descriptor CRC Check Enable');
+    defineField(reg.MH_SFTY_CTRL, regValue, 'TX_DESC_CRC_EN', 0, 0, 'TX Descriptor CRC Check Enable');
+    const f = reg.MH_SFTY_CTRL.fields;
 
     // 2. Generate human-readable register report
     reg.MH_SFTY_CTRL.report.push({
       severityLevel: sevC.info,
       msg: `MH_SFTY_CTRL: ${reg.MH_SFTY_CTRL.name_long} (0x${reg.MH_SFTY_CTRL.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-      `[PRT_TO_EN      ] PRT IF  Watchdog Enable          = ${reg.MH_SFTY_CTRL.fields.PRT_TO_EN}\n` +
-      `[MEM_TO_EN      ] MEM AXI Watchdog Enable          = ${reg.MH_SFTY_CTRL.fields.MEM_TO_EN}\n` +
-      `[DMA_TO_EN      ] DMA AXI Watchdog Enable          = ${reg.MH_SFTY_CTRL.fields.DMA_TO_EN}\n` +
-      `[DMA_CH_CHK_EN  ] DMA Channel Routing Check Enable = ${reg.MH_SFTY_CTRL.fields.DMA_CH_CHK_EN}\n` +
-      `[RX_AP_PARITY_EN] RX Address Path Parity Enable    = ${reg.MH_SFTY_CTRL.fields.RX_AP_PARITY_EN}\n` +
-      `[TX_AP_PARITY_EN] TX Address Path Parity Enable    = ${reg.MH_SFTY_CTRL.fields.TX_AP_PARITY_EN}\n` +
-      `[TX_DP_PARITY_EN] TX Data Path Parity Enable       = ${reg.MH_SFTY_CTRL.fields.TX_DP_PARITY_EN}\n` +
-      `[RX_DP_PARITY_EN] RX Data Path Parity Enable       = ${reg.MH_SFTY_CTRL.fields.RX_DP_PARITY_EN}\n` +
-      `[MEM_PROT_EN    ] Memory Protection Enable         = ${reg.MH_SFTY_CTRL.fields.MEM_PROT_EN}\n` +
-      `[RX_DESC_CRC_EN ] RX Descriptor CRC Check Enable   = ${reg.MH_SFTY_CTRL.fields.RX_DESC_CRC_EN}\n` +
-      `[TX_DESC_CRC_EN ] TX Descriptor CRC Check Enable   = ${reg.MH_SFTY_CTRL.fields.TX_DESC_CRC_EN}`
+      `[${f.PRT_TO_EN.name_short.padEnd(15)}] ${f.PRT_TO_EN.name_long.padEnd(32)} = ${f.PRT_TO_EN.value}\n` +
+      `[${f.MEM_TO_EN.name_short.padEnd(15)}] ${f.MEM_TO_EN.name_long.padEnd(32)} = ${f.MEM_TO_EN.value}\n` +
+      `[${f.DMA_TO_EN.name_short.padEnd(15)}] ${f.DMA_TO_EN.name_long.padEnd(32)} = ${f.DMA_TO_EN.value}\n` +
+      `[${f.DMA_CH_CHK_EN.name_short.padEnd(15)}] ${f.DMA_CH_CHK_EN.name_long.padEnd(32)} = ${f.DMA_CH_CHK_EN.value}\n` +
+      `[${f.RX_AP_PARITY_EN.name_short.padEnd(15)}] ${f.RX_AP_PARITY_EN.name_long.padEnd(32)} = ${f.RX_AP_PARITY_EN.value}\n` +
+      `[${f.TX_AP_PARITY_EN.name_short.padEnd(15)}] ${f.TX_AP_PARITY_EN.name_long.padEnd(32)} = ${f.TX_AP_PARITY_EN.value}\n` +
+      `[${f.TX_DP_PARITY_EN.name_short.padEnd(15)}] ${f.TX_DP_PARITY_EN.name_long.padEnd(32)} = ${f.TX_DP_PARITY_EN.value}\n` +
+      `[${f.RX_DP_PARITY_EN.name_short.padEnd(15)}] ${f.RX_DP_PARITY_EN.name_long.padEnd(32)} = ${f.RX_DP_PARITY_EN.value}\n` +
+      `[${f.MEM_PROT_EN.name_short.padEnd(15)}] ${f.MEM_PROT_EN.name_long.padEnd(32)} = ${f.MEM_PROT_EN.value}\n` +
+      `[${f.RX_DESC_CRC_EN.name_short.padEnd(15)}] ${f.RX_DESC_CRC_EN.name_long.padEnd(32)} = ${f.RX_DESC_CRC_EN.value}\n` +
+      `[${f.TX_DESC_CRC_EN.name_short.padEnd(15)}] ${f.TX_DESC_CRC_EN.name_long.padEnd(32)} = ${f.TX_DESC_CRC_EN.value}`
     });
 
     // Cross-checks with MH_SFTY_CTRL enable bits if available
     const sftyEna = reg.MH_SFTY_CTRL.fields;
     const sftyToVal = reg.MH_SFTY_CFG && reg.MH_SFTY_CFG.fields ? reg.MH_SFTY_CFG.fields : null;
     if (sftyToVal) {
-      if (sftyEna.DMA_TO_EN === 1 && sftyToVal.DMA_TO_VAL === 0) {
+      if (sftyEna.DMA_TO_EN.value === 1 && sftyToVal.DMA_TO_VAL.value === 0) {
         reg.MH_SFTY_CTRL.report.push({ severityLevel: sevC.warning, msg: 'MH_STY_CTRL: DMA_TO_VAL is 0 while DMA_TO_EN=1: DMA timeout triggers immediately.'});
       }
-      if (sftyEna.MEM_TO_EN === 1 && sftyToVal.MEM_TO_VAL === 0) {
+      if (sftyEna.MEM_TO_EN.value === 1 && sftyToVal.MEM_TO_VAL.value === 0) {
         reg.MH_SFTY_CTRL.report.push({ severityLevel: sevC.warning, msg: 'MH_STY_CTRL: MEM_TO_VAL is 0 while MEM_TO_EN=1: MEM timeout triggers immediately.'});
       }
-      if (sftyEna.PRT_TO_EN === 1 && sftyToVal.PRT_TO_VAL === 0) {
+      if (sftyEna.PRT_TO_EN.value === 1 && sftyToVal.PRT_TO_VAL.value === 0) {
         reg.MH_SFTY_CTRL.report.push({ severityLevel: sevC.warning, msg: 'MH_STY_CTRL: PRT_TO_VAL is 0 while PRT_TO_EN=1: PRT timeout triggers immediately.'});
       }
     }
@@ -197,19 +204,20 @@ export function procRegsMhGlobal(reg) {
     reg.RX_FILTER_MEM_ADD.report = [];
 
     // 1. Decode all individual bits of MODE register
-    reg.RX_FILTER_MEM_ADD.fields.BASE_ADDR = getBits(regValue, 15, 0);
-    const base = reg.RX_FILTER_MEM_ADD.fields.BASE_ADDR;
+    defineField(reg.RX_FILTER_MEM_ADD, regValue, 'BASE_ADDR', 15, 0, 'RX Filter Base Address (L_MEM)');
+    const f = reg.RX_FILTER_MEM_ADD.fields;
+    const base = f.BASE_ADDR.value;
     const alignOk = (base & 0x3) === 0;
 
     // 2. Generate human-readable register report
     reg.RX_FILTER_MEM_ADD.report.push({
       severityLevel: sevC.info,
       msg: `RX_FILTER_MEM_ADD: ${reg.RX_FILTER_MEM_ADD.name_long} (0x${reg.RX_FILTER_MEM_ADD.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[BASE_ADDR] RX Filter Base Address (L_MEM) = 0x${base.toString(16).toUpperCase().padStart(5,'0')} (16 bit, expected bits[1:0]=0)`
+           `[${f.BASE_ADDR.name_short.padEnd(9)}] ${f.BASE_ADDR.name_long.padEnd(30)} = 0x${base.toString(16).toUpperCase().padStart(5,'0')} (16 bit, expected bits[1:0]=0)`
     });
 
     // 3. Check Address Alignment
-    if ((reg.RX_FILTER_MEM_ADD.fields.BASE_ADDR & 0x3) !== 0) {
+    if ((f.BASE_ADDR.value & 0x3) !== 0) {
       reg.RX_FILTER_MEM_ADD.report.push({ severityLevel: sevC.warning, msg: 'RX_FILTER_MEM_ADD: RX Filter Base Address not word-aligned (LSBs [1:0] should be 0). LSBs [1:0] are ignored by X_CAN.'});
     }
   }
@@ -223,17 +231,18 @@ export function procRegsMhGlobal(reg) {
     reg.TX_DESC_MEM_ADD.report = [];
 
     // 1. Decode all individual bits of MODE register
-    reg.TX_DESC_MEM_ADD.fields.PQ_BASE_ADDR = getBits(regValue, 31, 16);
-    reg.TX_DESC_MEM_ADD.fields.FQ_BASE_ADDR = getBits(regValue, 15, 0);
-    const alignFqOk = (reg.TX_DESC_MEM_ADD.fields.FQ_BASE_ADDR & 0x3) === 0;
-    const alignPqOk = (reg.TX_DESC_MEM_ADD.fields.PQ_BASE_ADDR & 0x3) === 0;
+    defineField(reg.TX_DESC_MEM_ADD, regValue, 'PQ_BASE_ADDR', 31, 16, 'TX Priority Queue Base Address');
+    defineField(reg.TX_DESC_MEM_ADD, regValue, 'FQ_BASE_ADDR', 15, 0, 'TX FIFO Queue Base Address');
+    const f = reg.TX_DESC_MEM_ADD.fields;
+    const alignFqOk = (f.FQ_BASE_ADDR.value & 0x3) === 0;
+    const alignPqOk = (f.PQ_BASE_ADDR.value & 0x3) === 0;
 
     // 2. Generate human-readable register report
     reg.TX_DESC_MEM_ADD.report.push({
       severityLevel: sevC.info,
       msg: `TX_DESC_MEM_ADD: ${reg.TX_DESC_MEM_ADD.name_long} (0x${reg.TX_DESC_MEM_ADD.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[PQ_BASE_ADDR] TX Priority Queue Base Address = 0x${reg.TX_DESC_MEM_ADD.fields.PQ_BASE_ADDR.toString(16).toUpperCase().padStart(4,'0')} (16 bit, expected bits[1:0]=0)\n` +
-           `[FQ_BASE_ADDR] TX FIFO Queue Base Address     = 0x${reg.TX_DESC_MEM_ADD.fields.FQ_BASE_ADDR.toString(16).toUpperCase().padStart(4,'0')} (16 bit, expected bits[1:0]=0)`
+           `[${f.PQ_BASE_ADDR.name_short.padEnd(12)}] ${f.PQ_BASE_ADDR.name_long.padEnd(30)} = 0x${f.PQ_BASE_ADDR.value.toString(16).toUpperCase().padStart(4,'0')} (16 bit, expected bits[1:0]=0)\n` +
+           `[${f.FQ_BASE_ADDR.name_short.padEnd(12)}] ${f.FQ_BASE_ADDR.name_long.padEnd(30)} = 0x${f.FQ_BASE_ADDR.value.toString(16).toUpperCase().padStart(4,'0')} (16 bit, expected bits[1:0]=0)`
     });
     if (!alignPqOk) {
       reg.TX_DESC_MEM_ADD.report.push({ severityLevel: sevC.warning, msg: 'TX_DESC_MEM_ADD: TX PQ Base Address not word-aligned (LSBs [1:0] should be 0).' });
@@ -250,13 +259,14 @@ export function procRegsMhGlobal(reg) {
     reg.AXI_ADD_EXT.report = [];
 
     // 1. Decode all individual bits of MODE register
-    reg.AXI_ADD_EXT.fields.VAL = regValue;
+    defineField(reg.AXI_ADD_EXT, regValue, 'VAL', 31, 0, 'AXI Address Extension', r => r >>> 0);
+    const f = reg.AXI_ADD_EXT.fields;
 
     // 2. Generate human-readable register report
     reg.AXI_ADD_EXT.report.push({
       severityLevel: sevC.info,
       msg: `AXI_ADD_EXT: ${reg.AXI_ADD_EXT.name_long} (0x${reg.AXI_ADD_EXT.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[VAL] AXI Address Extension = 0x${reg.AXI_ADD_EXT.fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
+           `[${f.VAL.name_short.padEnd(3)}] ${f.VAL.name_long.padEnd(21)} = 0x${f.VAL.decoded.toString(16).toUpperCase().padStart(8,'0')}`
     });
   }
 
@@ -269,8 +279,9 @@ export function procRegsMhGlobal(reg) {
     reg.AXI_PARAMS.report = [];
 
     // 1. Decode all individual bits of MODE register
-    reg.AXI_PARAMS.fields.AW_MAX_PEND = getBits(regValue, 5, 4);
-    reg.AXI_PARAMS.fields.AR_MAX_PEND = getBits(regValue, 1, 0);
+    defineField(reg.AXI_PARAMS, regValue, 'AW_MAX_PEND', 5, 4, 'Max pending AXI writes');
+    defineField(reg.AXI_PARAMS, regValue, 'AR_MAX_PEND', 1, 0, 'Max pending AXI reads');
+    const f = reg.AXI_PARAMS.fields;
 
     // 2. Generate human-readable register report
     const pendMap = (v, kind) => {
@@ -284,17 +295,17 @@ export function procRegsMhGlobal(reg) {
     reg.AXI_PARAMS.report.push({
       severityLevel: sevC.info,
       msg: `AXI_PARAMS: ${reg.AXI_PARAMS.name_long} (0x${reg.AXI_PARAMS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[AW_MAX_PEND] Max pending AXI writes = ${reg.AXI_PARAMS.fields.AW_MAX_PEND} (= ${pendMap(reg.AXI_PARAMS.fields.AW_MAX_PEND,'write')})\n` +
-           `[AR_MAX_PEND] Max pending AXI reads  = ${reg.AXI_PARAMS.fields.AR_MAX_PEND} (= ${pendMap(reg.AXI_PARAMS.fields.AR_MAX_PEND,'read ')})`
+           `[${f.AW_MAX_PEND.name_short.padEnd(11)}] ${f.AW_MAX_PEND.name_long.padEnd(22)} = ${f.AW_MAX_PEND.value} (= ${pendMap(f.AW_MAX_PEND.value,'write')})\n` +
+           `[${f.AR_MAX_PEND.name_short.padEnd(11)}] ${f.AR_MAX_PEND.name_long.padEnd(22)} = ${f.AR_MAX_PEND.value} (= ${pendMap(f.AR_MAX_PEND.value,'read ')})`
     });
 
     // 3. Check AW_MAX_PEND and AR_MAX_PEND values
-    if (reg.AXI_PARAMS.fields.AW_MAX_PEND === 0) {
+    if (f.AW_MAX_PEND.value === 0) {
       reg.AXI_PARAMS.report.push({ severityLevel: sevC.error, msg: 'AXI_PARAMS: AW_MAX_PEND is 0: No AXI write transfers possible.'});
     }
 
     // Check AR_MAX_PEND and AR_MAX_PEND values
-    if (reg.AXI_PARAMS.fields.AR_MAX_PEND === 0) {
+    if (f.AR_MAX_PEND.value === 0) {
       reg.AXI_PARAMS.report.push({ severityLevel: sevC.error, msg: 'AXI_PARAMS: AR_MAX_PEND is 0: No AXI read transfers possible.'});
     }
 
@@ -309,15 +320,16 @@ export function procRegsMhGlobal(reg) {
     reg.MH_LOCK.report = [];
 
     // 1. Decode all individual bits of MODE register
-    reg.MH_LOCK.fields.TMK = getBits(regValue, 31, 16);
-    reg.MH_LOCK.fields.ULK = getBits(regValue, 15, 0);
+    defineField(reg.MH_LOCK, regValue, 'TMK', 31, 16, 'Test Mode Key');
+    defineField(reg.MH_LOCK, regValue, 'ULK', 15, 0, 'Unlock Key');
+    const f = reg.MH_LOCK.fields;
 
     // 2. Generate human-readable register report
     reg.MH_LOCK.report.push({
       severityLevel: sevC.info,
       msg: `MH_LOCK: ${reg.MH_LOCK.name_long} (0x${reg.MH_LOCK.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[TMK] Test Mode Key = 0x${reg.MH_LOCK.fields.TMK.toString(16).toUpperCase().padStart(4,'0')}\n` +
-           `[ULK] Unlock Key    = 0x${reg.MH_LOCK.fields.ULK.toString(16).toUpperCase().padStart(4,'0')}`
+           `[${f.TMK.name_short.padEnd(3)}] ${f.TMK.name_long.padEnd(13)} = 0x${f.TMK.value.toString(16).toUpperCase().padStart(4,'0')}\n` +
+           `[${f.ULK.name_short.padEnd(3)}] ${f.ULK.name_long.padEnd(13)} = 0x${f.ULK.value.toString(16).toUpperCase().padStart(4,'0')}`
     });
   }
 } // MH Global
@@ -342,13 +354,14 @@ export function procRegsMhTXFQ(reg) {
     reg.TX_DESC_ADD_PT.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_DESC_ADD_PT.fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
+    defineField(reg.TX_DESC_ADD_PT, regValue, 'VAL', 31, 0, 'TX Descriptor Address (SMEM) currently used by MH', r => r >>> 0);
+    const f = reg.TX_DESC_ADD_PT.fields;
 
     // 2. Generate human-readable register report
     reg.TX_DESC_ADD_PT.report.push({
       severityLevel: sevC.info,
       msg: `TX_DESC_ADD_PT: ${reg.TX_DESC_ADD_PT.name_long} (0x${reg.TX_DESC_ADD_PT.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[VAL] TX Descriptor Address (SMEM) currently used by MH = 0x${reg.TX_DESC_ADD_PT.fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
+           `[${f.VAL.name_short.padEnd(3)}] ${f.VAL.name_long.padEnd(49)} = 0x${f.VAL.decoded.toString(16).toUpperCase().padStart(8,'0')}`
     });
   }
 
@@ -361,15 +374,16 @@ export function procRegsMhTXFQ(reg) {
     reg.TX_STATISTICS.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_STATISTICS.fields.UNSUCC = getBits(regValue, 27, 16);
-    reg.TX_STATISTICS.fields.SUCC   = getBits(regValue, 11, 0);
+    defineField(reg.TX_STATISTICS, regValue, 'UNSUCC', 27, 16, 'Unsuccessful TX Count');
+    defineField(reg.TX_STATISTICS, regValue, 'SUCC', 11, 0, 'Successful   TX Count');
+    const f = reg.TX_STATISTICS.fields;
 
     // 2. Generate human-readable register report
     reg.TX_STATISTICS.report.push({
       severityLevel: sevC.info,
       msg: `TX_STATISTICS: ${reg.TX_STATISTICS.name_long} (0x${reg.TX_STATISTICS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[UNSUCC] Unsuccessful TX Count = ${reg.TX_STATISTICS.fields.UNSUCC}\n` +
-           `[SUCC  ] Successful   TX Count = ${reg.TX_STATISTICS.fields.SUCC}`
+           `[${f.UNSUCC.name_short.padEnd(6)}] ${f.UNSUCC.name_long.padEnd(21)} = ${f.UNSUCC.value}\n` +
+           `[${f.SUCC.name_short.padEnd(6)}] ${f.SUCC.name_long.padEnd(21)} = ${f.SUCC.value}`
     });
   }
 
@@ -382,18 +396,19 @@ export function procRegsMhTXFQ(reg) {
     reg.TX_FQ_STS0.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_FQ_STS0.fields.STOP = getBits(regValue, 23, 16);
-    reg.TX_FQ_STS0.fields.BUSY = getBits(regValue, 7, 0);
+    defineField(reg.TX_FQ_STS0, regValue, 'STOP', 23, 16, 'On Hold Queues');
+    defineField(reg.TX_FQ_STS0, regValue, 'BUSY', 7, 0, 'Active  Queues');
+    const f = reg.TX_FQ_STS0.fields;
 
-    const stopIdx = listSetIdx8(reg.TX_FQ_STS0.fields.STOP);
-    const busyIdx = listSetIdx8(reg.TX_FQ_STS0.fields.BUSY);
+    const stopIdx = listSetIdx8(f.STOP.value);
+    const busyIdx = listSetIdx8(f.BUSY.value);
 
     // 2. Generate human-readable register report
     reg.TX_FQ_STS0.report.push({
       severityLevel: sevC.info,
       msg: `TX_FQ_STS0: ${reg.TX_FQ_STS0.name_long} (0x${reg.TX_FQ_STS0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[STOP] On Hold Queues = 0x${reg.TX_FQ_STS0.fields.STOP.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${stopIdx.length?stopIdx.join(', '):'none'}\n` +
-           `[BUSY] Active  Queues = 0x${reg.TX_FQ_STS0.fields.BUSY.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${busyIdx.length?busyIdx.join(', '):'none'}`
+           `[${f.STOP.name_short.padEnd(4)}] ${f.STOP.name_long.padEnd(14)} = 0x${f.STOP.value.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${stopIdx.length?stopIdx.join(', '):'none'}\n` +
+           `[${f.BUSY.name_short.padEnd(4)}] ${f.BUSY.name_long.padEnd(14)} = 0x${f.BUSY.value.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${busyIdx.length?busyIdx.join(', '):'none'}`
     });
   }
 
@@ -406,18 +421,19 @@ export function procRegsMhTXFQ(reg) {
     reg.TX_FQ_STS1.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_FQ_STS1.fields.ERROR   = getBits(regValue, 23, 16);
-    reg.TX_FQ_STS1.fields.UNVALID = getBits(regValue, 7, 0);
+    defineField(reg.TX_FQ_STS1, regValue, 'ERROR', 23, 16, 'Descriptor with ERROR   Queues');
+    defineField(reg.TX_FQ_STS1, regValue, 'UNVALID', 7, 0, 'Descriptor with VALID=0 Queues');
+    const f = reg.TX_FQ_STS1.fields;
 
-    const errIdx = listSetIdx8(reg.TX_FQ_STS1.fields.ERROR);
-    const invIdx = listSetIdx8(reg.TX_FQ_STS1.fields.UNVALID);
+    const errIdx = listSetIdx8(f.ERROR.value);
+    const invIdx = listSetIdx8(f.UNVALID.value);
 
     // 2. Generate human-readable register report
     reg.TX_FQ_STS1.report.push({
       severityLevel: sevC.info,
       msg: `TX_FQ_STS1: ${reg.TX_FQ_STS1.name_long} (0x${reg.TX_FQ_STS1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ERROR  ] Descriptor with ERROR   Queues = 0x${reg.TX_FQ_STS1.fields.ERROR.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${errIdx.length?errIdx.join(', '):'none'}\n` +
-           `[UNVALID] Descriptor with VALID=0 Queues = 0x${reg.TX_FQ_STS1.fields.UNVALID.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${invIdx.length?invIdx.join(', '):'none'}`
+           `[${f.ERROR.name_short.padEnd(7)}] ${f.ERROR.name_long.padEnd(30)} = 0x${f.ERROR.value.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${errIdx.length?errIdx.join(', '):'none'}\n` +
+           `[${f.UNVALID.name_short.padEnd(7)}] ${f.UNVALID.name_long.padEnd(30)} = 0x${f.UNVALID.value.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${invIdx.length?invIdx.join(', '):'none'}`
     });
   }
 
@@ -430,14 +446,15 @@ export function procRegsMhTXFQ(reg) {
     reg.TX_FQ_CTRL2.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_FQ_CTRL2.fields.ENABLE = getBits(regValue, 7, 0);
-    const enaIdx = listSetIdx8(reg.TX_FQ_CTRL2.fields.ENABLE);
+    defineField(reg.TX_FQ_CTRL2, regValue, 'ENABLE', 7, 0, 'Enabled Queues');
+    const f = reg.TX_FQ_CTRL2.fields;
+    const enaIdx = listSetIdx8(f.ENABLE.value);
 
     // 2. Generate human-readable register report
     reg.TX_FQ_CTRL2.report.push({
       severityLevel: sevC.info,
       msg: `TX_FQ_CTRL2: ${reg.TX_FQ_CTRL2.name_long} (0x${reg.TX_FQ_CTRL2.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ENABLE] Enabled Queues = 0x${reg.TX_FQ_CTRL2.fields.ENABLE.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${enaIdx.length?enaIdx.join(', '):'none'}`
+           `[${f.ENABLE.name_short.padEnd(6)}] ${f.ENABLE.name_long.padEnd(14)} = 0x${f.ENABLE.value.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${enaIdx.length?enaIdx.join(', '):'none'}`
     });
   }
 
@@ -450,14 +467,15 @@ export function procRegsMhTXFQ(reg) {
     reg.TX_FQ_CTRL1.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_FQ_CTRL1.fields.ABORT = getBits(regValue, 7, 0);
-    const abortIdx = listSetIdx8(reg.TX_FQ_CTRL1.fields.ABORT);
+    defineField(reg.TX_FQ_CTRL1, regValue, 'ABORT', 7, 0, 'Aborted Queues');
+    const f = reg.TX_FQ_CTRL1.fields;
+    const abortIdx = listSetIdx8(f.ABORT.value);
 
     // 2. Generate human-readable register report
     reg.TX_FQ_CTRL1.report.push({
       severityLevel: sevC.info,
       msg: `TX_FQ_CTRL1: ${reg.TX_FQ_CTRL1.name_long} (0x${reg.TX_FQ_CTRL1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ABORT] Aborted Queues = 0x${reg.TX_FQ_CTRL1.fields.ABORT.toString(16).toUpperCase().padStart(2,'0')}  => FIFOs: ${abortIdx.length?abortIdx.join(', '):'none'}`
+           `[${f.ABORT.name_short.padEnd(5)}] ${f.ABORT.name_long.padEnd(14)} = 0x${f.ABORT.value.toString(16).toUpperCase().padStart(2,'0')}  => FIFOs: ${abortIdx.length?abortIdx.join(', '):'none'}`
     });
   }
 
@@ -470,14 +488,15 @@ export function procRegsMhTXFQ(reg) {
     reg.TX_FQ_CTRL0.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_FQ_CTRL0.fields.START = getBits(regValue, 7, 0);
-    const startIdx = listSetIdx8(reg.TX_FQ_CTRL0.fields.START);
+    defineField(reg.TX_FQ_CTRL0, regValue, 'START', 7, 0, 'Started Queues');
+    const f = reg.TX_FQ_CTRL0.fields;
+    const startIdx = listSetIdx8(f.START.value);
 
     // 2. Generate human-readable register report
     reg.TX_FQ_CTRL0.report.push({
       severityLevel: sevC.info,
       msg: `TX_FQ_CTRL0: ${reg.TX_FQ_CTRL0.name_long} (0x${reg.TX_FQ_CTRL0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[START] Started Queues = 0x${reg.TX_FQ_CTRL0.fields.START.toString(16).toUpperCase().padStart(2,'0')}) => FIFOs: ${startIdx.length?startIdx.join(', '):'none'}`
+           `[${f.START.name_short.padEnd(5)}] ${f.START.name_long.padEnd(14)} = 0x${f.START.value.toString(16).toUpperCase().padStart(2,'0')}) => FIFOs: ${startIdx.length?startIdx.join(', '):'none'}`
     });
 
     // Checks: require CTRL2.ENABLE[n] and PRT ENABLE high // Arthur: probably unnecessary, because not allowed by HW
@@ -508,11 +527,12 @@ export function procRegsMhTXFQ(reg) {
       const regValue = reg[addPtName].int32;
       reg[addPtName].fields = {};
       reg[addPtName].report = [];
-      reg[addPtName].fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
+      defineField(reg[addPtName], regValue, 'VAL', 31, 0, `TXFQ${q} Head Descriptor Address (SMEM)`, r => r >>> 0);
+      const f = reg[addPtName].fields;
       reg[addPtName].report.push({
         severityLevel: sevC.info,
         msg: `${addPtName}: ${reg[addPtName].name_long} (0x${reg[addPtName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-             `[VAL] TXFQ${q} Head Descriptor Address (SMEM) = 0x${reg[addPtName].fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
+             `[${f.VAL.name_short.padEnd(3)}] ${f.VAL.name_long.padEnd(36)} = 0x${f.VAL.decoded.toString(16).toUpperCase().padStart(8,'0')}`
       });
     }
 
@@ -521,12 +541,13 @@ export function procRegsMhTXFQ(reg) {
       const regValue = reg[startAddName].int32;
       reg[startAddName].fields = {};
       reg[startAddName].report = [];
-      reg[startAddName].fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
+      defineField(reg[startAddName], regValue, 'VAL', 31, 0, `TXFQ${q} Start Address (SMEM)`, r => r >>> 0);
+      const f = reg[startAddName].fields;
       const alignOk = (regValue & 0x3) === 0;
       reg[startAddName].report.push({
         severityLevel: sevC.info,
         msg: `${startAddName}: ${reg[startAddName].name_long} (0x${reg[startAddName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-             `[VAL] TXFQ${q} Start Address (SMEM)           = 0x${reg[startAddName].fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
+             `[${f.VAL.name_short.padEnd(3)}] ${f.VAL.name_long.padEnd(36)} = 0x${f.VAL.decoded.toString(16).toUpperCase().padStart(8,'0')}`
       });
       if (!alignOk) {
         reg[startAddName].report.push({ severityLevel: sevC.warning, msg: `${startAddName}: Address not word-aligned (LSBs [1:0] should be 0).` });
@@ -538,13 +559,14 @@ export function procRegsMhTXFQ(reg) {
       const regValue = reg[sizeName].int32;
       reg[sizeName].fields = {};
       reg[sizeName].report = [];
-      reg[sizeName].fields.MAX_DESC = getBits(regValue, 9, 0);
-      const maxDesc = reg[sizeName].fields.MAX_DESC;
+      defineField(reg[sizeName], regValue, 'MAX_DESC', 9, 0, `TXFQ${q} Max Descriptors`);
+      const f = reg[sizeName].fields;
+      const maxDesc = f.MAX_DESC.value;
       const memBytes = maxDesc > 0 ? (maxDesc * 32) >>> 0 : 0;
       reg[sizeName].report.push({
         severityLevel: sevC.info,
         msg: `${sizeName}: ${reg[sizeName].name_long} (0x${reg[sizeName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-             `[MAX_DESC] TXFQ${q} Max Descriptors = ${maxDesc}${maxDesc>0?` (allocates ${memBytes} bytes in S_MEM)`:''}`
+             `[${f.MAX_DESC.name_short.padEnd(8)}] ${f.MAX_DESC.name_long.padEnd(21)} = ${maxDesc}${maxDesc>0?` (allocates ${memBytes} bytes in S_MEM)`:''}`
       });
     }
   }
@@ -569,9 +591,9 @@ export function procRegsMhTXFQ(reg) {
       const addPtName   = `TX_FQ_ADD_PT${q}`;
       const sizeName    = `TX_FQ_SIZE${q}`;
 
-      const startRegVal = (startAddName in reg && reg[startAddName].fields && 'VAL' in reg[startAddName].fields) ? ('0x'+reg[startAddName].fields.VAL.toString(16).toUpperCase().padStart(8,'0')) : '-';
-      const addPtRegVal = (addPtName in reg && reg[addPtName].fields && 'VAL' in reg[addPtName].fields) ? ('0x'+reg[addPtName].fields.VAL.toString(16).toUpperCase().padStart(8,'0')) : '-';
-      const sizeVal     = (sizeName in reg && reg[sizeName].fields && 'MAX_DESC' in reg[sizeName].fields) ? (''+reg[sizeName].fields.MAX_DESC) : '-';
+      const startRegVal = (startAddName in reg && reg[startAddName].fields && 'VAL' in reg[startAddName].fields) ? ('0x'+reg[startAddName].fields.VAL.decoded.toString(16).toUpperCase().padStart(8,'0')) : '-';
+      const addPtRegVal = (addPtName in reg && reg[addPtName].fields && 'VAL' in reg[addPtName].fields) ? ('0x'+reg[addPtName].fields.VAL.decoded.toString(16).toUpperCase().padStart(8,'0')) : '-';
+      const sizeVal     = (sizeName in reg && reg[sizeName].fields && 'MAX_DESC' in reg[sizeName].fields) ? (''+reg[sizeName].fields.MAX_DESC.value) : '-';
 
       const enaBit   = (enaMask   !== undefined) ? ((enaMask   >>> q) & 1).toString() : '-';
       const stBit    = (startMask !== undefined) ? ((startMask >>> q) & 1).toString() : '-';
@@ -636,17 +658,18 @@ export function procRegsMhTXPQ(reg) {
     reg.TX_PQ_STS0.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_PQ_STS0.fields.BUSY = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
+    defineField(reg.TX_PQ_STS0, regValue, 'BUSY', 31, 0, 'Active Slots (TX Pending)', r => r >>> 0);
+    const f = reg.TX_PQ_STS0.fields;
 
     // 2. Generate human-readable register report
-    const busyIdx = listSetIdx32(reg.TX_PQ_STS0.fields.BUSY);
+    const busyIdx = listSetIdx32(f.BUSY.decoded);
     let binLineHead = "Bit: 31                  23                  15                  7               0\n";
     let binLineData = "Slot " + getBinaryLineData(regValue);
 
     reg.TX_PQ_STS0.report.push({
       severityLevel: sevC.info,
       msg: `TX_PQ_STS0: ${reg.TX_PQ_STS0.name_long} (0x${reg.TX_PQ_STS0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[BUSY] Active Slots (TX Pending) = 0x${reg.TX_PQ_STS0.fields.BUSY.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${busyIdx.length?busyIdx.join(', '):'none'}\n` +
+           `[${f.BUSY.name_short.padEnd(4)}] ${f.BUSY.name_long.padEnd(25)} = 0x${f.BUSY.decoded.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${busyIdx.length?busyIdx.join(', '):'none'}\n` +
            binLineHead +
            binLineData
     });
@@ -662,16 +685,17 @@ export function procRegsMhTXPQ(reg) {
     reg.TX_PQ_STS1.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_PQ_STS1.fields.SENT = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
+    defineField(reg.TX_PQ_STS1, regValue, 'SENT', 31, 0, 'Sent (TX Desc. SMEM update)', r => r >>> 0);
+    const f = reg.TX_PQ_STS1.fields;
 
     // 2. Generate human-readable register report
-    const sentIdx = listSetIdx32(reg.TX_PQ_STS1.fields.SENT);
+    const sentIdx = listSetIdx32(f.SENT.decoded);
     let binLineHead = "Bit: 31                  23                  15                  7               0\n";
     let binLineData = "Slot " + getBinaryLineData(regValue);
     reg.TX_PQ_STS1.report.push({
       severityLevel: sevC.info,
       msg: `TX_PQ_STS1: ${reg.TX_PQ_STS1.name_long} (0x${reg.TX_PQ_STS1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[SENT] Sent (TX Desc. SMEM update) = 0x${reg.TX_PQ_STS1.fields.SENT.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${sentIdx.length?sentIdx.join(', '):'none'}\n` +
+           `[${f.SENT.name_short.padEnd(4)}] ${f.SENT.name_long.padEnd(27)} = 0x${f.SENT.decoded.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${sentIdx.length?sentIdx.join(', '):'none'}\n` +
            binLineHead +
            binLineData
     });
@@ -685,16 +709,17 @@ export function procRegsMhTXPQ(reg) {
     reg.TX_PQ_CTRL0.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_PQ_CTRL0.fields.START = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
+    defineField(reg.TX_PQ_CTRL0, regValue, 'START', 31, 0, 'Started Slots', r => r >>> 0);
+    const f = reg.TX_PQ_CTRL0.fields;
 
     // 2. Generate human-readable register report
-    const startIdx = listSetIdx32(reg.TX_PQ_CTRL0.fields.START);
+    const startIdx = listSetIdx32(f.START.decoded);
     let binLineHead = "Bit: 31                  23                  15                  7               0\n";
     let binLineData = "Slot " + getBinaryLineData(regValue);    
     reg.TX_PQ_CTRL0.report.push({
       severityLevel: sevC.info,
       msg: `TX_PQ_CTRL0: ${reg.TX_PQ_CTRL0.name_long} (0x${reg.TX_PQ_CTRL0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[START] Started Slots              = 0x${reg.TX_PQ_CTRL0.fields.START.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${startIdx.length?startIdx.join(', '):'none'}\n` +
+           `[${f.START.name_short.padEnd(5)}] ${f.START.name_long.padEnd(26)} = 0x${f.START.decoded.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${startIdx.length?startIdx.join(', '):'none'}\n` +
            binLineHead +
            binLineData
     });
@@ -709,16 +734,17 @@ export function procRegsMhTXPQ(reg) {
     reg.TX_PQ_CTRL1.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_PQ_CTRL1.fields.ABORT = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
+    defineField(reg.TX_PQ_CTRL1, regValue, 'ABORT', 31, 0, 'Aborted Slots (requested)', r => r >>> 0);
+    const f = reg.TX_PQ_CTRL1.fields;
 
     // 2. Generate human-readable register report
-    const abortIdx = listSetIdx32(reg.TX_PQ_CTRL1.fields.ABORT);
+    const abortIdx = listSetIdx32(f.ABORT.decoded);
     let binLineHead = "Bit: 31                  23                  15                  7               0\n";
     let binLineData = "Slot " + getBinaryLineData(regValue);    
     reg.TX_PQ_CTRL1.report.push({
       severityLevel: sevC.info,
       msg: `TX_PQ_CTRL1: ${reg.TX_PQ_CTRL1.name_long} (0x${reg.TX_PQ_CTRL1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ABORT] Aborted Slots (requested)  = 0x${reg.TX_PQ_CTRL1.fields.ABORT.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${abortIdx.length?abortIdx.join(', '):'none'}\n` +
+           `[${f.ABORT.name_short.padEnd(5)}] ${f.ABORT.name_long.padEnd(26)} = 0x${f.ABORT.decoded.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${abortIdx.length?abortIdx.join(', '):'none'}\n` +
            binLineHead +
            binLineData
     });
@@ -733,16 +759,17 @@ export function procRegsMhTXPQ(reg) {
     reg.TX_PQ_CTRL2.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_PQ_CTRL2.fields.ENABLE = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
+    defineField(reg.TX_PQ_CTRL2, regValue, 'ENABLE', 31, 0, 'Enabled Slots', r => r >>> 0);
+    const f = reg.TX_PQ_CTRL2.fields;
 
     // 2. Generate human-readable register report
-    const enaIdx = listSetIdx32(reg.TX_PQ_CTRL2.fields.ENABLE);
+    const enaIdx = listSetIdx32(f.ENABLE.decoded);
     let binLineHead = "Bit: 31                  23                  15                  7               0\n";
     let binLineData = "Slot " + getBinaryLineData(regValue);    
     reg.TX_PQ_CTRL2.report.push({
       severityLevel: sevC.info,
       msg: `TX_PQ_CTRL2: ${reg.TX_PQ_CTRL2.name_long} (0x${reg.TX_PQ_CTRL2.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ENABLE] Enabled Slots             = 0x${reg.TX_PQ_CTRL2.fields.ENABLE.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${enaIdx.length?enaIdx.join(', '):'none'}\n` +
+           `[${f.ENABLE.name_short.padEnd(6)}] ${f.ENABLE.name_long.padEnd(25)} = 0x${f.ENABLE.decoded.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${enaIdx.length?enaIdx.join(', '):'none'}\n` +
            binLineHead +
            binLineData
     });
@@ -756,14 +783,15 @@ export function procRegsMhTXPQ(reg) {
     reg.TX_PQ_START_ADD.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.TX_PQ_START_ADD.fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
+    defineField(reg.TX_PQ_START_ADD, regValue, 'VAL', 31, 0, 'TXPQ Start Address (SMEM)', r => r >>> 0);
+    const f = reg.TX_PQ_START_ADD.fields;
     const alignOk = (regValue & 0x3) === 0;
 
     // 2. Generate human-readable register report
     reg.TX_PQ_START_ADD.report.push({
       severityLevel: sevC.info,
       msg: `TX_PQ_START_ADD: ${reg.TX_PQ_START_ADD.name_long} (0x${reg.TX_PQ_START_ADD.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[VAL] TXPQ Start Address (SMEM) = 0x${reg.TX_PQ_START_ADD.fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
+           `[${f.VAL.name_short.padEnd(3)}] ${f.VAL.name_long.padEnd(25)} = 0x${f.VAL.decoded.toString(16).toUpperCase().padStart(8,'0')}`
     });
     if (!alignOk) {
       reg.TX_PQ_START_ADD.report.push({ severityLevel: sevC.warning, msg: 'TX_PQ_START_ADD: Address not word-aligned (LSBs [1:0] should be 0).' });
@@ -778,7 +806,7 @@ export function procRegsMhTXPQ(reg) {
                    '------------------------------------------------------------------------------------';
     lines.push(header);
 
-    const getVal = (r, f) => (r in reg && reg[r].fields && f in reg[r].fields) ? reg[r].fields[f] : null;
+    const getVal = (r, f) => (r in reg && reg[r].fields && f in reg[r].fields) ? reg[r].fields[f].decoded : null;
     const addRegLine = (label, r, f) => {
       const v = getVal(r, f);
       if (v !== null) {
@@ -838,13 +866,14 @@ export function procRegsMhRXFQ(reg) {
     reg.RX_DESC_ADD_PT.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.RX_DESC_ADD_PT.fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
+    defineField(reg.RX_DESC_ADD_PT, regValue, 'VAL', 31, 0, 'RX Descriptor Address (SMEM) currently used by MH', r => r >>> 0);
+    const f = reg.RX_DESC_ADD_PT.fields;
 
     // 2. Generate human-readable register report
     reg.RX_DESC_ADD_PT.report.push({
       severityLevel: sevC.info,
       msg: `RX_DESC_ADD_PT: ${reg.RX_DESC_ADD_PT.name_long} (0x${reg.RX_DESC_ADD_PT.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[VAL] RX Descriptor Address (SMEM) currently used by MH = 0x${reg.RX_DESC_ADD_PT.fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
+           `[${f.VAL.name_short.padEnd(3)}] ${f.VAL.name_long.padEnd(49)} = 0x${f.VAL.decoded.toString(16).toUpperCase().padStart(8,'0')}`
     });
   }
 
@@ -857,15 +886,16 @@ export function procRegsMhRXFQ(reg) {
     reg.RX_STATISTICS.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.RX_STATISTICS.fields.UNSUCC = getBits(regValue, 27, 16); // unsuccessful receptions
-    reg.RX_STATISTICS.fields.SUCC   = getBits(regValue, 11, 0);  // successful receptions
+    defineField(reg.RX_STATISTICS, regValue, 'UNSUCC', 27, 16, 'Unsuccessful RX Count'); // unsuccessful receptions
+    defineField(reg.RX_STATISTICS, regValue, 'SUCC', 11, 0, 'Successful   RX Count');  // successful receptions
+    const f = reg.RX_STATISTICS.fields;
 
     // 2. Generate human-readable register report
     reg.RX_STATISTICS.report.push({
       severityLevel: sevC.info,
       msg: `RX_STATISTICS: ${reg.RX_STATISTICS.name_long} (0x${reg.RX_STATISTICS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[UNSUCC] Unsuccessful RX Count = ${reg.RX_STATISTICS.fields.UNSUCC}\n` +
-           `[SUCC  ] Successful   RX Count = ${reg.RX_STATISTICS.fields.SUCC}`
+           `[${f.UNSUCC.name_short.padEnd(6)}] ${f.UNSUCC.name_long.padEnd(21)} = ${f.UNSUCC.value}\n` +
+           `[${f.SUCC.name_short.padEnd(6)}] ${f.SUCC.name_long.padEnd(21)} = ${f.SUCC.value}`
     });
   }
 
@@ -878,18 +908,19 @@ export function procRegsMhRXFQ(reg) {
     reg.RX_FQ_STS0.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.RX_FQ_STS0.fields.STOP = getBits(regValue, 23, 16);
-    reg.RX_FQ_STS0.fields.BUSY = getBits(regValue, 7, 0);
+    defineField(reg.RX_FQ_STS0, regValue, 'STOP', 23, 16, 'On Hold Queues');
+    defineField(reg.RX_FQ_STS0, regValue, 'BUSY', 7, 0, 'Active  Queues');
+    const f = reg.RX_FQ_STS0.fields;
 
-    const stopIdx = listSetIdx8(reg.RX_FQ_STS0.fields.STOP);
-    const busyIdx = listSetIdx8(reg.RX_FQ_STS0.fields.BUSY);
+    const stopIdx = listSetIdx8(f.STOP.value);
+    const busyIdx = listSetIdx8(f.BUSY.value);
 
     // 2. Generate human-readable register report
     reg.RX_FQ_STS0.report.push({
       severityLevel: sevC.info,
       msg: `RX_FQ_STS0: ${reg.RX_FQ_STS0.name_long} (0x${reg.RX_FQ_STS0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[STOP] On Hold Queues = 0x${reg.RX_FQ_STS0.fields.STOP.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${stopIdx.length?stopIdx.join(', '):'none'}\n` +
-           `[BUSY] Active  Queues = 0x${reg.RX_FQ_STS0.fields.BUSY.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${busyIdx.length?busyIdx.join(', '):'none'}`
+           `[${f.STOP.name_short.padEnd(4)}] ${f.STOP.name_long.padEnd(14)} = 0x${f.STOP.value.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${stopIdx.length?stopIdx.join(', '):'none'}\n` +
+           `[${f.BUSY.name_short.padEnd(4)}] ${f.BUSY.name_long.padEnd(14)} = 0x${f.BUSY.value.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${busyIdx.length?busyIdx.join(', '):'none'}`
     });
   }
 
@@ -902,18 +933,19 @@ export function procRegsMhRXFQ(reg) {
     reg.RX_FQ_STS1.report = [];
 
     // 1. Decode all individual bits of register (MSB -> LSB)
-    reg.RX_FQ_STS1.fields.ERROR   = getBits(regValue, 23, 16);
-    reg.RX_FQ_STS1.fields.UNVALID = getBits(regValue, 7, 0);
+    defineField(reg.RX_FQ_STS1, regValue, 'ERROR', 23, 16, 'Descriptor with ERROR   Queues');
+    defineField(reg.RX_FQ_STS1, regValue, 'UNVALID', 7, 0, 'Descriptor with VALID=0 Queues');
+    const f = reg.RX_FQ_STS1.fields;
 
-    const errIdx = listSetIdx8(reg.RX_FQ_STS1.fields.ERROR);
-    const invIdx = listSetIdx8(reg.RX_FQ_STS1.fields.UNVALID);
+    const errIdx = listSetIdx8(f.ERROR.value);
+    const invIdx = listSetIdx8(f.UNVALID.value);
 
     // 2. Generate human-readable register report
     reg.RX_FQ_STS1.report.push({
       severityLevel: sevC.info,
       msg: `RX_FQ_STS1: ${reg.RX_FQ_STS1.name_long} (0x${reg.RX_FQ_STS1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ERROR  ] Descriptor with ERROR   Queues = 0x${reg.RX_FQ_STS1.fields.ERROR.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${errIdx.length?errIdx.join(', '):'none'}\n` +
-           `[UNVALID] Descriptor with VALID=0 Queues = 0x${reg.RX_FQ_STS1.fields.UNVALID.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${invIdx.length?invIdx.join(', '):'none'}`
+           `[${f.ERROR.name_short.padEnd(7)}] ${f.ERROR.name_long.padEnd(30)} = 0x${f.ERROR.value.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${errIdx.length?errIdx.join(', '):'none'}\n` +
+           `[${f.UNVALID.name_short.padEnd(7)}] ${f.UNVALID.name_long.padEnd(30)} = 0x${f.UNVALID.value.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${invIdx.length?invIdx.join(', '):'none'}`
     });
   }
 
@@ -926,14 +958,15 @@ export function procRegsMhRXFQ(reg) {
     reg.RX_FQ_STS2.report = [];
 
     // 1. Decode bits (MSB -> LSB) only DC_FULL[7:0]
-    reg.RX_FQ_STS2.fields.DC_FULL = getBits(regValue, 7, 0);
-    const fullIdx = listSetIdx8(reg.RX_FQ_STS2.fields.DC_FULL);
+    defineField(reg.RX_FQ_STS2, regValue, 'DC_FULL', 7, 0, 'Data Container Full for Queues');
+    const f = reg.RX_FQ_STS2.fields;
+    const fullIdx = listSetIdx8(f.DC_FULL.value);
 
     // 2. Generate report
     reg.RX_FQ_STS2.report.push({
       severityLevel: sevC.info,
       msg: `RX_FQ_STS2: ${reg.RX_FQ_STS2.name_long} (0x${reg.RX_FQ_STS2.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[DC_FULL] Data Container Full for Queues = 0x${reg.RX_FQ_STS2.fields.DC_FULL.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${fullIdx.length?fullIdx.join(', '):'none'}`
+           `[${f.DC_FULL.name_short.padEnd(7)}] ${f.DC_FULL.name_long.padEnd(30)} = 0x${f.DC_FULL.value.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${fullIdx.length?fullIdx.join(', '):'none'}`
     });
   }
 
@@ -946,14 +979,15 @@ export function procRegsMhRXFQ(reg) {
     reg.RX_FQ_CTRL0.report = [];
 
     // 1. Decode
-    reg.RX_FQ_CTRL0.fields.START = getBits(regValue, 7, 0);
-    const startIdx = listSetIdx8(reg.RX_FQ_CTRL0.fields.START);
+    defineField(reg.RX_FQ_CTRL0, regValue, 'START', 7, 0, 'Started Queues');
+    const f = reg.RX_FQ_CTRL0.fields;
+    const startIdx = listSetIdx8(f.START.value);
 
     // 2. Report
     reg.RX_FQ_CTRL0.report.push({
       severityLevel: sevC.info,
       msg: `RX_FQ_CTRL0: ${reg.RX_FQ_CTRL0.name_long} (0x${reg.RX_FQ_CTRL0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[START] Started Queues = 0x${reg.RX_FQ_CTRL0.fields.START.toString(16).toUpperCase().padStart(2,'0')}) => FIFOs: ${startIdx.length?startIdx.join(', '):'none'}`
+           `[${f.START.name_short.padEnd(5)}] ${f.START.name_long.padEnd(14)} = 0x${f.START.value.toString(16).toUpperCase().padStart(2,'0')}) => FIFOs: ${startIdx.length?startIdx.join(', '):'none'}`
     });
   }
 
@@ -966,14 +1000,15 @@ export function procRegsMhRXFQ(reg) {
     reg.RX_FQ_CTRL1.report = [];
 
     // 1. Decode
-    reg.RX_FQ_CTRL1.fields.ABORT = getBits(regValue, 7, 0);
-    const abortIdx = listSetIdx8(reg.RX_FQ_CTRL1.fields.ABORT);
+    defineField(reg.RX_FQ_CTRL1, regValue, 'ABORT', 7, 0, 'Aborted Queues');
+    const f = reg.RX_FQ_CTRL1.fields;
+    const abortIdx = listSetIdx8(f.ABORT.value);
 
     // 2. Report
     reg.RX_FQ_CTRL1.report.push({
       severityLevel: sevC.info,
       msg: `RX_FQ_CTRL1: ${reg.RX_FQ_CTRL1.name_long} (0x${reg.RX_FQ_CTRL1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ABORT] Aborted Queues = 0x${reg.RX_FQ_CTRL1.fields.ABORT.toString(16).toUpperCase().padStart(2,'0')}  => FIFOs: ${abortIdx.length?abortIdx.join(', '):'none'}`
+           `[${f.ABORT.name_short.padEnd(5)}] ${f.ABORT.name_long.padEnd(14)} = 0x${f.ABORT.value.toString(16).toUpperCase().padStart(2,'0')}  => FIFOs: ${abortIdx.length?abortIdx.join(', '):'none'}`
     });
   }
 
@@ -986,14 +1021,15 @@ export function procRegsMhRXFQ(reg) {
     reg.RX_FQ_CTRL2.report = [];
 
     // 1. Decode
-    reg.RX_FQ_CTRL2.fields.ENABLE = getBits(regValue, 7, 0);
-    const enaIdx = listSetIdx8(reg.RX_FQ_CTRL2.fields.ENABLE);
+    defineField(reg.RX_FQ_CTRL2, regValue, 'ENABLE', 7, 0, 'Enabled Queues');
+    const f = reg.RX_FQ_CTRL2.fields;
+    const enaIdx = listSetIdx8(f.ENABLE.value);
 
     // 2. Report
     reg.RX_FQ_CTRL2.report.push({
       severityLevel: sevC.info,
       msg: `RX_FQ_CTRL2: ${reg.RX_FQ_CTRL2.name_long} (0x${reg.RX_FQ_CTRL2.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-           `[ENABLE] Enabled Queues = 0x${reg.RX_FQ_CTRL2.fields.ENABLE.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${enaIdx.length?enaIdx.join(', '):'none'}`
+           `[${f.ENABLE.name_short.padEnd(6)}] ${f.ENABLE.name_long.padEnd(14)} = 0x${f.ENABLE.value.toString(16).toUpperCase().padStart(2,'0')} => FIFOs: ${enaIdx.length?enaIdx.join(', '):'none'}`
     });
   }
 
@@ -1010,11 +1046,12 @@ export function procRegsMhRXFQ(reg) {
       const regValue = reg[addPtName].int32;
       reg[addPtName].fields = {};
       reg[addPtName].report = [];
-      reg[addPtName].fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
+      defineField(reg[addPtName], regValue, 'VAL', 31, 0, `RXFQ${q} Current Descriptor Address (SMEM)`, r => r >>> 0);
+      const f = reg[addPtName].fields;
       reg[addPtName].report.push({
         severityLevel: sevC.info,
         msg: `${addPtName}: ${reg[addPtName].name_long} (0x${reg[addPtName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-             `[VAL] RXFQ${q} Current Descriptor Address (SMEM) = 0x${reg[addPtName].fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
+             `[${f.VAL.name_short.padEnd(3)}] ${f.VAL.name_long.padEnd(39)} = 0x${f.VAL.decoded.toString(16).toUpperCase().padStart(8,'0')}`
       });
     }
 
@@ -1023,12 +1060,13 @@ export function procRegsMhRXFQ(reg) {
       const regValue = reg[startAddName].int32;
       reg[startAddName].fields = {};
       reg[startAddName].report = [];
-      reg[startAddName].fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
+      defineField(reg[startAddName], regValue, 'VAL', 31, 0, `RXFQ${q} Start Address (SMEM)`, r => r >>> 0);
+      const f = reg[startAddName].fields;
       const alignOk = (regValue & 0x3) === 0;
       reg[startAddName].report.push({
         severityLevel: sevC.info,
         msg: `${startAddName}: ${reg[startAddName].name_long} (0x${reg[startAddName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-             `[VAL] RXFQ${q} Start Address (SMEM)                = 0x${reg[startAddName].fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
+             `[${f.VAL.name_short.padEnd(3)}] ${f.VAL.name_long.padEnd(41)} = 0x${f.VAL.decoded.toString(16).toUpperCase().padStart(8,'0')}`
       });
       if (!alignOk) {
         reg[startAddName].report.push({ severityLevel: sevC.warning, msg: `${startAddName}: Address not word-aligned (LSBs [1:0] should be 0).` });
@@ -1040,18 +1078,19 @@ export function procRegsMhRXFQ(reg) {
       const regValue = reg[sizeName].int32;
       reg[sizeName].fields = {};
       reg[sizeName].report = [];
-      reg[sizeName].fields.DC_SIZE  = getBits(regValue, 27, 16); // data container size units
-      reg[sizeName].fields.MAX_DESC = getBits(regValue,  9,  0); // link list descriptors
-      const maxDesc = reg[sizeName].fields.MAX_DESC;
-      const dcSize = reg[sizeName].fields.DC_SIZE; // units of 32 bytes (normal: per desc; continuous: whole container)
+      defineField(reg[sizeName], regValue, 'DC_SIZE', 27, 16, `RXFQ${q} Data Container Size`); // data container size units
+      defineField(reg[sizeName], regValue, 'MAX_DESC', 9, 0, `RXFQ${q} Size`); // link list descriptors
+      const f = reg[sizeName].fields;
+      const maxDesc = f.MAX_DESC.value;
+      const dcSize = f.DC_SIZE.value; // units of 32 bytes (normal: per desc; continuous: whole container)
       const descBytes = maxDesc > 0 ? (maxDesc * 16) >>> 0 : 0; // RX descriptors 16 bytes each
       let dcInfo = '';
       if (dcSize > 0) dcInfo = ` (in Normal Mode = ${getBits(dcSize, 6, 0)* 32} byte; in Continuous Mode = ${dcSize * 32} byte)`;
       reg[sizeName].report.push({
         severityLevel: sevC.info,
         msg: `${sizeName}: ${reg[sizeName].name_long} (0x${reg[sizeName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-             `[DC_SIZE ] RXFQ${q} Data Container Size = ${dcSize}${dcInfo}\n` +
-             `[MAX_DESC] RXFQ${q} Size                = ${maxDesc}${maxDesc>0?` (Descriptors allocate ${descBytes} byte in S_MEM)`:''}`
+             `[${f.DC_SIZE.name_short.padEnd(8)}] ${f.DC_SIZE.name_long.padEnd(25)} = ${dcSize}${dcInfo}\n` +
+             `[${f.MAX_DESC.name_short.padEnd(8)}] ${f.MAX_DESC.name_long.padEnd(25)} = ${maxDesc}${maxDesc>0?` (Descriptors allocate ${descBytes} byte in S_MEM)`:''}`
       });
     }
 
@@ -1060,12 +1099,13 @@ export function procRegsMhRXFQ(reg) {
       const regValue = reg[dcStartAddName].int32;
       reg[dcStartAddName].fields = {};
       reg[dcStartAddName].report = [];
-      reg[dcStartAddName].fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
+      defineField(reg[dcStartAddName], regValue, 'VAL', 31, 0, `RXFQ${q} Data Container Start Address (SMEM)`, r => r >>> 0);
+      const f = reg[dcStartAddName].fields;
       const alignOk = (regValue & 0x3) === 0;
       reg[dcStartAddName].report.push({
         severityLevel: sevC.info,
         msg: `${dcStartAddName}: ${reg[dcStartAddName].name_long} (0x${reg[dcStartAddName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-             `[VAL] RXFQ${q} Data Container Start Address (SMEM) = 0x${reg[dcStartAddName].fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
+             `[${f.VAL.name_short.padEnd(3)}] ${f.VAL.name_long.padEnd(41)} = 0x${f.VAL.decoded.toString(16).toUpperCase().padStart(8,'0')}`
       });
       if (!alignOk) {
         reg[dcStartAddName].report.push({ severityLevel: sevC.warning, msg: `${dcStartAddName}: Address not word-aligned (LSBs [1:0] should be 0).` });
@@ -1077,13 +1117,14 @@ export function procRegsMhRXFQ(reg) {
       const regValue = reg[rdAddPtName].int32;
       reg[rdAddPtName].fields = {};
       reg[rdAddPtName].report = [];
-      reg[rdAddPtName].fields.VAL = getBits(regValue, 31, 0) >>> 0; // convert to unsigned via >>> 0, to prevent negative numbers in printout
+      defineField(reg[rdAddPtName], regValue, 'VAL', 31, 0, `RXFQ${q} Data Container Read Address (SMEM)`, r => r >>> 0);
+      const f = reg[rdAddPtName].fields;
       const initialSpecial = (regValue & 0x3) === 0x3; // initial required 0b11 for start according to manual
       const alignedLater   = (regValue & 0x3) === 0x0; // after initial should be aligned
       reg[rdAddPtName].report.push({
         severityLevel: sevC.info,
         msg: `${rdAddPtName}: ${reg[rdAddPtName].name_long} (0x${reg[rdAddPtName].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n` +
-             `[VAL] RXFQ${q} Data Container Read Address (SMEM)  = 0x${reg[rdAddPtName].fields.VAL.toString(16).toUpperCase().padStart(8,'0')}`
+             `[${f.VAL.name_short.padEnd(3)}] ${f.VAL.name_long.padEnd(41)} = 0x${f.VAL.decoded.toString(16).toUpperCase().padStart(8,'0')}`
       });
       if (!initialSpecial && !alignedLater) {
         reg[rdAddPtName].report.push({ severityLevel: sevC.warning, msg: `${rdAddPtName}: LSBs [1:0] must be =0. Exception: initial value can be 0b11.` });
@@ -1111,10 +1152,10 @@ export function procRegsMhRXFQ(reg) {
       const addPtName   = `RX_FQ_ADD_PT${q}`;
       const sizeName    = `RX_FQ_SIZE${q}`;
 
-      const startRegVal = (startAddName in reg && reg[startAddName].fields && 'VAL' in reg[startAddName].fields) ? ('0x'+reg[startAddName].fields.VAL.toString(16).toUpperCase().padStart(8,'0')) : '-';
-      const addPtRegVal = (addPtName   in reg && reg[addPtName].fields   && 'VAL' in reg[addPtName].fields)   ? ('0x'+reg[addPtName].fields.VAL.toString(16).toUpperCase().padStart(8,'0'))   : '-';
-      const sizeVal     = (sizeName    in reg && reg[sizeName].fields    && 'MAX_DESC' in reg[sizeName].fields)? (''+reg[sizeName].fields.MAX_DESC) : '-';
-      const dcSizeVal   = (sizeName    in reg && reg[sizeName].fields    && 'DC_SIZE'  in reg[sizeName].fields)? (''+reg[sizeName].fields.DC_SIZE)  : '-';
+      const startRegVal = (startAddName in reg && reg[startAddName].fields && 'VAL' in reg[startAddName].fields) ? ('0x'+reg[startAddName].fields.VAL.decoded.toString(16).toUpperCase().padStart(8,'0')) : '-';
+      const addPtRegVal = (addPtName   in reg && reg[addPtName].fields   && 'VAL' in reg[addPtName].fields)   ? ('0x'+reg[addPtName].fields.VAL.decoded.toString(16).toUpperCase().padStart(8,'0'))   : '-';
+      const sizeVal     = (sizeName    in reg && reg[sizeName].fields    && 'MAX_DESC' in reg[sizeName].fields)? (''+reg[sizeName].fields.MAX_DESC.value) : '-';
+      const dcSizeVal   = (sizeName    in reg && reg[sizeName].fields    && 'DC_SIZE'  in reg[sizeName].fields)? (''+reg[sizeName].fields.DC_SIZE.value)  : '-';
 
       const enaBit    = (enaMask    !== undefined) ? ((enaMask    >>> q) & 1).toString() : '-';
       const stBit     = (startMask  !== undefined) ? ((startMask  >>> q) & 1).toString() : '-';
@@ -1170,29 +1211,30 @@ export function procRegsMhRXTXFilter(reg) {
     reg.TX_FILTER_CTRL0.fields = {};
     reg.TX_FILTER_CTRL0.report = [];
     // 1. Decode
-    reg.TX_FILTER_CTRL0.fields.IRQ_EN = getBits(regValue, 20, 20);
-    reg.TX_FILTER_CTRL0.fields.EN     = getBits(regValue, 19, 19);
-    reg.TX_FILTER_CTRL0.fields.CC_CAN = getBits(regValue, 18, 18);
-    reg.TX_FILTER_CTRL0.fields.CAN_FD = getBits(regValue, 17, 17);
-    reg.TX_FILTER_CTRL0.fields.MODE   = getBits(regValue, 16,16); // 1=accept on match else reject on match
-    reg.TX_FILTER_CTRL0.fields.MASK   = getBits(regValue, 15, 8);
-    reg.TX_FILTER_CTRL0.fields.COMB   = getBits(regValue, 7, 0);
+    defineField(reg.TX_FILTER_CTRL0, regValue, 'IRQ_EN', 20, 20, 'Interrupt on Rejection Enabled');
+    defineField(reg.TX_FILTER_CTRL0, regValue, 'EN', 19, 19, 'TX Filter Global Enable');
+    defineField(reg.TX_FILTER_CTRL0, regValue, 'CC_CAN', 18, 18, 'CAN CC frame Reject(1)');
+    defineField(reg.TX_FILTER_CTRL0, regValue, 'CAN_FD', 17, 17, 'CAN FD frame Reject(1)');
+    defineField(reg.TX_FILTER_CTRL0, regValue, 'MODE', 16, 16, 'Mode: Accept (1) or Reject (0)'); // 1=accept on match else reject on match
+    defineField(reg.TX_FILTER_CTRL0, regValue, 'MASK', 15, 8, 'Use Value/Mask pairs');
+    defineField(reg.TX_FILTER_CTRL0, regValue, 'COMB', 7, 0, 'Use REF_VAL pairs (0+1, 2+3, )');
+    const f = reg.TX_FILTER_CTRL0.fields;
     // for each element of maskIdx => create strings 0/1, 2/3, ...
-    const maskIdx = listSetIdx8(reg.TX_FILTER_CTRL0.fields.MASK);
-    const combIdx = listSetIdx8(reg.TX_FILTER_CTRL0.fields.COMB);
+    const maskIdx = listSetIdx8(f.MASK.value);
+    const combIdx = listSetIdx8(f.COMB.value);
     let maskIdxPairsString = maskIdx.map((v, i) => `${2*v+1}/${2*v}`).join(', ');
     let combIdxPairsString = combIdx.map((v, i) => `${2*v+1}/${2*v}`).join(', ');
     // 2. Report
     reg.TX_FILTER_CTRL0.report.push({
       severityLevel: sevC.info,
       msg: `TX_FILTER_CTRL0: ${reg.TX_FILTER_CTRL0.name_long} (0x${reg.TX_FILTER_CTRL0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[IRQ_EN] Interrupt on Rejection Enabled = ${reg.TX_FILTER_CTRL0.fields.IRQ_EN}\n` +
-           `[EN    ] TX Filter Global Enable        = ${reg.TX_FILTER_CTRL0.fields.EN}\n`+
-           `[CC_CAN] CAN CC frame Reject(1)         = ${reg.TX_FILTER_CTRL0.fields.CC_CAN} ${reg.TX_FILTER_CTRL0.fields.CC_CAN? '(=Reject)':'(=Accept)'}\n`+
-           `[CAN_FD] CAN FD frame Reject(1)         = ${reg.TX_FILTER_CTRL0.fields.CAN_FD} ${reg.TX_FILTER_CTRL0.fields.CAN_FD? '(=Reject)':'(=Accept)'}\n`+
-           `[MODE  ] Mode: Accept (1) or Reject (0) = ${reg.TX_FILTER_CTRL0.fields.MODE} ${reg.TX_FILTER_CTRL0.fields.MODE? '(=Accept)':'(=Reject)'} on match)\n`+
-           `[MASK  ] Use Value/Mask pairs           = 0x${reg.TX_FILTER_CTRL0.fields.MASK.toString(16).toUpperCase().padStart(2,'0')} => Mask/Value Pairs: ${maskIdxPairsString? maskIdxPairsString : 'none'}\n`+
-           `[COMB  ] Use REF_VAL pairs (0+1, 2+3, ) = 0x${reg.TX_FILTER_CTRL0.fields.COMB.toString(16).toUpperCase().padStart(2,'0')} => Filter     Pairs: ${combIdxPairsString? combIdxPairsString : 'none'}`
+           `[${f.IRQ_EN.name_short.padEnd(6)}] ${f.IRQ_EN.name_long.padEnd(30)} = ${f.IRQ_EN.value}\n` +
+           `[${f.EN.name_short.padEnd(6)}] ${f.EN.name_long.padEnd(30)} = ${f.EN.value}\n`+
+           `[${f.CC_CAN.name_short.padEnd(6)}] ${f.CC_CAN.name_long.padEnd(30)} = ${f.CC_CAN.value} ${f.CC_CAN.value? '(=Reject)':'(=Accept)'}\n`+
+           `[${f.CAN_FD.name_short.padEnd(6)}] ${f.CAN_FD.name_long.padEnd(30)} = ${f.CAN_FD.value} ${f.CAN_FD.value? '(=Reject)':'(=Accept)'}\n`+
+           `[${f.MODE.name_short.padEnd(6)}] ${f.MODE.name_long.padEnd(30)} = ${f.MODE.value} ${f.MODE.value? '(=Accept)':'(=Reject)'} on match)\n`+
+           `[${f.MASK.name_short.padEnd(6)}] ${f.MASK.name_long.padEnd(30)} = 0x${f.MASK.value.toString(16).toUpperCase().padStart(2,'0')} => Mask/Value Pairs: ${maskIdxPairsString? maskIdxPairsString : 'none'}\n`+
+           `[${f.COMB.name_short.padEnd(6)}] ${f.COMB.name_long.padEnd(30)} = 0x${f.COMB.value.toString(16).toUpperCase().padStart(2,'0')} => Filter     Pairs: ${combIdxPairsString? combIdxPairsString : 'none'}`
     });
   }
 
@@ -1203,16 +1245,17 @@ export function procRegsMhRXTXFilter(reg) {
     reg.TX_FILTER_CTRL1.fields = {};
     reg.TX_FILTER_CTRL1.report = [];
     // 1. Decode
-    reg.TX_FILTER_CTRL1.fields.FIELD = getBits(regValue, 31,16); // 1 = SDT, 0 = VCID
-    reg.TX_FILTER_CTRL1.fields.VALID = getBits(regValue, 15, 0);
+    defineField(reg.TX_FILTER_CTRL1, regValue, 'FIELD', 31, 16, 'Compared field: SDT(1) or VCID(0)'); // 1 = SDT, 0 = VCID
+    defineField(reg.TX_FILTER_CTRL1, regValue, 'VALID', 15, 0, 'Active Ref Value Indexes: REF_VALx');
+    const f = reg.TX_FILTER_CTRL1.fields;
     // 2. Report
-    const fieldIdx = listSetIdx16(reg.TX_FILTER_CTRL1.fields.FIELD);
-    const validIdx = listSetIdx16(reg.TX_FILTER_CTRL1.fields.VALID);
+    const fieldIdx = listSetIdx16(f.FIELD.value);
+    const validIdx = listSetIdx16(f.VALID.value);
     reg.TX_FILTER_CTRL1.report.push({
       severityLevel: sevC.info,
       msg: `TX_FILTER_CTRL1: ${reg.TX_FILTER_CTRL1.name_long} (0x${reg.TX_FILTER_CTRL1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[VALID] Active Ref Value Indexes: REF_VALx = 0x${reg.TX_FILTER_CTRL1.fields.VALID.toString(16).toUpperCase().padStart(4,'0')} => ${validIdx.length?validIdx.join(', '):'none'}\n`+
-           `[FIELD] Compared field: SDT(1) or VCID(0)  = 0x${reg.TX_FILTER_CTRL1.fields.FIELD.toString(16).toUpperCase().padStart(4,'0')} => binary (15:0)  ${getBinaryLineData(reg.TX_FILTER_CTRL1.fields.FIELD, 16)}`
+           `[${f.VALID.name_short.padEnd(5)}] ${f.VALID.name_long.padEnd(34)} = 0x${f.VALID.value.toString(16).toUpperCase().padStart(4,'0')} => ${validIdx.length?validIdx.join(', '):'none'}\n`+
+           `[${f.FIELD.name_short.padEnd(5)}] ${f.FIELD.name_long.padEnd(34)} = 0x${f.FIELD.value.toString(16).toUpperCase().padStart(4,'0')} => binary (15:0)  ${getBinaryLineData(f.FIELD.value, 16)}`
     });
   }
 
@@ -1223,17 +1266,18 @@ export function procRegsMhRXTXFilter(reg) {
       const regValue = reg[name].int32;
       reg[name].fields = {};
       reg[name].report = [];
-      reg[name].fields.REF_VAL0 = getBits(regValue, 7, 0);
-      reg[name].fields.REF_VAL1 = getBits(regValue,15, 8);
-      reg[name].fields.REF_VAL2 = getBits(regValue,23,16);
-      reg[name].fields.REF_VAL3 = getBits(regValue,31,24);
+      defineField(reg[name], regValue, 'REF_VAL0', 7, 0, `global REF_VAL${(index*4+0).toString().padEnd(2,' ')}`);
+      defineField(reg[name], regValue, 'REF_VAL1', 15, 8, `global REF_VAL${(index*4+1).toString().padEnd(2,' ')}`);
+      defineField(reg[name], regValue, 'REF_VAL2', 23, 16, `global REF_VAL${(index*4+2).toString().padEnd(2,' ')}`);
+      defineField(reg[name], regValue, 'REF_VAL3', 31, 24, `global REF_VAL${(index*4+3).toString().padEnd(2,' ')}`);
+      const f = reg[name].fields;
       reg[name].report.push({
         severityLevel: sevC.info,
         msg: `${name}: ${reg[name].name_long} (0x${reg[name].addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-             `[REF_VAL3] global REF_VAL${(index*4+3).toString().padEnd(2,' ')} = 0x${reg[name].fields.REF_VAL3.toString(16).toUpperCase().padStart(2,'0')}\n`+
-             `[REF_VAL2] global REF_VAL${(index*4+2).toString().padEnd(2,' ')} = 0x${reg[name].fields.REF_VAL2.toString(16).toUpperCase().padStart(2,'0')}\n`+
-             `[REF_VAL1] global REF_VAL${(index*4+1).toString().padEnd(2,' ')} = 0x${reg[name].fields.REF_VAL1.toString(16).toUpperCase().padStart(2,'0')}\n`+
-             `[REF_VAL0] global REF_VAL${(index*4+0).toString().padEnd(2,' ')} = 0x${reg[name].fields.REF_VAL0.toString(16).toUpperCase().padStart(2,'0')}`
+             `[${f.REF_VAL3.name_short.padEnd(8)}] ${f.REF_VAL3.name_long.padEnd(16)} = 0x${f.REF_VAL3.value.toString(16).toUpperCase().padStart(2,'0')}\n`+
+             `[${f.REF_VAL2.name_short.padEnd(8)}] ${f.REF_VAL2.name_long.padEnd(16)} = 0x${f.REF_VAL2.value.toString(16).toUpperCase().padStart(2,'0')}\n`+
+             `[${f.REF_VAL1.name_short.padEnd(8)}] ${f.REF_VAL1.name_long.padEnd(16)} = 0x${f.REF_VAL1.value.toString(16).toUpperCase().padStart(2,'0')}\n`+
+             `[${f.REF_VAL0.name_short.padEnd(8)}] ${f.REF_VAL0.name_long.padEnd(16)} = 0x${f.REF_VAL0.value.toString(16).toUpperCase().padStart(2,'0')}`
       });
     }
   };
@@ -1245,11 +1289,11 @@ export function procRegsMhRXTXFilter(reg) {
   // === TX_FILTER Summary =====================================
   if (reg.TX_FILTER_CTRL0 && reg.TX_FILTER_CTRL0.fields &&
       reg.TX_FILTER_CTRL1 && reg.TX_FILTER_CTRL1.fields) {
-    const enGlobal = reg.TX_FILTER_CTRL0.fields.EN === 1;
-    const validMask = reg.TX_FILTER_CTRL1.fields.VALID; // 16 bits -> REF_VAL00..15
-    const fieldMask = reg.TX_FILTER_CTRL1.fields.FIELD; // 1 = SDT, 0 = VCID
-    const maskPairs = reg.TX_FILTER_CTRL0.fields.MASK;  // bit i => use REF_VAL(2*i+1)/(2*i)
-    const combPairs = reg.TX_FILTER_CTRL0.fields.COMB;  // bit i => combine pair (2*i,2*i+1)
+    const enGlobal = reg.TX_FILTER_CTRL0.fields.EN.value === 1;
+    const validMask = reg.TX_FILTER_CTRL1.fields.VALID.value; // 16 bits -> REF_VAL00..15
+    const fieldMask = reg.TX_FILTER_CTRL1.fields.FIELD.value; // 1 = SDT, 0 = VCID
+    const maskPairs = reg.TX_FILTER_CTRL0.fields.MASK.value;  // bit i => use REF_VAL(2*i+1)/(2*i)
+    const combPairs = reg.TX_FILTER_CTRL0.fields.COMB.value;  // bit i => combine pair (2*i,2*i+1)
 
     // Helper to fetch a global REF_VALx (0..15) value
     const getRefVal = (idx) => {
@@ -1263,7 +1307,7 @@ export function procRegsMhRXTXFilter(reg) {
       };
       const entry = map[regIdx];
       if (!entry || !entry.fields) return undefined;
-      return entry.fields[`REF_VAL${pos}`];
+      return entry.fields[`REF_VAL${pos}`].value;
     };
 
     const lines = [];
@@ -1324,20 +1368,21 @@ export function procRegsMhRXTXFilter(reg) {
     reg.RX_FILTER_CTRL.fields = {};
     reg.RX_FILTER_CTRL.report = [];
     // 1.
-    reg.RX_FILTER_CTRL.fields.ANFF     = getBits(regValue,21,21);
-    reg.RX_FILTER_CTRL.fields.ANMF     = getBits(regValue,20,20);
-    reg.RX_FILTER_CTRL.fields.ANMF_FQ  = getBits(regValue,18,16);
-    reg.RX_FILTER_CTRL.fields.THRESHOLD= getBits(regValue,12, 8);
-    reg.RX_FILTER_CTRL.fields.NB_FE      = getBits(regValue, 7, 0);
+    defineField(reg.RX_FILTER_CTRL, regValue, 'ANFF', 21, 21, 'Threshold for RX DMA FIFO (=cache)');
+    defineField(reg.RX_FILTER_CTRL, regValue, 'ANMF', 20, 20, 'Accept Non-Matching Frames');
+    defineField(reg.RX_FILTER_CTRL, regValue, 'ANMF_FQ', 18, 16, 'Default RX FIFO Queue (ANMF/ANFF)');
+    defineField(reg.RX_FILTER_CTRL, regValue, 'THRESHOLD', 12, 8, 'Threshold (words, if ANFF=1)');
+    defineField(reg.RX_FILTER_CTRL, regValue, 'NB_FE', 7, 0, 'Number of RX Filter Elements');
+    const f = reg.RX_FILTER_CTRL.fields;
     // 2.
     reg.RX_FILTER_CTRL.report.push({
       severityLevel: sevC.info,
       msg: `RX_FILTER_CTRL: ${reg.RX_FILTER_CTRL.name_long} (0x${reg.RX_FILTER_CTRL.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[ANFF     ] Threshold for RX DMA FIFO (=cache) = ${reg.RX_FILTER_CTRL.fields.ANFF}\n`+
-           `[ANMF     ] Accept Non-Matching Frames         = ${reg.RX_FILTER_CTRL.fields.ANMF}\n`+
-           `[ANMF_FQ  ] Default RX FIFO Queue (ANMF/ANFF)  = ${reg.RX_FILTER_CTRL.fields.ANMF_FQ}\n`+
-           `[THRESHOLD] Threshold (words, if ANFF=1)       = ${reg.RX_FILTER_CTRL.fields.THRESHOLD}\n`+
-           `[NB_FE    ] Number of RX Filter Elements       = ${reg.RX_FILTER_CTRL.fields.NB_FE}`
+           `[${f.ANFF.name_short.padEnd(9)}] ${f.ANFF.name_long.padEnd(34)} = ${f.ANFF.value}\n`+
+           `[${f.ANMF.name_short.padEnd(9)}] ${f.ANMF.name_long.padEnd(34)} = ${f.ANMF.value}\n`+
+           `[${f.ANMF_FQ.name_short.padEnd(9)}] ${f.ANMF_FQ.name_long.padEnd(34)} = ${f.ANMF_FQ.value}\n`+
+           `[${f.THRESHOLD.name_short.padEnd(9)}] ${f.THRESHOLD.name_long.padEnd(34)} = ${f.THRESHOLD.value}\n`+
+           `[${f.NB_FE.name_short.padEnd(9)}] ${f.NB_FE.name_long.padEnd(34)} = ${f.NB_FE.value}`
     });
   }
 }
@@ -1354,16 +1399,17 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.TX_FQ_INT_STS.fields = {};
     reg.TX_FQ_INT_STS.report = [];
     // 1. Decode (MSB -> LSB)
-    reg.TX_FQ_INT_STS.fields.UNVALID = getBits(regValue,23,16); // invalid descriptor
-    reg.TX_FQ_INT_STS.fields.SENT    = getBits(regValue,7,0);   // sent msg
-    const unvIdx = listSet(reg.TX_FQ_INT_STS.fields.UNVALID,7);
-    const sentIdx= listSet(reg.TX_FQ_INT_STS.fields.SENT,7);
+    defineField(reg.TX_FQ_INT_STS, regValue, 'UNVALID', 23, 16, 'TXFQ Descriptor VALID=0 IR'); // invalid descriptor
+    defineField(reg.TX_FQ_INT_STS, regValue, 'SENT', 7, 0, 'TXFQ Message Dequeued   IR');   // sent msg
+    const f = reg.TX_FQ_INT_STS.fields;
+    const unvIdx = listSet(f.UNVALID.value,7);
+    const sentIdx= listSet(f.SENT.value,7);
     // 2. Report
     reg.TX_FQ_INT_STS.report.push({
       severityLevel: sevC.info,
       msg: `TX_FQ_INT_STS: ${reg.TX_FQ_INT_STS.name_long} (0x${reg.TX_FQ_INT_STS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[UNVALID ] TXFQ Descriptor VALID=0 IR = 0x${reg.TX_FQ_INT_STS.fields.UNVALID.toString(16).toUpperCase().padStart(2,'0')} => Queues: ${unvIdx.length?unvIdx.join(', '):'none'}\n`+
-           `[SENT    ] TXFQ Message Dequeued   IR = 0x${reg.TX_FQ_INT_STS.fields.SENT.toString(16).toUpperCase().padStart(2,'0')} => Queues: ${sentIdx.length?sentIdx.join(', '):'none'}`
+           `[${f.UNVALID.name_short.padEnd(8)}] ${f.UNVALID.name_long.padEnd(26)} = 0x${f.UNVALID.value.toString(16).toUpperCase().padStart(2,'0')} => Queues: ${unvIdx.length?unvIdx.join(', '):'none'}\n`+
+           `[${f.SENT.name_short.padEnd(8)}] ${f.SENT.name_long.padEnd(26)} = 0x${f.SENT.value.toString(16).toUpperCase().padStart(2,'0')} => Queues: ${sentIdx.length?sentIdx.join(', '):'none'}`
     });
   }
 
@@ -1374,16 +1420,17 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.RX_FQ_INT_STS.fields = {};
     reg.RX_FQ_INT_STS.report = [];
     // 1. Decode (MSB -> LSB)
-    reg.RX_FQ_INT_STS.fields.UNVALID  = getBits(regValue,23,16);
-    reg.RX_FQ_INT_STS.fields.RECEIVED = getBits(regValue,7,0);
+    defineField(reg.RX_FQ_INT_STS, regValue, 'UNVALID', 23, 16, 'RXFQ Descriptor VALID=0 IR');
+    defineField(reg.RX_FQ_INT_STS, regValue, 'RECEIVED', 7, 0, 'RXFQ Message Enqueued   IR');
+    const f = reg.RX_FQ_INT_STS.fields;
     // 2. Report
-    const unvIdx = listSet(reg.RX_FQ_INT_STS.fields.UNVALID,7);
-    const rcvIdx = listSet(reg.RX_FQ_INT_STS.fields.RECEIVED,7);
+    const unvIdx = listSet(f.UNVALID.value,7);
+    const rcvIdx = listSet(f.RECEIVED.value,7);
     reg.RX_FQ_INT_STS.report.push({
       severityLevel: sevC.info,
       msg: `RX_FQ_INT_STS: ${reg.RX_FQ_INT_STS.name_long} (0x${reg.RX_FQ_INT_STS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[UNVALID ] RXFQ Descriptor VALID=0 IR = 0x${reg.RX_FQ_INT_STS.fields.UNVALID.toString(16).toUpperCase().padStart(2,'0')} => Queues: ${unvIdx.length?unvIdx.join(', '):'none'}\n`+
-           `[RECEIVED] RXFQ Message Enqueued   IR = 0x${reg.RX_FQ_INT_STS.fields.RECEIVED.toString(16).toUpperCase().padStart(2,'0')} => Queues: ${rcvIdx.length?rcvIdx.join(', '):'none'}`
+           `[${f.UNVALID.name_short.padEnd(8)}] ${f.UNVALID.name_long.padEnd(26)} = 0x${f.UNVALID.value.toString(16).toUpperCase().padStart(2,'0')} => Queues: ${unvIdx.length?unvIdx.join(', '):'none'}\n`+
+           `[${f.RECEIVED.name_short.padEnd(8)}] ${f.RECEIVED.name_long.padEnd(26)} = 0x${f.RECEIVED.value.toString(16).toUpperCase().padStart(2,'0')} => Queues: ${rcvIdx.length?rcvIdx.join(', '):'none'}`
     });
   }
 
@@ -1394,15 +1441,16 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.TX_PQ_INT_STS0.fields = {};
     reg.TX_PQ_INT_STS0.report = [];
     // 1. Decode (MSB -> LSB)
-    reg.TX_PQ_INT_STS0.fields.SENT = getBits(regValue,31,0);
+    defineField(reg.TX_PQ_INT_STS0, regValue, 'SENT', 31, 0, 'TXPQ Messages Dequeued IR');
+    const f = reg.TX_PQ_INT_STS0.fields;
     // 2. Report
-    const sentIdx = listSet(reg.TX_PQ_INT_STS0.fields.SENT,31);
+    const sentIdx = listSet(f.SENT.value,31);
     let binLineHead = "Bit: 31                  23                  15                  7               0\n";
     let binLineData = "Slot " + getBinaryLineData(regValue);
     reg.TX_PQ_INT_STS0.report.push({
       severityLevel: sevC.info,
       msg: `TX_PQ_INT_STS0: ${reg.TX_PQ_INT_STS0.name_long} (0x${reg.TX_PQ_INT_STS0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[SENT] TXPQ Messages Dequeued IR      = 0x${reg.TX_PQ_INT_STS0.fields.SENT.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${sentIdx.length?sentIdx.join(', '):'none'}\n` +
+           `[${f.SENT.name_short.padEnd(4)}] ${f.SENT.name_long.padEnd(30)} = 0x${f.SENT.value.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${sentIdx.length?sentIdx.join(', '):'none'}\n` +
            binLineHead +
            binLineData
     });
@@ -1415,15 +1463,16 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.TX_PQ_INT_STS1.fields = {};
     reg.TX_PQ_INT_STS1.report = [];
     // 1. Decode (MSB -> LSB)
-    reg.TX_PQ_INT_STS1.fields.UNVALID = getBits(regValue,31,0);
+    defineField(reg.TX_PQ_INT_STS1, regValue, 'UNVALID', 31, 0, 'TXPQ Descriptor VALID=0 IR');
+    const f = reg.TX_PQ_INT_STS1.fields;
     // 2. Report
-    const unvIdx = listSet(reg.TX_PQ_INT_STS1.fields.UNVALID,31);
+    const unvIdx = listSet(f.UNVALID.value,31);
     let binLineHead = "Bit: 31                  23                  15                  7               0\n";
     let binLineData = "Slot " + getBinaryLineData(regValue);
     reg.TX_PQ_INT_STS1.report.push({
       severityLevel: sevC.info,
       msg: `TX_PQ_INT_STS1: ${reg.TX_PQ_INT_STS1.name_long} (0x${reg.TX_PQ_INT_STS1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[UNVALID] TXPQ Descriptor VALID=0 IR  = 0x${reg.TX_PQ_INT_STS1.fields.UNVALID.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${unvIdx.length?unvIdx.join(', '):'none'}\n` +
+           `[${f.UNVALID.name_short.padEnd(7)}] ${f.UNVALID.name_long.padEnd(27)} = 0x${f.UNVALID.value.toString(16).toUpperCase().padStart(8,'0')} => Slots: ${unvIdx.length?unvIdx.join(', '):'none'}\n` +
            binLineHead +
            binLineData
     });
@@ -1436,18 +1485,19 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.STATS_INT_STS.fields = {};
     reg.STATS_INT_STS.report = [];
     // 1. Decode (MSB -> LSB)
-    reg.STATS_INT_STS.fields.RX_UNSUCC = getBits(regValue,3,3);
-    reg.STATS_INT_STS.fields.RX_SUCC   = getBits(regValue,2,2);
-    reg.STATS_INT_STS.fields.TX_UNSUCC = getBits(regValue,1,1);
-    reg.STATS_INT_STS.fields.TX_SUCC   = getBits(regValue,0,0);
+    defineField(reg.STATS_INT_STS, regValue, 'RX_UNSUCC', 3, 3, 'RX unsuccessful counter');
+    defineField(reg.STATS_INT_STS, regValue, 'RX_SUCC', 2, 2, 'RX successful counter');
+    defineField(reg.STATS_INT_STS, regValue, 'TX_UNSUCC', 1, 1, 'TX unsuccessful counter');
+    defineField(reg.STATS_INT_STS, regValue, 'TX_SUCC', 0, 0, 'TX successful counter');
+    const f = reg.STATS_INT_STS.fields;
     // 2. Report
     reg.STATS_INT_STS.report.push({
       severityLevel: sevC.info,
       msg: `STATS_INT_STS: ${reg.STATS_INT_STS.name_long} (0x${reg.STATS_INT_STS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[RX_UNSUCC] RX unsuccessful counter = ${reg.STATS_INT_STS.fields.RX_UNSUCC}\n`+
-           `[RX_SUCC  ] RX successful counter   = ${reg.STATS_INT_STS.fields.RX_SUCC}\n`+
-           `[TX_UNSUCC] TX unsuccessful counter = ${reg.STATS_INT_STS.fields.TX_UNSUCC}\n`+
-           `[TX_SUCC  ] TX successful counter   = ${reg.STATS_INT_STS.fields.TX_SUCC}`
+           `[${f.RX_UNSUCC.name_short.padEnd(9)}] ${f.RX_UNSUCC.name_long.padEnd(23)} = ${f.RX_UNSUCC.value}\n`+
+           `[${f.RX_SUCC.name_short.padEnd(9)}] ${f.RX_SUCC.name_long.padEnd(23)} = ${f.RX_SUCC.value}\n`+
+           `[${f.TX_UNSUCC.name_short.padEnd(9)}] ${f.TX_UNSUCC.name_long.padEnd(23)} = ${f.TX_UNSUCC.value}\n`+
+           `[${f.TX_SUCC.name_short.padEnd(9)}] ${f.TX_SUCC.name_long.padEnd(23)} = ${f.TX_SUCC.value}`
     });
   }
 
@@ -1458,20 +1508,21 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.ERR_INT_STS.fields = {};
     reg.ERR_INT_STS.report = [];
     // 1. Decode (MSB -> LSB)
-    reg.ERR_INT_STS.fields.DP_RX_SEQ_ERR     = getBits(regValue,4,4);
-    reg.ERR_INT_STS.fields.DP_TX_SEQ_ERR     = getBits(regValue,3,3);
-    reg.ERR_INT_STS.fields.DP_RX_ACK_DO_ERR  = getBits(regValue,2,2);
-    reg.ERR_INT_STS.fields.DP_RX_FIFO_DO_ERR = getBits(regValue,1,1);
-    reg.ERR_INT_STS.fields.DP_TX_ACK_DO_ERR  = getBits(regValue,0,0);
+    defineField(reg.ERR_INT_STS, regValue, 'DP_RX_SEQ_ERR', 4, 4, 'Data Path RX sequence error');
+    defineField(reg.ERR_INT_STS, regValue, 'DP_TX_SEQ_ERR', 3, 3, 'Data Path TX sequence error');
+    defineField(reg.ERR_INT_STS, regValue, 'DP_RX_ACK_DO_ERR', 2, 2, 'Data Path RX acknowledge data overflow');
+    defineField(reg.ERR_INT_STS, regValue, 'DP_RX_FIFO_DO_ERR', 1, 1, 'Data Path RX DMA FIFO overflow');
+    defineField(reg.ERR_INT_STS, regValue, 'DP_TX_ACK_DO_ERR', 0, 0, 'Data Path TX acknowledge data overflow');
+    const f = reg.ERR_INT_STS.fields;
     // 2. Report
     reg.ERR_INT_STS.report.push({
       severityLevel: sevC.info,
       msg: `ERR_INT_STS: ${reg.ERR_INT_STS.name_long} (0x${reg.ERR_INT_STS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[DP_RX_SEQ_ERR    ] Data Path RX sequence error            = ${reg.ERR_INT_STS.fields.DP_RX_SEQ_ERR}\n`+
-           `[DP_TX_SEQ_ERR    ] Data Path TX sequence error            = ${reg.ERR_INT_STS.fields.DP_TX_SEQ_ERR}\n`+
-           `[DP_RX_ACK_DO_ERR ] Data Path RX acknowledge data overflow = ${reg.ERR_INT_STS.fields.DP_RX_ACK_DO_ERR}\n`+
-           `[DP_RX_FIFO_DO_ERR] Data Path RX DMA FIFO overflow         = ${reg.ERR_INT_STS.fields.DP_RX_FIFO_DO_ERR}\n`+
-           `[DP_TX_ACK_DO_ERR ] Data Path TX acknowledge data overflow = ${reg.ERR_INT_STS.fields.DP_TX_ACK_DO_ERR}`
+           `[${f.DP_RX_SEQ_ERR.name_short.padEnd(17)}] ${f.DP_RX_SEQ_ERR.name_long.padEnd(38)} = ${f.DP_RX_SEQ_ERR.value}\n`+
+           `[${f.DP_TX_SEQ_ERR.name_short.padEnd(17)}] ${f.DP_TX_SEQ_ERR.name_long.padEnd(38)} = ${f.DP_TX_SEQ_ERR.value}\n`+
+           `[${f.DP_RX_ACK_DO_ERR.name_short.padEnd(17)}] ${f.DP_RX_ACK_DO_ERR.name_long.padEnd(38)} = ${f.DP_RX_ACK_DO_ERR.value}\n`+
+           `[${f.DP_RX_FIFO_DO_ERR.name_short.padEnd(17)}] ${f.DP_RX_FIFO_DO_ERR.name_long.padEnd(38)} = ${f.DP_RX_FIFO_DO_ERR.value}\n`+
+           `[${f.DP_TX_ACK_DO_ERR.name_short.padEnd(17)}] ${f.DP_TX_ACK_DO_ERR.name_long.padEnd(38)} = ${f.DP_TX_ACK_DO_ERR.value}`
     });
   }
 
@@ -1482,46 +1533,47 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.SFTY_INT_STS.fields = {};
     reg.SFTY_INT_STS.report = [];
     // 1. Decode (MSB -> LSB)
-    reg.SFTY_INT_STS.fields.ACK_RX_PARITY_ERR    = getBits(regValue,17,17);
-    reg.SFTY_INT_STS.fields.ACK_TX_PARITY_ERR    = getBits(regValue,16,16);
-    reg.SFTY_INT_STS.fields.MEM_SFTY_CE  = getBits(regValue,15,15);
-    reg.SFTY_INT_STS.fields.MEM_SFTY_UE  = getBits(regValue,14,14);
-    reg.SFTY_INT_STS.fields.RX_DESC_CRC_ERR   = getBits(regValue,13,13);
-    reg.SFTY_INT_STS.fields.RX_DESC_REQ_ERR   = getBits(regValue,12,12);
-    reg.SFTY_INT_STS.fields.TX_DESC_CRC_ERR   = getBits(regValue,11,11);
-    reg.SFTY_INT_STS.fields.TX_DESC_REQ_ERR   = getBits(regValue,10,10);
-    reg.SFTY_INT_STS.fields.AP_RX_PARITY_ERR  = getBits(regValue,9,9);
-    reg.SFTY_INT_STS.fields.AP_TX_PARITY_ERR  = getBits(regValue,8,8);
-    reg.SFTY_INT_STS.fields.DP_RX_PARITY_ERR  = getBits(regValue,7,7);
-    reg.SFTY_INT_STS.fields.DP_TX_PARITY_ERR  = getBits(regValue,6,6);
-    reg.SFTY_INT_STS.fields.MEM_AXI_RD_TO_ERR = getBits(regValue,5,5);
-    reg.SFTY_INT_STS.fields.MEM_AXI_WR_TO_ERR = getBits(regValue,4,4);
-    reg.SFTY_INT_STS.fields.DP_PRT_RX_TO_ERR     = getBits(regValue,3,3);
-    reg.SFTY_INT_STS.fields.DP_PRT_TX_TO_ERR     = getBits(regValue,2,2);
-    reg.SFTY_INT_STS.fields.DMA_AXI_RD_TO_ERR = getBits(regValue,1,1);
-    reg.SFTY_INT_STS.fields.DMA_AXI_WR_TO_ERR = getBits(regValue,0,0);
+    defineField(reg.SFTY_INT_STS, regValue, 'ACK_RX_PARITY_ERR', 17, 17, 'RX Ack Data Parity Issue');
+    defineField(reg.SFTY_INT_STS, regValue, 'ACK_TX_PARITY_ERR', 16, 16, 'TX Ack Data Parity Issue');
+    defineField(reg.SFTY_INT_STS, regValue, 'MEM_SFTY_CE', 15, 15, 'LMEM Correctable   Error');
+    defineField(reg.SFTY_INT_STS, regValue, 'MEM_SFTY_UE', 14, 14, 'LMEM Uncorrectable Error');
+    defineField(reg.SFTY_INT_STS, regValue, 'RX_DESC_CRC_ERR', 13, 13, 'RX Descriptor CRC Error');
+    defineField(reg.SFTY_INT_STS, regValue, 'RX_DESC_REQ_ERR', 12, 12, 'RX Descriptor Fetched Wrong');
+    defineField(reg.SFTY_INT_STS, regValue, 'TX_DESC_CRC_ERR', 11, 11, 'TX Descriptor Wrong CRC');
+    defineField(reg.SFTY_INT_STS, regValue, 'TX_DESC_REQ_ERR', 10, 10, 'TX Descriptor Fetched Wrong');
+    defineField(reg.SFTY_INT_STS, regValue, 'AP_RX_PARITY_ERR', 9, 9, 'RX Address Pointer Parity Error');
+    defineField(reg.SFTY_INT_STS, regValue, 'AP_TX_PARITY_ERR', 8, 8, 'TX Address Pointer Parity Error');
+    defineField(reg.SFTY_INT_STS, regValue, 'DP_RX_PARITY_ERR', 7, 7, 'RX Data Parity Error');
+    defineField(reg.SFTY_INT_STS, regValue, 'DP_TX_PARITY_ERR', 6, 6, 'TX Data Parity Error');
+    defineField(reg.SFTY_INT_STS, regValue, 'MEM_AXI_RD_TO_ERR', 5, 5, 'MEM AXI Read Timeout');
+    defineField(reg.SFTY_INT_STS, regValue, 'MEM_AXI_WR_TO_ERR', 4, 4, 'MEM AXI Write Timeout');
+    defineField(reg.SFTY_INT_STS, regValue, 'DP_PRT_RX_TO_ERR', 3, 3, '(PRT=>MH) RX_MSG IF Timeout');
+    defineField(reg.SFTY_INT_STS, regValue, 'DP_PRT_TX_TO_ERR', 2, 2, '(MH=>PRT) TX_MSG IF Timeout');
+    defineField(reg.SFTY_INT_STS, regValue, 'DMA_AXI_RD_TO_ERR', 1, 1, 'DMA AXI Read  Timeout');
+    defineField(reg.SFTY_INT_STS, regValue, 'DMA_AXI_WR_TO_ERR', 0, 0, 'DMA AXI Write Timeout');
+    const f = reg.SFTY_INT_STS.fields;
     // 2. Report
     reg.SFTY_INT_STS.report.push({
       severityLevel: sevC.info,
       msg: `SFTY_INT_STS: ${reg.SFTY_INT_STS.name_long} (0x${reg.SFTY_INT_STS.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[ACK_RX_PARITY_ERR] RX Ack Data Parity Issue        = ${reg.SFTY_INT_STS.fields.ACK_RX_PARITY_ERR}\n`+
-           `[ACK_TX_PARITY_ERR] TX Ack Data Parity Issue        = ${reg.SFTY_INT_STS.fields.ACK_TX_PARITY_ERR}\n`+
-           `[MEM_SFTY_CE      ] LMEM Correctable   Error        = ${reg.SFTY_INT_STS.fields.MEM_SFTY_CE}\n`+
-           `[MEM_SFTY_UE      ] LMEM Uncorrectable Error        = ${reg.SFTY_INT_STS.fields.MEM_SFTY_UE}\n`+
-           `[RX_DESC_CRC_ERR  ] RX Descriptor CRC Error         = ${reg.SFTY_INT_STS.fields.RX_DESC_CRC_ERR}\n`+
-           `[RX_DESC_REQ_ERR  ] RX Descriptor Fetched Wrong     = ${reg.SFTY_INT_STS.fields.RX_DESC_REQ_ERR}\n`+
-           `[TX_DESC_CRC_ERR  ] TX Descriptor Wrong CRC         = ${reg.SFTY_INT_STS.fields.TX_DESC_CRC_ERR}\n`+
-           `[TX_DESC_REQ_ERR  ] TX Descriptor Fetched Wrong     = ${reg.SFTY_INT_STS.fields.TX_DESC_REQ_ERR}\n`+
-           `[AP_RX_PARITY_ERR ] RX Address Pointer Parity Error = ${reg.SFTY_INT_STS.fields.AP_RX_PARITY_ERR}\n`+
-           `[AP_TX_PARITY_ERR ] TX Address Pointer Parity Error = ${reg.SFTY_INT_STS.fields.AP_TX_PARITY_ERR}\n`+
-           `[DP_RX_PARITY_ERR ] RX Data Parity Error            = ${reg.SFTY_INT_STS.fields.DP_RX_PARITY_ERR}\n`+
-           `[DP_TX_PARITY_ERR ] TX Data Parity Error            = ${reg.SFTY_INT_STS.fields.DP_TX_PARITY_ERR}\n`+
-           `[MEM_AXI_RD_TO_ERR] MEM AXI Read Timeout            = ${reg.SFTY_INT_STS.fields.MEM_AXI_RD_TO_ERR}\n`+
-           `[MEM_AXI_WR_TO_ERR] MEM AXI Write Timeout           = ${reg.SFTY_INT_STS.fields.MEM_AXI_WR_TO_ERR}\n`+
-           `[DP_PRT_RX_TO_ERR ] (PRT=>MH) RX_MSG IF Timeout     = ${reg.SFTY_INT_STS.fields.DP_PRT_RX_TO_ERR}\n`+
-           `[DP_PRT_TX_TO_ERR ] (MH=>PRT) TX_MSG IF Timeout     = ${reg.SFTY_INT_STS.fields.DP_PRT_TX_TO_ERR}\n`+
-           `[DMA_AXI_RD_TO_ERR] DMA AXI Read  Timeout           = ${reg.SFTY_INT_STS.fields.DMA_AXI_RD_TO_ERR}\n`+
-           `[DMA_AXI_WR_TO_ERR] DMA AXI Write Timeout           = ${reg.SFTY_INT_STS.fields.DMA_AXI_WR_TO_ERR}`
+           `[${f.ACK_RX_PARITY_ERR.name_short.padEnd(17)}] ${f.ACK_RX_PARITY_ERR.name_long.padEnd(31)} = ${f.ACK_RX_PARITY_ERR.value}\n`+
+           `[${f.ACK_TX_PARITY_ERR.name_short.padEnd(17)}] ${f.ACK_TX_PARITY_ERR.name_long.padEnd(31)} = ${f.ACK_TX_PARITY_ERR.value}\n`+
+           `[${f.MEM_SFTY_CE.name_short.padEnd(17)}] ${f.MEM_SFTY_CE.name_long.padEnd(31)} = ${f.MEM_SFTY_CE.value}\n`+
+           `[${f.MEM_SFTY_UE.name_short.padEnd(17)}] ${f.MEM_SFTY_UE.name_long.padEnd(31)} = ${f.MEM_SFTY_UE.value}\n`+
+           `[${f.RX_DESC_CRC_ERR.name_short.padEnd(17)}] ${f.RX_DESC_CRC_ERR.name_long.padEnd(31)} = ${f.RX_DESC_CRC_ERR.value}\n`+
+           `[${f.RX_DESC_REQ_ERR.name_short.padEnd(17)}] ${f.RX_DESC_REQ_ERR.name_long.padEnd(31)} = ${f.RX_DESC_REQ_ERR.value}\n`+
+           `[${f.TX_DESC_CRC_ERR.name_short.padEnd(17)}] ${f.TX_DESC_CRC_ERR.name_long.padEnd(31)} = ${f.TX_DESC_CRC_ERR.value}\n`+
+           `[${f.TX_DESC_REQ_ERR.name_short.padEnd(17)}] ${f.TX_DESC_REQ_ERR.name_long.padEnd(31)} = ${f.TX_DESC_REQ_ERR.value}\n`+
+           `[${f.AP_RX_PARITY_ERR.name_short.padEnd(17)}] ${f.AP_RX_PARITY_ERR.name_long.padEnd(31)} = ${f.AP_RX_PARITY_ERR.value}\n`+
+           `[${f.AP_TX_PARITY_ERR.name_short.padEnd(17)}] ${f.AP_TX_PARITY_ERR.name_long.padEnd(31)} = ${f.AP_TX_PARITY_ERR.value}\n`+
+           `[${f.DP_RX_PARITY_ERR.name_short.padEnd(17)}] ${f.DP_RX_PARITY_ERR.name_long.padEnd(31)} = ${f.DP_RX_PARITY_ERR.value}\n`+
+           `[${f.DP_TX_PARITY_ERR.name_short.padEnd(17)}] ${f.DP_TX_PARITY_ERR.name_long.padEnd(31)} = ${f.DP_TX_PARITY_ERR.value}\n`+
+           `[${f.MEM_AXI_RD_TO_ERR.name_short.padEnd(17)}] ${f.MEM_AXI_RD_TO_ERR.name_long.padEnd(31)} = ${f.MEM_AXI_RD_TO_ERR.value}\n`+
+           `[${f.MEM_AXI_WR_TO_ERR.name_short.padEnd(17)}] ${f.MEM_AXI_WR_TO_ERR.name_long.padEnd(31)} = ${f.MEM_AXI_WR_TO_ERR.value}\n`+
+           `[${f.DP_PRT_RX_TO_ERR.name_short.padEnd(17)}] ${f.DP_PRT_RX_TO_ERR.name_long.padEnd(31)} = ${f.DP_PRT_RX_TO_ERR.value}\n`+
+           `[${f.DP_PRT_TX_TO_ERR.name_short.padEnd(17)}] ${f.DP_PRT_TX_TO_ERR.name_long.padEnd(31)} = ${f.DP_PRT_TX_TO_ERR.value}\n`+
+           `[${f.DMA_AXI_RD_TO_ERR.name_short.padEnd(17)}] ${f.DMA_AXI_RD_TO_ERR.name_long.padEnd(31)} = ${f.DMA_AXI_RD_TO_ERR.value}\n`+
+           `[${f.DMA_AXI_WR_TO_ERR.name_short.padEnd(17)}] ${f.DMA_AXI_WR_TO_ERR.name_long.padEnd(31)} = ${f.DMA_AXI_WR_TO_ERR.value}`
     });
   }
 
@@ -1532,18 +1584,19 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.AXI_ERR_INFO.fields = {};
     reg.AXI_ERR_INFO.report = [];
     // 1. Decode (MSB -> LSB)
-    reg.AXI_ERR_INFO.fields.MEM_RESP = getBits(regValue,7,6);
-    reg.AXI_ERR_INFO.fields.MEM_ID   = getBits(regValue,5,4);
-    reg.AXI_ERR_INFO.fields.DMA_RESP = getBits(regValue,3,2);
-    reg.AXI_ERR_INFO.fields.DMA_ID   = getBits(regValue,1,0);
+    defineField(reg.AXI_ERR_INFO, regValue, 'MEM_RESP', 7, 6, 'MEM AXI Response');
+    defineField(reg.AXI_ERR_INFO, regValue, 'MEM_ID', 5, 4, 'MEM AXI ID (in case of RD or WR Error Response)');
+    defineField(reg.AXI_ERR_INFO, regValue, 'DMA_RESP', 3, 2, 'DMA AXI Response');
+    defineField(reg.AXI_ERR_INFO, regValue, 'DMA_ID', 1, 0, 'DMA AXI ID (in case of RD or WR Error Response)');
+    const f = reg.AXI_ERR_INFO.fields;
     // 2. Report
     reg.AXI_ERR_INFO.report.push({
       severityLevel: sevC.info,
       msg: `AXI_ERR_INFO: ${reg.AXI_ERR_INFO.name_long} (0x${reg.AXI_ERR_INFO.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[MEM_RESP] MEM AXI Response                                = ${reg.AXI_ERR_INFO.fields.MEM_RESP} (0: Okay, 1: res, 2: SLVERR, 3: DECERR)\n`+
-           `[MEM_ID  ] MEM AXI ID (in case of RD or WR Error Response) = ${reg.AXI_ERR_INFO.fields.MEM_ID}\n`+
-           `[DMA_RESP] DMA AXI Response                                = ${reg.AXI_ERR_INFO.fields.DMA_RESP} (0: Okay, 1: res, 2: SLVERR, 3: DECERR)\n`+
-           `[DMA_ID  ] DMA AXI ID (in case of RD or WR Error Response) = ${reg.AXI_ERR_INFO.fields.DMA_ID}`
+           `[${f.MEM_RESP.name_short.padEnd(8)}] ${f.MEM_RESP.name_long.padEnd(47)} = ${f.MEM_RESP.value} (0: Okay, 1: res, 2: SLVERR, 3: DECERR)\n`+
+           `[${f.MEM_ID.name_short.padEnd(8)}] ${f.MEM_ID.name_long.padEnd(47)} = ${f.MEM_ID.value}\n`+
+           `[${f.DMA_RESP.name_short.padEnd(8)}] ${f.DMA_RESP.name_long.padEnd(47)} = ${f.DMA_RESP.value} (0: Okay, 1: res, 2: SLVERR, 3: DECERR)\n`+
+           `[${f.DMA_ID.name_short.padEnd(8)}] ${f.DMA_ID.name_long.padEnd(47)} = ${f.DMA_ID.value}`
     });
   }
 
@@ -1554,12 +1607,13 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.DESC_ERR_INFO0.fields = {};
     reg.DESC_ERR_INFO0.report = [];
     // 1. Decode (MSB -> LSB)
-    reg.DESC_ERR_INFO0.fields.ADD = getBits(regValue,31,0);
+    defineField(reg.DESC_ERR_INFO0, regValue, 'ADD', 31, 0, 'Descriptor Address');
+    const f = reg.DESC_ERR_INFO0.fields;
     // 2. Report
     reg.DESC_ERR_INFO0.report.push({
       severityLevel: sevC.info,
       msg: `DESC_ERR_INFO0: ${reg.DESC_ERR_INFO0.name_long} (0x${reg.DESC_ERR_INFO0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[ADD] Descriptor Address = 0x${reg.DESC_ERR_INFO0.fields.ADD.toString(16).toUpperCase().padStart(8,'0')}`
+           `[${f.ADD.name_short.padEnd(3)}] ${f.ADD.name_long.padEnd(18)} = 0x${f.ADD.value.toString(16).toUpperCase().padStart(8,'0')}`
     });
   }
 
@@ -1570,22 +1624,23 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.DESC_ERR_INFO1.fields = {};
     reg.DESC_ERR_INFO1.report = [];
     // 1. Decode (MSB -> LSB)
-    reg.DESC_ERR_INFO1.fields.CRC      = getBits(regValue,24,16);
-    reg.DESC_ERR_INFO1.fields.RX_TX    = getBits(regValue,15,15);
-    reg.DESC_ERR_INFO1.fields.RC       = getBits(regValue,13,9);
-    reg.DESC_ERR_INFO1.fields.PQ       = getBits(regValue,8,8);
-    reg.DESC_ERR_INFO1.fields.INSTANCE = getBits(regValue,7,5);
-    reg.DESC_ERR_INFO1.fields.FQN_PQSN = getBits(regValue,4,0);
+    defineField(reg.DESC_ERR_INFO1, regValue, 'CRC', 24, 16, 'Descriptor CRC Value');
+    defineField(reg.DESC_ERR_INFO1, regValue, 'RX_TX', 15, 15, 'RX(1) or TX(0) Descriptor');
+    defineField(reg.DESC_ERR_INFO1, regValue, 'RC', 13, 9, 'Rolling Counter');
+    defineField(reg.DESC_ERR_INFO1, regValue, 'PQ', 8, 8, 'TX Queue type: PQ(1), FQ(0)');
+    defineField(reg.DESC_ERR_INFO1, regValue, 'INSTANCE', 7, 5, 'Instance Number');
+    defineField(reg.DESC_ERR_INFO1, regValue, 'FQN_PQSN', 4, 0, 'Queue/Slot Number');
+    const f = reg.DESC_ERR_INFO1.fields;
     // 2. Report
     reg.DESC_ERR_INFO1.report.push({
       severityLevel: sevC.info,
       msg: `DESC_ERR_INFO1: ${reg.DESC_ERR_INFO1.name_long} (0x${reg.DESC_ERR_INFO1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[CRC     ] Descriptor CRC Value        = 0x${reg.DESC_ERR_INFO1.fields.CRC.toString(16).toUpperCase().padStart(2,'0')}\n`+
-           `[RX_TX   ] RX(1) or TX(0) Descriptor   = ${reg.DESC_ERR_INFO1.fields.RX_TX}\n`+
-           `[RC      ] Rolling Counter             = ${reg.DESC_ERR_INFO1.fields.RC}\n`+
-           `[PQ      ] TX Queue type: PQ(1), FQ(0) = ${reg.DESC_ERR_INFO1.fields.PQ}\n`+
-           `[INSTANCE] Instance Number             = ${reg.DESC_ERR_INFO1.fields.INSTANCE}\n`+
-           `[FQN_PQSN] Queue/Slot Number           = ${reg.DESC_ERR_INFO1.fields.FQN_PQSN}`
+           `[${f.CRC.name_short.padEnd(8)}] ${f.CRC.name_long.padEnd(27)} = 0x${f.CRC.value.toString(16).toUpperCase().padStart(2,'0')}\n`+
+           `[${f.RX_TX.name_short.padEnd(8)}] ${f.RX_TX.name_long.padEnd(27)} = ${f.RX_TX.value}\n`+
+           `[${f.RC.name_short.padEnd(8)}] ${f.RC.name_long.padEnd(27)} = ${f.RC.value}\n`+
+           `[${f.PQ.name_short.padEnd(8)}] ${f.PQ.name_long.padEnd(27)} = ${f.PQ.value}\n`+
+           `[${f.INSTANCE.name_short.padEnd(8)}] ${f.INSTANCE.name_long.padEnd(27)} = ${f.INSTANCE.value}\n`+
+           `[${f.FQN_PQSN.name_short.padEnd(8)}] ${f.FQN_PQSN.name_long.padEnd(27)} = ${f.FQN_PQSN.value}`
     });
   }
 
@@ -1596,14 +1651,15 @@ export function procRegsMhIRCtrlStat(reg) {
     reg.TX_FILTER_ERR_INFO.fields = {};
     reg.TX_FILTER_ERR_INFO.report = [];
     // 1. Decode (MSB -> LSB)
-    reg.TX_FILTER_ERR_INFO.fields.FQN_PQS = getBits(regValue,5,1);
-    reg.TX_FILTER_ERR_INFO.fields.FQ      = getBits(regValue,0,0); // 1=TX FIFO Queue, 0=TX PQ slot
+    defineField(reg.TX_FILTER_ERR_INFO, regValue, 'FQN_PQS', 5, 1, 'FIFO Queue/Slot Number');
+    defineField(reg.TX_FILTER_ERR_INFO, regValue, 'FQ', 0, 0, 'TX Queue type FQ(1), PQ(0)'); // 1=TX FIFO Queue, 0=TX PQ slot
+    const f = reg.TX_FILTER_ERR_INFO.fields;
     // 2. Report
     reg.TX_FILTER_ERR_INFO.report.push({
       severityLevel: sevC.info,
       msg: `TX_FILTER_ERR_INFO: ${reg.TX_FILTER_ERR_INFO.name_long} (0x${reg.TX_FILTER_ERR_INFO.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[FQN_PQS] FIFO Queue/Slot Number     = ${reg.TX_FILTER_ERR_INFO.fields.FQN_PQS}\n` +
-           `[FQ     ] TX Queue type FQ(1), PQ(0) = ${reg.TX_FILTER_ERR_INFO.fields.FQ}`
+           `[${f.FQN_PQS.name_short.padEnd(7)}] ${f.FQN_PQS.name_long.padEnd(26)} = ${f.FQN_PQS.value}\n` +
+           `[${f.FQ.name_short.padEnd(7)}] ${f.FQ.name_long.padEnd(26)} = ${f.FQ.value}`
     });
   }
 }
@@ -1619,16 +1675,17 @@ export function procRegsMhDebugCtrlStat(reg) {
     reg.DEBUG_TEST_CTRL.fields = {};
     reg.DEBUG_TEST_CTRL.report = [];
     // 1. Decode (MSB->LSB)
-    reg.DEBUG_TEST_CTRL.fields.HDP_SEL     = getBits(regValue,10,8);
-    reg.DEBUG_TEST_CTRL.fields.HDP_EN      = getBits(regValue,1,1);
-    reg.DEBUG_TEST_CTRL.fields.TEST_IRQ_EN = getBits(regValue,0,0);
+    defineField(reg.DEBUG_TEST_CTRL, regValue, 'HDP_SEL', 10, 8, 'HDP Signal Set');
+    defineField(reg.DEBUG_TEST_CTRL, regValue, 'HDP_EN', 1, 1, 'HDP Port Enable');
+    defineField(reg.DEBUG_TEST_CTRL, regValue, 'TEST_IRQ_EN', 0, 0, 'Test Interrupt Enable');
+    const f = reg.DEBUG_TEST_CTRL.fields;
     // 2. Report
     reg.DEBUG_TEST_CTRL.report.push({
       severityLevel: sevC.info,
       msg: `DEBUG_TEST_CTRL: ${reg.DEBUG_TEST_CTRL.name_long} (0x${reg.DEBUG_TEST_CTRL.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[HDP_SEL    ] HDP Signal Set        = ${reg.DEBUG_TEST_CTRL.fields.HDP_SEL}\n`+
-           `[HDP_EN     ] HDP Port Enable       = ${reg.DEBUG_TEST_CTRL.fields.HDP_EN}\n`+
-           `[TEST_IRQ_EN] Test Interrupt Enable = ${reg.DEBUG_TEST_CTRL.fields.TEST_IRQ_EN}`
+           `[${f.HDP_SEL.name_short.padEnd(11)}] ${f.HDP_SEL.name_long.padEnd(21)} = ${f.HDP_SEL.value}\n`+
+           `[${f.HDP_EN.name_short.padEnd(11)}] ${f.HDP_EN.name_long.padEnd(21)} = ${f.HDP_EN.value}\n`+
+           `[${f.TEST_IRQ_EN.name_short.padEnd(11)}] ${f.TEST_IRQ_EN.name_long.padEnd(21)} = ${f.TEST_IRQ_EN.value}`
     });
   }
 
@@ -1639,14 +1696,15 @@ export function procRegsMhDebugCtrlStat(reg) {
     reg.INT_TEST0.fields = {};
     reg.INT_TEST0.report = [];
     // 1. Decode (MSB->LSB)
-    reg.INT_TEST0.fields.RX_FQ_IRQ = getBits(regValue,23,16);
-    reg.INT_TEST0.fields.TX_FQ_IRQ = getBits(regValue,7,0);
+    defineField(reg.INT_TEST0, regValue, 'RX_FQ_IRQ', 23, 16, 'Trigger RX_FQ IRQs');
+    defineField(reg.INT_TEST0, regValue, 'TX_FQ_IRQ', 7, 0, 'Trigger TX_FQ IRQs');
+    const f = reg.INT_TEST0.fields;
     // 2. Report
     reg.INT_TEST0.report.push({
       severityLevel: sevC.info,
       msg: `INT_TEST0: ${reg.INT_TEST0.name_long} (0x${reg.INT_TEST0.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[RX_FQ_IRQ] Trigger RX_FQ IRQs = 0x${reg.INT_TEST0.fields.RX_FQ_IRQ.toString(16).toUpperCase().padStart(2,'0')}\n`+
-           `[TX_FQ_IRQ] Trigger TX_FQ IRQs = 0x${reg.INT_TEST0.fields.TX_FQ_IRQ.toString(16).toUpperCase().padStart(2,'0')}`
+           `[${f.RX_FQ_IRQ.name_short.padEnd(9)}] ${f.RX_FQ_IRQ.name_long.padEnd(18)} = 0x${f.RX_FQ_IRQ.value.toString(16).toUpperCase().padStart(2,'0')}\n`+
+           `[${f.TX_FQ_IRQ.name_short.padEnd(9)}] ${f.TX_FQ_IRQ.name_long.padEnd(18)} = 0x${f.TX_FQ_IRQ.value.toString(16).toUpperCase().padStart(2,'0')}`
     });
   }
 
@@ -1657,50 +1715,51 @@ export function procRegsMhDebugCtrlStat(reg) {
     reg.INT_TEST1.fields = {};
     reg.INT_TEST1.report = [];
     // 1. Decode (MSB->LSB)
-    reg.INT_TEST1.fields.TX_PQ_IRQ     = getBits(regValue,20,20);
-    reg.INT_TEST1.fields.STATS_IRQ     = getBits(regValue,19,19);
-    reg.INT_TEST1.fields.STOP_IRQ      = getBits(regValue,18,18);
-    reg.INT_TEST1.fields.RX_FILTER_IRQ = getBits(regValue,17,17);
-    reg.INT_TEST1.fields.TX_FILTER_IRQ = getBits(regValue,16,16);
-    reg.INT_TEST1.fields.TX_ABORT_IRQ  = getBits(regValue,15,15);
-    reg.INT_TEST1.fields.RX_ABORT_IRQ  = getBits(regValue,14,14);
-    reg.INT_TEST1.fields.RX_FILTER_ERR = getBits(regValue,13,13);
-    reg.INT_TEST1.fields.MEM_TO_ERR    = getBits(regValue,12,12);
-    reg.INT_TEST1.fields.MEM_SFTY_ERR  = getBits(regValue,11,11);
-    reg.INT_TEST1.fields.REG_CRC_ERR   = getBits(regValue,10,10);
-    reg.INT_TEST1.fields.DESC_ERR      = getBits(regValue,9,9);
-    reg.INT_TEST1.fields.AP_PARITY_ERR = getBits(regValue,8,8);
-    reg.INT_TEST1.fields.DP_PARITY_ERR = getBits(regValue,7,7);
-    reg.INT_TEST1.fields.DP_SEQ_ERR    = getBits(regValue,6,6);
-    reg.INT_TEST1.fields.DP_DO_ERR     = getBits(regValue,5,5);
-    reg.INT_TEST1.fields.DP_TO_ERR     = getBits(regValue,4,4);
-    reg.INT_TEST1.fields.DMA_CH_ERR    = getBits(regValue,3,3);
-    reg.INT_TEST1.fields.DMA_TO_ERR    = getBits(regValue,2,2);
-    reg.INT_TEST1.fields.RESP_ERR      = getBits(regValue,1,0);
+    defineField(reg.INT_TEST1, regValue, 'TX_PQ_IRQ', 20, 20, 'Trigger TX Priority Queue IRQ');
+    defineField(reg.INT_TEST1, regValue, 'STATS_IRQ', 19, 19, 'Trigger Statistics IRQ');
+    defineField(reg.INT_TEST1, regValue, 'STOP_IRQ', 18, 18, 'Trigger STOP IRQ');
+    defineField(reg.INT_TEST1, regValue, 'RX_FILTER_IRQ', 17, 17, 'Trigger RX Filter IRQ');
+    defineField(reg.INT_TEST1, regValue, 'TX_FILTER_IRQ', 16, 16, 'Trigger TX Filter IRQ');
+    defineField(reg.INT_TEST1, regValue, 'TX_ABORT_IRQ', 15, 15, 'Trigger TX Abort IRQ');
+    defineField(reg.INT_TEST1, regValue, 'RX_ABORT_IRQ', 14, 14, 'Trigger RX Abort IRQ');
+    defineField(reg.INT_TEST1, regValue, 'RX_FILTER_ERR', 13, 13, 'Trigger RX Filter Error IRQ');
+    defineField(reg.INT_TEST1, regValue, 'MEM_TO_ERR', 12, 12, 'Trigger MEM AXI Timeout IRQ');
+    defineField(reg.INT_TEST1, regValue, 'MEM_SFTY_ERR', 11, 11, 'Trigger MEM Safety Error IRQ');
+    defineField(reg.INT_TEST1, regValue, 'REG_CRC_ERR', 10, 10, 'Trigger Register CRC Error IRQ');
+    defineField(reg.INT_TEST1, regValue, 'DESC_ERR', 9, 9, 'Trigger Descriptor Error IRQ');
+    defineField(reg.INT_TEST1, regValue, 'AP_PARITY_ERR', 8, 8, 'Trigger Address Pointer Parity IRQ');
+    defineField(reg.INT_TEST1, regValue, 'DP_PARITY_ERR', 7, 7, 'Trigger Data Path Parity IRQ');
+    defineField(reg.INT_TEST1, regValue, 'DP_SEQ_ERR', 6, 6, 'Trigger Data Path Sequence IRQ');
+    defineField(reg.INT_TEST1, regValue, 'DP_DO_ERR', 5, 5, 'Trigger Data Path Overflow IRQ');
+    defineField(reg.INT_TEST1, regValue, 'DP_TO_ERR', 4, 4, 'Trigger Data Path Timeout IRQ');
+    defineField(reg.INT_TEST1, regValue, 'DMA_CH_ERR', 3, 3, 'Trigger DMA Channel Error IRQ');
+    defineField(reg.INT_TEST1, regValue, 'DMA_TO_ERR', 2, 2, 'Trigger DMA Timeout IRQ');
+    defineField(reg.INT_TEST1, regValue, 'RESP_ERR', 1, 0, 'Trigger AXI Response Error IRQs');
+    const f = reg.INT_TEST1.fields;
     // 2. Report
     reg.INT_TEST1.report.push({
       severityLevel: sevC.info,
       msg: `INT_TEST1: ${reg.INT_TEST1.name_long} (0x${reg.INT_TEST1.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[TX_PQ_IRQ    ] Trigger TX Priority Queue IRQ      = ${reg.INT_TEST1.fields.TX_PQ_IRQ}\n`+
-           `[STATS_IRQ    ] Trigger Statistics IRQ             = ${reg.INT_TEST1.fields.STATS_IRQ}\n`+
-           `[STOP_IRQ     ] Trigger STOP IRQ                   = ${reg.INT_TEST1.fields.STOP_IRQ}\n`+
-           `[RX_FILTER_IRQ] Trigger RX Filter IRQ              = ${reg.INT_TEST1.fields.RX_FILTER_IRQ}\n`+
-           `[TX_FILTER_IRQ] Trigger TX Filter IRQ              = ${reg.INT_TEST1.fields.TX_FILTER_IRQ}\n`+
-           `[TX_ABORT_IRQ ] Trigger TX Abort IRQ               = ${reg.INT_TEST1.fields.TX_ABORT_IRQ}\n`+
-           `[RX_ABORT_IRQ ] Trigger RX Abort IRQ               = ${reg.INT_TEST1.fields.RX_ABORT_IRQ}\n`+
-           `[RX_FILTER_ERR] Trigger RX Filter Error IRQ        = ${reg.INT_TEST1.fields.RX_FILTER_ERR}\n`+
-           `[MEM_TO_ERR   ] Trigger MEM AXI Timeout IRQ        = ${reg.INT_TEST1.fields.MEM_TO_ERR}\n`+
-           `[MEM_SFTY_ERR ] Trigger MEM Safety Error IRQ       = ${reg.INT_TEST1.fields.MEM_SFTY_ERR}\n`+
-           `[REG_CRC_ERR  ] Trigger Register CRC Error IRQ     = ${reg.INT_TEST1.fields.REG_CRC_ERR}\n`+
-           `[DESC_ERR     ] Trigger Descriptor Error IRQ       = ${reg.INT_TEST1.fields.DESC_ERR}\n`+
-           `[AP_PARITY_ERR] Trigger Address Pointer Parity IRQ = ${reg.INT_TEST1.fields.AP_PARITY_ERR}\n`+
-           `[DP_PARITY_ERR] Trigger Data Path Parity IRQ       = ${reg.INT_TEST1.fields.DP_PARITY_ERR}\n`+
-           `[DP_SEQ_ERR   ] Trigger Data Path Sequence IRQ     = ${reg.INT_TEST1.fields.DP_SEQ_ERR}\n`+
-           `[DP_DO_ERR    ] Trigger Data Path Overflow IRQ     = ${reg.INT_TEST1.fields.DP_DO_ERR}\n`+
-           `[DP_TO_ERR    ] Trigger Data Path Timeout IRQ      = ${reg.INT_TEST1.fields.DP_TO_ERR}\n`+
-           `[DMA_CH_ERR   ] Trigger DMA Channel Error IRQ      = ${reg.INT_TEST1.fields.DMA_CH_ERR}\n`+
-           `[DMA_TO_ERR   ] Trigger DMA Timeout IRQ            = ${reg.INT_TEST1.fields.DMA_TO_ERR}\n`+
-           `[RESP_ERR     ] Trigger AXI Response Error IRQs    = 0b${reg.INT_TEST1.fields.RESP_ERR.toString(2).padStart(2,'0')}`
+           `[${f.TX_PQ_IRQ.name_short.padEnd(13)}] ${f.TX_PQ_IRQ.name_long.padEnd(34)} = ${f.TX_PQ_IRQ.value}\n`+
+           `[${f.STATS_IRQ.name_short.padEnd(13)}] ${f.STATS_IRQ.name_long.padEnd(34)} = ${f.STATS_IRQ.value}\n`+
+           `[${f.STOP_IRQ.name_short.padEnd(13)}] ${f.STOP_IRQ.name_long.padEnd(34)} = ${f.STOP_IRQ.value}\n`+
+           `[${f.RX_FILTER_IRQ.name_short.padEnd(13)}] ${f.RX_FILTER_IRQ.name_long.padEnd(34)} = ${f.RX_FILTER_IRQ.value}\n`+
+           `[${f.TX_FILTER_IRQ.name_short.padEnd(13)}] ${f.TX_FILTER_IRQ.name_long.padEnd(34)} = ${f.TX_FILTER_IRQ.value}\n`+
+           `[${f.TX_ABORT_IRQ.name_short.padEnd(13)}] ${f.TX_ABORT_IRQ.name_long.padEnd(34)} = ${f.TX_ABORT_IRQ.value}\n`+
+           `[${f.RX_ABORT_IRQ.name_short.padEnd(13)}] ${f.RX_ABORT_IRQ.name_long.padEnd(34)} = ${f.RX_ABORT_IRQ.value}\n`+
+           `[${f.RX_FILTER_ERR.name_short.padEnd(13)}] ${f.RX_FILTER_ERR.name_long.padEnd(34)} = ${f.RX_FILTER_ERR.value}\n`+
+           `[${f.MEM_TO_ERR.name_short.padEnd(13)}] ${f.MEM_TO_ERR.name_long.padEnd(34)} = ${f.MEM_TO_ERR.value}\n`+
+           `[${f.MEM_SFTY_ERR.name_short.padEnd(13)}] ${f.MEM_SFTY_ERR.name_long.padEnd(34)} = ${f.MEM_SFTY_ERR.value}\n`+
+           `[${f.REG_CRC_ERR.name_short.padEnd(13)}] ${f.REG_CRC_ERR.name_long.padEnd(34)} = ${f.REG_CRC_ERR.value}\n`+
+           `[${f.DESC_ERR.name_short.padEnd(13)}] ${f.DESC_ERR.name_long.padEnd(34)} = ${f.DESC_ERR.value}\n`+
+           `[${f.AP_PARITY_ERR.name_short.padEnd(13)}] ${f.AP_PARITY_ERR.name_long.padEnd(34)} = ${f.AP_PARITY_ERR.value}\n`+
+           `[${f.DP_PARITY_ERR.name_short.padEnd(13)}] ${f.DP_PARITY_ERR.name_long.padEnd(34)} = ${f.DP_PARITY_ERR.value}\n`+
+           `[${f.DP_SEQ_ERR.name_short.padEnd(13)}] ${f.DP_SEQ_ERR.name_long.padEnd(34)} = ${f.DP_SEQ_ERR.value}\n`+
+           `[${f.DP_DO_ERR.name_short.padEnd(13)}] ${f.DP_DO_ERR.name_long.padEnd(34)} = ${f.DP_DO_ERR.value}\n`+
+           `[${f.DP_TO_ERR.name_short.padEnd(13)}] ${f.DP_TO_ERR.name_long.padEnd(34)} = ${f.DP_TO_ERR.value}\n`+
+           `[${f.DMA_CH_ERR.name_short.padEnd(13)}] ${f.DMA_CH_ERR.name_long.padEnd(34)} = ${f.DMA_CH_ERR.value}\n`+
+           `[${f.DMA_TO_ERR.name_short.padEnd(13)}] ${f.DMA_TO_ERR.name_long.padEnd(34)} = ${f.DMA_TO_ERR.value}\n`+
+           `[${f.RESP_ERR.name_short.padEnd(13)}] ${f.RESP_ERR.name_long.padEnd(34)} = 0b${f.RESP_ERR.value.toString(2).padStart(2,'0')}`
     });
   }
 
@@ -1711,26 +1770,27 @@ export function procRegsMhDebugCtrlStat(reg) {
     reg.TX_SCAN_FC.fields = {};
     reg.TX_SCAN_FC.report = [];
     // 1. Decode (MSB->LSB)
-    reg.TX_SCAN_FC.fields.FQN_PQSN3 = getBits(regValue,29,25);
-    reg.TX_SCAN_FC.fields.FQ_PQ3    = getBits(regValue,24,24);
-    reg.TX_SCAN_FC.fields.FQN_PQSN2 = getBits(regValue,21,17);
-    reg.TX_SCAN_FC.fields.FQ_PQ2    = getBits(regValue,16,16);
-    reg.TX_SCAN_FC.fields.FQN_PQSN1 = getBits(regValue,13,9);
-    reg.TX_SCAN_FC.fields.FQ_PQ1    = getBits(regValue,8,8);
-    reg.TX_SCAN_FC.fields.FQN_PQSN0 = getBits(regValue,5,1);
-    reg.TX_SCAN_FC.fields.FQ_PQ0    = getBits(regValue,0,0);
+    defineField(reg.TX_SCAN_FC, regValue, 'FQN_PQSN3', 29, 25, '4th cand. Queue/Slot');
+    defineField(reg.TX_SCAN_FC, regValue, 'FQ_PQ3', 24, 24, 'TX Queue type FQ(0), PQ(1)');
+    defineField(reg.TX_SCAN_FC, regValue, 'FQN_PQSN2', 21, 17, '3rd  cand. Queue/Slot');
+    defineField(reg.TX_SCAN_FC, regValue, 'FQ_PQ2', 16, 16, 'TX Queue type FQ(0), PQ(1)');
+    defineField(reg.TX_SCAN_FC, regValue, 'FQN_PQSN1', 13, 9, '2nd cand. Queue/Slot');
+    defineField(reg.TX_SCAN_FC, regValue, 'FQ_PQ1', 8, 8, 'TX Queue type FQ(0), PQ(1)');
+    defineField(reg.TX_SCAN_FC, regValue, 'FQN_PQSN0', 5, 1, '1st  cand. Queue/Slot');
+    defineField(reg.TX_SCAN_FC, regValue, 'FQ_PQ0', 0, 0, 'TX Queue type FQ(0), PQ(1)');
+    const f = reg.TX_SCAN_FC.fields;
     // 2. Report
     reg.TX_SCAN_FC.report.push({
       severityLevel: sevC.info,
       msg: `TX_SCAN_FC: ${reg.TX_SCAN_FC.name_long} (0x${reg.TX_SCAN_FC.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[FQN_PQSN3] 4th cand. Queue/Slot    = ${reg.TX_SCAN_FC.fields.FQN_PQSN3}\n`+
-           `[FQ_PQ3   ] TX Queue type FQ(0), PQ(1) = ${reg.TX_SCAN_FC.fields.FQ_PQ3}\n`+
-           `[FQN_PQSN2] 3rd  cand. Queue/Slot    = ${reg.TX_SCAN_FC.fields.FQN_PQSN2}\n`+
-           `[FQ_PQ2   ] TX Queue type FQ(0), PQ(1) = ${reg.TX_SCAN_FC.fields.FQ_PQ2}\n`+
-           `[FQN_PQSN1] 2nd cand. Queue/Slot    = ${reg.TX_SCAN_FC.fields.FQN_PQSN1}\n`+
-           `[FQ_PQ1   ] TX Queue type FQ(0), PQ(1) = ${reg.TX_SCAN_FC.fields.FQ_PQ1}\n`+
-           `[FQN_PQSN0] 1st  cand. Queue/Slot    = ${reg.TX_SCAN_FC.fields.FQN_PQSN0}\n`+
-           `[FQ_PQ0   ] TX Queue type FQ(0), PQ(1) = ${reg.TX_SCAN_FC.fields.FQ_PQ0}`
+           `[${f.FQN_PQSN3.name_short.padEnd(9)}] ${f.FQN_PQSN3.name_long.padEnd(23)} = ${f.FQN_PQSN3.value}\n`+
+           `[${f.FQ_PQ3.name_short.padEnd(9)}] ${f.FQ_PQ3.name_long.padEnd(26)} = ${f.FQ_PQ3.value}\n`+
+           `[${f.FQN_PQSN2.name_short.padEnd(9)}] ${f.FQN_PQSN2.name_long.padEnd(24)} = ${f.FQN_PQSN2.value}\n`+
+           `[${f.FQ_PQ2.name_short.padEnd(9)}] ${f.FQ_PQ2.name_long.padEnd(26)} = ${f.FQ_PQ2.value}\n`+
+           `[${f.FQN_PQSN1.name_short.padEnd(9)}] ${f.FQN_PQSN1.name_long.padEnd(23)} = ${f.FQN_PQSN1.value}\n`+
+           `[${f.FQ_PQ1.name_short.padEnd(9)}] ${f.FQ_PQ1.name_long.padEnd(26)} = ${f.FQ_PQ1.value}\n`+
+           `[${f.FQN_PQSN0.name_short.padEnd(9)}] ${f.FQN_PQSN0.name_long.padEnd(24)} = ${f.FQN_PQSN0.value}\n`+
+           `[${f.FQ_PQ0.name_short.padEnd(9)}] ${f.FQ_PQ0.name_long.padEnd(26)} = ${f.FQ_PQ0.value}`
     });
   }
 
@@ -1741,22 +1801,23 @@ export function procRegsMhDebugCtrlStat(reg) {
     reg.TX_SCAN_BC.fields = {};
     reg.TX_SCAN_BC.report = [];
     // 1. Decode (MSB->LSB)
-    reg.TX_SCAN_BC.fields.SH_OFFSET    = getBits(regValue,31,22);
-    reg.TX_SCAN_BC.fields.SH_FQN_PQSN  = getBits(regValue,21,17);
-    reg.TX_SCAN_BC.fields.SH_PQ        = getBits(regValue,16,16);
-    reg.TX_SCAN_BC.fields.FH_OFFSET    = getBits(regValue,15,6);
-    reg.TX_SCAN_BC.fields.FH_FQN_PQSN  = getBits(regValue,5,1);
-    reg.TX_SCAN_BC.fields.FH_PQ        = getBits(regValue,0,0);
+    defineField(reg.TX_SCAN_BC, regValue, 'SH_OFFSET', 31, 22, '2nd cand. Offset (32byte/Desc)');
+    defineField(reg.TX_SCAN_BC, regValue, 'SH_FQN_PQSN', 21, 17, '2nd cand. FIFO Queue/Slot Number');
+    defineField(reg.TX_SCAN_BC, regValue, 'SH_PQ', 16, 16, '2nd cand. TX Queue type FQ(0), PQ(1)');
+    defineField(reg.TX_SCAN_BC, regValue, 'FH_OFFSET', 15, 6, '1st cand. Offset (32byte/Desc)');
+    defineField(reg.TX_SCAN_BC, regValue, 'FH_FQN_PQSN', 5, 1, '1st cand. FIFO Queue/Slot Number');
+    defineField(reg.TX_SCAN_BC, regValue, 'FH_PQ', 0, 0, '1st cand. TX Queue type FQ(0), PQ(1)');
+    const f = reg.TX_SCAN_BC.fields;
     // 2. Report
     reg.TX_SCAN_BC.report.push({
       severityLevel: sevC.info,
       msg: `TX_SCAN_BC: ${reg.TX_SCAN_BC.name_long} (0x${reg.TX_SCAN_BC.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[SH_OFFSET  ] 2nd cand. Offset (32byte/Desc)       = ${reg.TX_SCAN_BC.fields.SH_OFFSET} (valid if SH_PQ=0, Offset = ${reg.TX_SCAN_BC.fields.SH_OFFSET}*32byte = ${reg.TX_SCAN_BC.fields.SH_OFFSET * 32} byte)\n`+
-           `[SH_FQN_PQSN] 2nd cand. FIFO Queue/Slot Number     = ${reg.TX_SCAN_BC.fields.SH_FQN_PQSN}\n`+
-           `[SH_PQ      ] 2nd cand. TX Queue type FQ(0), PQ(1) = ${reg.TX_SCAN_BC.fields.SH_PQ}\n`+
-           `[FH_OFFSET  ] 1st cand. Offset (32byte/Desc)       = ${reg.TX_SCAN_BC.fields.FH_OFFSET} (valid if FH_PQ=0, Offset = ${reg.TX_SCAN_BC.fields.FH_OFFSET}*32byte = ${reg.TX_SCAN_BC.fields.FH_OFFSET * 32} byte)\n`+
-           `[FH_FQN_PQSN] 1st cand. FIFO Queue/Slot Number     = ${reg.TX_SCAN_BC.fields.FH_FQN_PQSN}\n`+
-           `[FH_PQ      ] 1st cand. TX Queue type FQ(0), PQ(1) = ${reg.TX_SCAN_BC.fields.SH_PQ}`
+           `[${f.SH_OFFSET.name_short.padEnd(11)}] ${f.SH_OFFSET.name_long.padEnd(36)} = ${f.SH_OFFSET.value} (valid if SH_PQ=0, Offset = ${f.SH_OFFSET.value}*32byte = ${f.SH_OFFSET.value * 32} byte)\n`+
+           `[${f.SH_FQN_PQSN.name_short.padEnd(11)}] ${f.SH_FQN_PQSN.name_long.padEnd(36)} = ${f.SH_FQN_PQSN.value}\n`+
+           `[${f.SH_PQ.name_short.padEnd(11)}] ${f.SH_PQ.name_long.padEnd(36)} = ${f.SH_PQ.value}\n`+
+           `[${f.FH_OFFSET.name_short.padEnd(11)}] ${f.FH_OFFSET.name_long.padEnd(36)} = ${f.FH_OFFSET.value} (valid if FH_PQ=0, Offset = ${f.FH_OFFSET.value}*32byte = ${f.FH_OFFSET.value * 32} byte)\n`+
+           `[${f.FH_FQN_PQSN.name_short.padEnd(11)}] ${f.FH_FQN_PQSN.name_long.padEnd(36)} = ${f.FH_FQN_PQSN.value}\n`+
+           `[${f.FH_PQ.name_short.padEnd(11)}] ${f.FH_PQ.name_long.padEnd(36)} = ${f.SH_PQ.value}`
     });
   }
 
@@ -1767,16 +1828,17 @@ export function procRegsMhDebugCtrlStat(reg) {
     reg.TX_FQ_DESC_VALID.fields = {};
     reg.TX_FQ_DESC_VALID.report = [];
     // 1. Decode (MSB->LSB)
-    reg.TX_FQ_DESC_VALID.fields.DESC_NC_VALID = getBits(regValue,23,16); // next/current
-    reg.TX_FQ_DESC_VALID.fields.DESC_CN_VALID = getBits(regValue,7,0);   // current/next
-    const ncIdx = listSet(reg.TX_FQ_DESC_VALID.fields.DESC_NC_VALID,7);
-    const cnIdx = listSet(reg.TX_FQ_DESC_VALID.fields.DESC_CN_VALID,7);
+    defineField(reg.TX_FQ_DESC_VALID, regValue, 'DESC_NC_VALID', 23, 16, 'Next/Current Descriptors is in L_MEM'); // next/current
+    defineField(reg.TX_FQ_DESC_VALID, regValue, 'DESC_CN_VALID', 7, 0, 'Current/Next Descriptors is in L_MEM');   // current/next
+    const f = reg.TX_FQ_DESC_VALID.fields;
+    const ncIdx = listSet(f.DESC_NC_VALID.value,7);
+    const cnIdx = listSet(f.DESC_CN_VALID.value,7);
     // 2. Report
     reg.TX_FQ_DESC_VALID.report.push({
       severityLevel: sevC.info,
       msg: `TX_FQ_DESC_VALID: ${reg.TX_FQ_DESC_VALID.name_long} (0x${reg.TX_FQ_DESC_VALID.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[DESC_NC_VALID] Next/Current Descriptors is in L_MEM = 0x${reg.TX_FQ_DESC_VALID.fields.DESC_NC_VALID.toString(16).toUpperCase().padStart(2,'0')} => TX FIFO Queues: ${ncIdx.length?ncIdx.join(', '):'none'}\n`+
-           `[DESC_CN_VALID] Current/Next Descriptors is in L_MEM = 0x${reg.TX_FQ_DESC_VALID.fields.DESC_CN_VALID.toString(16).toUpperCase().padStart(2,'0')} => TX FIFO Queues: ${cnIdx.length?cnIdx.join(', '):'none'}`
+           `[${f.DESC_NC_VALID.name_short.padEnd(13)}] ${f.DESC_NC_VALID.name_long.padEnd(36)} = 0x${f.DESC_NC_VALID.value.toString(16).toUpperCase().padStart(2,'0')} => TX FIFO Queues: ${ncIdx.length?ncIdx.join(', '):'none'}\n`+
+           `[${f.DESC_CN_VALID.name_short.padEnd(13)}] ${f.DESC_CN_VALID.name_long.padEnd(36)} = 0x${f.DESC_CN_VALID.value.toString(16).toUpperCase().padStart(2,'0')} => TX FIFO Queues: ${cnIdx.length?cnIdx.join(', '):'none'}`
     });
   }
 
@@ -1787,14 +1849,15 @@ export function procRegsMhDebugCtrlStat(reg) {
     reg.TX_PQ_DESC_VALID.fields = {};
     reg.TX_PQ_DESC_VALID.report = [];
     // 1. Decode (MSB->LSB)
-    reg.TX_PQ_DESC_VALID.fields.DESC_VALID = regValue >>> 0; // full mask
+    defineField(reg.TX_PQ_DESC_VALID, regValue, 'DESC_VALID', 31, 0, 'PQ Slot Descriptors is in LMEM', r => r >>> 0); // full mask
+    const f = reg.TX_PQ_DESC_VALID.fields;
     // 2. Report
     let binLineHead = "Bit: 31                  23                  15                  7               0\n";
     let binLineData = "Slot " + getBinaryLineData(regValue);
     reg.TX_PQ_DESC_VALID.report.push({
       severityLevel: sevC.info,
       msg: `TX_PQ_DESC_VALID: ${reg.TX_PQ_DESC_VALID.name_long} (0x${reg.TX_PQ_DESC_VALID.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[DESC_VALID] PQ Slot Descriptors is in LMEM = 0x${reg.TX_PQ_DESC_VALID.fields.DESC_VALID.toString(16).toUpperCase().padStart(8,'0')}\n`+
+           `[${f.DESC_VALID.name_short.padEnd(10)}] ${f.DESC_VALID.name_long.padEnd(30)} = 0x${f.DESC_VALID.decoded.toString(16).toUpperCase().padStart(8,'0')}\n`+
            binLineHead +
            binLineData
     });
@@ -1807,7 +1870,7 @@ export function procRegsMhDebugCtrlStat(reg) {
     reg.CRC_CTRL.fields = {};
     reg.CRC_CTRL.report = [];
     // 1. Decode (MSB->LSB)
-    reg.CRC_CTRL.fields.START = getBits(regValue,0,0);
+    defineField(reg.CRC_CTRL, regValue, 'START', 0, 0, 'Start');
     // 2. Report
     reg.CRC_CTRL.report.push({
       severityLevel: sevC.info,
@@ -1830,12 +1893,13 @@ export function procRegsMhDebugCtrlStat(reg) {
     reg.CRC_REG.fields = {};
     reg.CRC_REG.report = [];
     // 1. Decode (MSB->LSB)
-    reg.CRC_REG.fields.CRC = regValue >>> 0;
+    defineField(reg.CRC_REG, regValue, 'CRC', 31, 0, 'Register Bank CRC Value', r => r >>> 0);
+    const f = reg.CRC_REG.fields;
     // 2. Report
     reg.CRC_REG.report.push({
       severityLevel: sevC.info,
       msg: `CRC_REG: ${reg.CRC_REG.name_long} (0x${reg.CRC_REG.addr.toString(16).toUpperCase().padStart(3,'0')}: 0x${regValue.toString(16).toUpperCase().padStart(8,'0')})\n`+
-           `[CRC] Register Bank CRC Value = 0x${reg.CRC_REG.fields.CRC.toString(16).toUpperCase().padStart(8,'0')}`
+           `[${f.CRC.name_short.padEnd(3)}] ${f.CRC.name_long.padEnd(23)} = 0x${f.CRC.decoded.toString(16).toUpperCase().padStart(8,'0')}`
     });
   }
 }

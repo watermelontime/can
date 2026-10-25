@@ -46,12 +46,19 @@ import * as x_canb from './x_canb_main.js';
 import * as xs_can from './xs_can_main.js';
 import { sevC, clearObject } from './help_functions.js';
 import { downloadEvaluationReport } from './report_export.js';
+import { buildCompactView } from './compact_view.js';
 
 // global variable definitions
 let par_clk_freq_g = 160; // Global variable for CAN clock frequency in MHz
 
 // Initialize GLOBAL register result object
 let reg = {};
+
+// Compact view: register-visibility selection, kept PER MODULE for the session.
+// compactRegisterSelection[moduleName][regName] === false => hidden; otherwise shown.
+const compactRegisterSelection = {};
+let compactConfigMode = false; // false = normal view (view1), true = config view (view2)
+let compactCurrentModule = 'CAN';
 
 // Application version shown next to the page title
 const APP_VERSION = 'V1.0.5';
@@ -166,6 +173,9 @@ function initEventListeners() {
   } else {
     console.warn('[Warning] Download report link not found in HTML');
   }
+
+  // HTML TABS: normal / compact report views
+  initReportTabs();
 
   // Download combined BT diagram links
   document.getElementById('downloadBTsvg').addEventListener('click', (e) => { e.preventDefault(); downloadBTcombined('svg'); });
@@ -1289,7 +1299,7 @@ function applyHashParamsAndProcess() {
 // Download the current evaluation as a single, self-contained HTML report file.
 // The report is first re-rendered with ALL severities (so the exported filter
 // checkboxes can show/hide every line), then restored to the on-screen state.
-function handleDownloadReport() {
+async function handleDownloadReport() {
   const canIpModule = getCanIpModuleFromHTML() || 'CAN';
 
   const reportEl = document.getElementById('reportTextArea');
@@ -1312,7 +1322,18 @@ function handleDownloadReport() {
     }
   }
 
-  downloadEvaluationReport({ canIpModule, reportHtml: fullReportHtml });
+  // Build a full compact-view snapshot (ALL registers, normal view) for the export,
+  // independent of the current on-screen subset/config selection.
+  let compactViewHtml = '';
+  try {
+    const tmp = document.createElement('div');
+    await buildCompactView(reg, canIpModule, tmp, { mode: 'normal', isShown: () => true });
+    compactViewHtml = tmp.innerHTML;
+  } catch (err) {
+    console.warn('[Warning] handleDownloadReport(): could not render compact view:', err);
+  }
+
+  downloadEvaluationReport({ canIpModule, reportHtml: fullReportHtml, compactViewHtml });
 }
 
 // ===================================================================================
@@ -1498,4 +1519,124 @@ function processUserRegisterValues() {
 
   // Display Reports in HTML textarea
   displayValidationReport(reg, reportVerbosity);
+
+  // Display compact register view (separate "compact" tab); reset to normal view.
+  compactCurrentModule = canIpModule;
+  setCompactConfigMode(false);
+}
+
+// ===================================================================================
+// Render the compact register view into the compact tab (async, fire-and-forget).
+function renderCompactView(moduleName) {
+  const container = document.getElementById('compactView');
+  if (!container) return;
+  if (moduleName) compactCurrentModule = moduleName;
+  buildCompactView(reg, compactCurrentModule, container, {
+    mode: compactConfigMode ? 'config' : 'normal',
+    isShown: (regName) => isCompactRegShown(compactCurrentModule, regName)
+  }).catch(err => {
+    console.warn('[Warning] renderCompactView() failed:', err);
+  });
+}
+
+// Whether a register is currently selected for display (default: shown).
+function isCompactRegShown(moduleName, regName) {
+  const sel = compactRegisterSelection[moduleName];
+  return !sel || sel[regName] !== false;
+}
+
+// Store a register's show/hide state for the given module.
+function setCompactRegShown(moduleName, regName, shown) {
+  if (!compactRegisterSelection[moduleName]) compactRegisterSelection[moduleName] = {};
+  compactRegisterSelection[moduleName][regName] = shown;
+}
+
+// Check/uncheck every register (config view) and persist it in the selection store.
+function setAllCompactRegisters(shown) {
+  const container = document.getElementById('compactView');
+  if (!container) return;
+  container.querySelectorAll('.cv-show-cb').forEach(cb => {
+    cb.checked = shown;
+    const regName = cb.getAttribute('data-reg');
+    if (regName) setCompactRegShown(compactCurrentModule, regName, shown);
+  });
+}
+
+// Switch the compact tab between normal view (view1) and config view (view2).
+function setCompactConfigMode(on) {
+  compactConfigMode = on;
+  const configControls = document.getElementById('compactConfigControls');
+  const selectRegistersBtn = document.getElementById('btnSelectRegisters');
+  const compactTab = document.getElementById('reportTabCompact');
+  if (configControls) configControls.hidden = !on;
+  if (selectRegistersBtn) selectRegistersBtn.disabled = on;
+  if (compactTab) compactTab.textContent = on ? 'compact config' : 'compact';
+  renderCompactView(compactCurrentModule);
+}
+
+// ===================================================================================
+// Report view tabs: wire the "normal" / "compact" tab buttons.
+function initReportTabs() {
+  const tabs = document.querySelectorAll('.report-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => switchReportTab(tab.dataset.reportTab));
+  });
+
+  // Compact view: toggle non-zero highlighting via the "cv-highlight" class.
+  const highlightCheckbox = document.getElementById('par_compact_highlight_nonzero');
+  const compactView = document.getElementById('compactView');
+  if (highlightCheckbox && compactView) {
+    highlightCheckbox.addEventListener('change', () => {
+      compactView.classList.toggle('cv-highlight', highlightCheckbox.checked);
+    });
+  }
+
+  // Compact view: toggle field name_long hover tooltips via the "cv-longnames" class.
+  const longNamesCheckbox = document.getElementById('par_compact_show_longnames');
+  if (longNamesCheckbox && compactView) {
+    longNamesCheckbox.addEventListener('change', () => {
+      compactView.classList.toggle('cv-longnames', longNamesCheckbox.checked);
+    });
+  }
+
+  // Compact view: register-selection (config) mode controls.
+  const selectRegistersBtn = document.getElementById('btnSelectRegisters');
+  if (selectRegistersBtn) {
+    selectRegistersBtn.addEventListener('click', () => setCompactConfigMode(true));
+  }
+  const applySubsetBtn = document.getElementById('btnApplySubset');
+  if (applySubsetBtn) {
+    applySubsetBtn.addEventListener('click', () => setCompactConfigMode(false));
+  }
+  const setAllBtn = document.getElementById('btnSetAll');
+  if (setAllBtn) {
+    setAllBtn.addEventListener('click', () => setAllCompactRegisters(true));
+  }
+  const clearAllBtn = document.getElementById('btnClearAll');
+  if (clearAllBtn) {
+    clearAllBtn.addEventListener('click', () => setAllCompactRegisters(false));
+  }
+
+  // Delegated: update the stored selection when a per-register "show" checkbox changes.
+  if (compactView) {
+    compactView.addEventListener('change', (e) => {
+      const cb = e.target;
+      if (cb && cb.classList && cb.classList.contains('cv-show-cb')) {
+        const regName = cb.getAttribute('data-reg');
+        if (regName) setCompactRegShown(compactCurrentModule, regName, cb.checked);
+      }
+    });
+  }
+}
+
+// Switch the visible report tab panel.
+function switchReportTab(tabName) {
+  document.querySelectorAll('.report-tab').forEach(t => {
+    const active = t.dataset.reportTab === tabName;
+    t.classList.toggle('active', active);
+    t.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  document.querySelectorAll('.report-tabpanel').forEach(p => {
+    p.hidden = p.dataset.reportTabpanel !== tabName;
+  });
 }
