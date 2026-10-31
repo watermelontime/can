@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAN Bus Simulator</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="style_sim.css" />
+  <link rel="icon" href="../favicon.ico" type="image/x-icon" />
+</head>
+
+<body>
+
+  <div id="site-menu"></div>
+  <script type="module" src="/can/menu.js"></script>
+
+  <main>
+
+    <div class="page-header">
+      <h1>CAN Bus Simulator
+        <a href="versionhistory.html" id="appVersion" class="version-label" target="_blank" rel="noopener noreferrer"
+          aria-label="Version"></a>
+      </h1>
+      <div class="header-actions">
+        <button type="button" id="copyShareLinkButton" class="styled-select">Copy link with settings</button>
+      </div>
+    </div>
+
+    <p class="sim-intro">
+      Two-node CAN XL bus simulation. Configure both nodes and the channel, then you get 
+      waveforms that show frame transmission including arbitration. The intention of this tool is to study A) the impact of the delay parameters, and B) study corner cases like the maximum arbitration bit rate.
+      This tool is under development.
+    </p>
+
+    <!-- Validation errors -->
+    <div id="sim-errors" class="sim-errors" style="display:none;"></div>
+
+    <!-- Part 1: Setup (built by sim_main.js) -->
+    <section class="sim-part sim-part-light">
+      <h2>Setup</h2>
+      <div id="sim-setup" class="sim-setup"></div>
+    </section>
+
+    <!-- Part 2: Evaluation View (built by sim_main.js) -->
+    <div class="sim-config-head">
+      <h2>Evaluation View</h2>
+      <button type="button" id="sim-eval-toggle" class="styled-button">Show</button>
+    </div>
+    <div id="sim-eval"></div>
+
+    <!-- Part 3: Configuration View (built by sim_main.js) -->
+    <div class="sim-config-head">
+      <h2>Configuration View</h2>
+      <button type="button" id="sim-config-toggle" class="styled-button">Hide</button>
+    </div>
+    <div id="sim-config" class="sim-config"></div>
+
+    <!-- Part 4: Simulation Result (SVG injected by sim_draw.js) -->
+    <section class="sim-part sim-part-light">
+      <h2>Simulation Result</h2>
+      <div class="sim-result-bar">
+        <span id="sim-zoom-host" class="sim-zoom-bar"></span>
+      </div>
+      <div id="sim-output" class="sim-output"></div>
+    </section>
+
+    <script type="module" src="sim_main.js"></script>
+
+  </main>
+
+  <div id="site-footer"></div>
+  <script type="module" src="/can/footer.js"></script>
+
+</body>
+
+</html>

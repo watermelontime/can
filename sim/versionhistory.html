@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAN Bus Simulator - Version History</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="icon" href="../favicon.ico" type="image/x-icon" />
+</head>
+
+<body>
+
+  <div id="site-menu"></div>
+  <script type="module" src="/can/menu.js"></script>
+
+  <main>
+
+    <div class="page-header">
+      <h1>CAN Bus Simulator - Version History</h1>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Version</th>
+          <th>Date</th>
+          <th>Changes to previous version</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0.2.0</td>
+          <td>2026-10-31</td>
+          <td>New page layout.
+            <ul>
+              <li>Setup overview: both nodes with CAN controller, transceiver, delays and CAN bus</li>
+              <li>Configuration view (hide/show) per node, laid out as in the XL Bit Timing Configurator, plus transceiver, channel and frame inputs</li>
+              <li>Transceiver and channel parameters per node; t_cable as bus parameter</li>
+              <li>Node 2: delay transmission start (idle, hard sync on SOF)</li>
+              <li>Copy Node 1 config button</li>
+              <li>"Copy link with settings" button: shares all user parameters via the URL</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td>0.1.0</td>
+          <td>2026-10-27</td>
+          <td>Initial development version.
+            <ul>
+              <li>Two-node CAN XL bus simulation (wired-AND bus model)</li>
+              <li>Configurable bit timing (arbitration and data phase), clock tolerance and TMS per node</li>
+              <li>Arbitration resolution and bit monitoring</li>
+              <li>PWM encoding of the data phase on TX_CC</li>
+              <li>Transceiver mode state machine (SIC / FAST_TX / FAST_RX)</li>
+              <li>Channel and transceiver delays and rising-edge asymmetries</li>
+              <li>SVG visualization of TX_CC, TX_bus, RX_CC, sample points and transceiver states</li>
+            </ul>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+  </main>
+
+  <div id="site-footer"></div>
+  <script type="module" src="/can/footer.js"></script>
+
+</body>
+
+</html>
