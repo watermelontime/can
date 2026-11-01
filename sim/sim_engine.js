@@ -260,6 +260,8 @@ export function runSimulation(cfg) {
     return out;
   };
 
+  const actRec = nodes.map((m) => m.trx.actRecSegments(busTotalT));
+
   const nodesOut = nodes.map((m, i) => {
     const roleSegs = m.roles
       .map((r, j) => ({ t0: r.t, t1: m.roles[j + 1]?.t ?? busTotalT, role: r.role }))
@@ -278,6 +280,20 @@ export function runSimulation(cfg) {
       rxcc: buildRxCc(i),
       txState: m.trx.segments(busTotalT),
       txPre: m.trx.preSegments(busTotalT),
+      txHiZ: m.trx.hiZSegments(busTotalT),
+      txActRec: actRec[i],
+      // Own phases plus the far node's phases after t_cable, through the own RX path. The start is a
+      // rising edge, so it gets the RX asymmetry like the RX_CC edge (buildRxCc); the end does not.
+      rxActRec: (() => {
+        const me = m.trx;
+        const rx = (segs, extra) => segs.map(({ t0, t1 }) => {
+          let s = t0 + extra + me.trx.t_tc_rx;
+          s += me.stateAt(s) === STATE_SIC ? me.trx.a_sic_rx : me.trx.a_fast_rx;
+          const e = t1 + extra + me.trx.t_tc_rx;
+          return { t0: s + m.ch.t_cc_tc_rx, t1: e + m.ch.t_cc_tc_rx };
+        }).filter((r) => r.t1 > r.t0);
+        return [...rx(actRec[i], 0), ...rx(actRec[1 - i], c)];
+      })(),
       errorAt: m.errorAt,
     };
   });

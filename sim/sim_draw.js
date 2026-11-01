@@ -176,8 +176,8 @@ function drawNode(node, result, view, y0) {
   const wavesTop = y + 6;
   const rows = [
     { label: names.txCc, sig: node.txcc, color: colors.tx_cc },
-    { label: names.txBus, sig: node.txbus, color: colors.tx_bus },
-    { label: names.rxCc, sig: node.rxcc, color: colors.rx_cc },
+    { label: names.txBus, sig: node.txbus, color: colors.tx_bus, hiZ: node.txHiZ, actRec: node.txActRec },
+    { label: names.rxCc, sig: node.rxcc, color: colors.rx_cc, actRec: node.rxActRec },
   ];
   const WAVE_H = view.waveHeight;
   const spBottom = wavesTop + rows.length * (WAVE_H + WAVE_GAP) - WAVE_GAP;
@@ -196,7 +196,37 @@ function drawNode(node, result, view, y0) {
   let waves = '';
   for (const r of rows) {
     labels += rowLabel(r.label, yy, WAVE_H, fs);
+    for (const a of view.showSicTime ? r.actRec || [] : []) {
+      const x0 = x(a.t0);
+      const w = x(Math.min(a.t1, t1)) - x0;
+      if (w > 0) {
+        waves += `<rect x="${x0.toFixed(1)}" y="${yy + 6}" width="${w.toFixed(1)}" height="${WAVE_H - 12}" `
+          + `fill="${colors.activeRecessiveColor}" fill-opacity="${colors.activeRecessiveOpacity}" />`;
+      }
+    }
     waves += waveform(r.sig, t1, x, yy + 6, yy + WAVE_H - 6, r.color, view.waveLineWidth);
+    for (const z of r.hiZ || []) {
+      // Cover the (recessive) level and draw the high ohmic state in the middle.
+      const x0 = x(z.t0).toFixed(1);
+      const x1 = x(Math.min(z.t1, t1)).toFixed(1);
+      const yMid = yy + WAVE_H / 2;
+      waves += `<rect x="${x0}" y="${yy}" width="${(x1 - x0).toFixed(1)}" height="${WAVE_H}" fill="#ffffff" />`
+        + `<line x1="${x0}" y1="${yMid}" x2="${x1}" y2="${yMid}" stroke="${r.color}" `
+        + `stroke-width="${view.hiZLine.width}" stroke-dasharray="${view.hiZLine.dash}" />`;
+      // Vertical connectors to the driven level before and after.
+      const levelY = (t, inclusive) => {
+        let v = RECESSIVE;
+        for (const e of r.sig) {
+          if (inclusive ? e.t > t : e.t >= t) break;
+          v = e.v;
+        }
+        return v === RECESSIVE ? yy + 6 : yy + WAVE_H - 6;
+      };
+      const conn = (px, yA) => `<line x1="${px}" y1="${yA}" x2="${px}" y2="${yMid}" stroke="${r.color}" `
+        + `stroke-width="${view.waveLineWidth}" />`;
+      waves += conn(x0, levelY(z.t0, false));
+      if (z.t1 < t1) waves += conn(x1, levelY(z.t1, true));
+    }
     yy += WAVE_H + WAVE_GAP;
   }
 

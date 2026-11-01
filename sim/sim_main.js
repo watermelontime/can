@@ -405,6 +405,7 @@ function buildInput3(node) {
     ['a_sic_tx [ns]', 'a_sic_tx'], ['a_sic_rx [ns]', 'a_sic_rx'],
     ['a_fast_tx [ns]', 'a_fast_tx'], ['a_fast_rx [ns]', 'a_fast_rx'],
     ['t_select [ns]', 'tselect_threshold'],
+    ['t_pas_rec_start [ns]', 't_pas_rec_start'],
   ].map(([label, key]) => sliderRow(label, t, key));
   rows.push(
     tr(td('SIC→FAST [ns]'), td(), td(numInput(() => t().sic2fast, (v) => { t().sic2fast = v; }))),
@@ -622,8 +623,9 @@ function setupMarkers(scroller, axis, m) {
 // Current zoom = pixel width of a data bit; kept across re-runs.
 let zoomPx = null;
 let lastResult = null;
+let showSicTime = false;
 
-const viewCfg = () => ({ ...cfg, view: { ...cfg.view, dataBitPx: zoomPx } });
+const viewCfg = () => ({ ...cfg, view: { ...cfg.view, dataBitPx: zoomPx, showSicTime } });
 
 // Zoom so that time t stays at offsetPx from the left edge of the visible area.
 function zoomTo(px, t, offsetPx) {
@@ -647,11 +649,15 @@ function buildZoomBar(bar, getScroller) {
     b.addEventListener('click', fn);
     return b;
   };
+  const sic = el('input', { type: 'checkbox' });
+  sic.checked = showSicTime;
+  sic.addEventListener('change', () => { showSicTime = sic.checked; render(); });
   bar.append(
     btn('−', 'Zoom out', () => centerZoom(1 / z.step)),
     btn('+', 'Zoom in', () => centerZoom(z.step)),
     btn('Fit', 'Show the whole frame', () => fitView(getScroller())),
     el('span', { class: 'sim-zoom-info', text: `Scroll (horizontal): wheel, Zoom: CTRL + wheel (data bit = ${zoomPx.toFixed(1)} px)` }),
+    el('label', { class: 'sim-zoom-info' }, [sic, ' show SIC time']),
   );
 }
 

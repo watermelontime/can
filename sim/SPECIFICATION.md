@@ -1,6 +1,6 @@
-# CAN Bus Simulator — Specification V0.1 (DRAFT)
+# CAN Bus Simulator — Specification V0.2
 
-> Status: **Specification draft for review.** No implementation until the user gives the explicit start command.
+> Status: **Implemented (V0.2.0), under development.**
 > Folder: `sim/`. Fourth tool of the CAN Tools website.
 
 ---
@@ -11,7 +11,8 @@ A single-page browser tool that simulates **two CAN XL controllers** connected t
 SIC XL transceivers and a cable, and visualizes what happens on the wire during
 **arbitration, data transmission, and the ACK phase**.
 
-Both nodes start transmitting at the same time. The tool computes the complete signal
+Node 1 starts transmitting at t = 0; Node 2 starts at t = 0 or after a configurable delay
+(`txStartDelay`, §6.4). The tool computes the complete signal
 history (static, one-shot) and renders, **per node**:
 
 - **A hierarchical state trace** (transmitter/receiver → phase → field → bit → bit-phase + SP).
@@ -34,7 +35,7 @@ The CAN standard reference is [ISO11898-1_2024_FINAL.PDF](ISO11898-1_2024_FINAL.
 
 ### In scope
 - CAN **XL** frame format only (**XLFF**, 11-bit ID).
-- Two fully configurable nodes, both transmitting simultaneously.
+- Two fully configurable nodes; Node 2 may start its transmission delayed.
 - Simplified ISO 11898-1 controller model (see §7).
 - SIC XL transceiver model with propagation delays + SIC/FAST rising-edge asymmetry + PWM decoding.
 - Cable delay model.
@@ -108,20 +109,45 @@ The **bus level** is the wired-AND of both transceivers' driven levels (dominant
 
 ## 6. Configuration UI
 
-Layout mirrors Slide 1 (block diagram with editable values) plus per-node frame and bit-timing panels.
-All numeric inputs validated; invalid values flagged inline (reuse existing `.input-field` / error styles).
+The page consists of four parts (layout per Slide 1):
 
-### 6.1 Per-node — Operation mode
+1. **Setup** (always visible, light blue): block diagram of both nodes with CAN controller, TXD/RXD,
+   SIC XL transceiver, the CAN bus (twisted pair, terminations `T`) and the most important parameters.
+   - Blue fields (`.input-field`) are editable copies of parameters: `df`, `t_cc_tc_tx`, `t_tc_tx`,
+     `t_cc_tc_rx`, `t_tc_rx`, `t_cable` and, for Node 2, "delay transmission start by [ns]" (`txStartDelay`).
+   - White fields (`.result-field`) are read-only copies: arbitration bit rate [kbit/s], data bit rate [Mbit/s].
+2. **Evaluation View** (hide/show button, hidden by default, green): calculations per node (§6.7).
+3. **Configuration View** (hide/show button, hidden by default, green):
+   - **Bus Configuration:** `t_cable`.
+   - **Node 1 Configuration** and **Node 2 Configuration**, each with the columns:
+     Input 1 (transceiver type, example configurations, CAN clock), Input 2 (bit timing parameters),
+     Output 1 (bit timing properties), Output 2 (bit timing visualization, as in `xl_bt/`),
+     Input 3 (transceiver parameters), Input 4 (channel parameters), Input 5 (frame).
+   - Node 2 has the button **"Copy Node 1 configuration"** after its title (§6.2).
+4. **Simulation Result** (light blue): button row (−, +, Fit, zoom info) and the figure (§13).
+
+Setup and configuration fields are bound to the same data model: a change in one place updates all copies.
+The simulation runs automatically (debounced) after every valid change; there is no "Run" button.
+All numeric inputs are validated; invalid values are flagged inline (`.input-error`), configuration errors are
+listed above the setup.
+
+A header button **"Copy link with settings"** copies a share link (§6.8).
+
+### 6.1 Per-node — Operation mode (Input 1 / Input 2)
 | Field | Control | Default | Notes |
 |---|---|---|---|
-| Transceiver Mode Switching (TMS) | toggle ON/OFF | ON | Enables SIC→FAST switch + PWM in data phase. |
+| Transceiver type | buttons FD / SIC / SIC XL | SIC XL | Only SIC XL is simulated; FD and SIC are shown disabled. |
+| Transceiver Mode Switching (TMS) | checkbox | ON | Enables SIC→FAST switch + PWM in data phase. |
+| TDC | checkbox | OFF | Shown (incl. SSP offset / SSP) for later CC/FD use; no effect on the simulation. |
 | Clock frequency | number (MHz) | 160 | |
 | Clock tolerance `df` | number field, step 0.1 (spin buttons) | 0.2 | Relative clock deviation in %, may be **negative** (slower clock); **independent configuration parameter per node**. |
 
-### 6.2 Per-node — Bit timing
+### 6.2 Per-node — Bit timing (Input 2)
+Defaults (clock, bit timing, TMS) are taken from preset `cfg01` (`DEFAULT_PRESET` in `sim_config.js`):
+
 | Parameter | Arb default | Data default |
 |---|---|---|
-| BRP | 1 | 1 |
+| BRP (shared by both phases) | 1 | 1 |
 | Prop seg (tq) | 191 | 0 |
 | Phase seg 1 (tq) | 64 | 4 |
 | Phase seg 2 (tq) | 64 | 3 |
@@ -131,18 +157,22 @@ All numeric inputs validated; invalid values flagged inline (reuse existing `.in
 
 With clk = 160 MHz → tq = 6.25 ns. Arb bit = 2000 ns; data bit = 50 ns.
 
-Node 2 has a checkbox **"Use bit timing of Node 1"** (default: checked). When checked, Node 2's bit timing
-inputs are locked and mirror Node 1's values (clock frequency and `df` stay per node).
-
-A **"Bit timing preset"** drop-down loads predefined configurations into both nodes: clock frequency,
-bit timing (arb + data) and TMS; `df` and frame contents stay unchanged. Each preset is defined by one line in
+**"Load Example"** (Input 1) loads a predefined configuration into **this node**: clock frequency,
+bit timing (arb + data) and TMS; `df` and frame contents stay unchanged. Each example is defined by one line in
 `BT_PRESETS` (`sim_config.js`): unique internal ID, drop-down label and values.
 SyncSeg is always 1 tq. SP = after (Sync + Prop + PhaseSeg1).
 
-**PWM configuration** (derived like the XL BT tool, editable/overridable): `PWMO`, `PWML`, `PWMS`
-(clock-period counts). Used by the transceiver PWM decode (§9, §10).
+**"Copy Node 1 configuration"** (Node 2 only) copies all Node 1 parameters to Node 2 (clock, `df`, TMS, TDC,
+transceiver type, bit timing, channel, transceiver and frame); Node 2's `txStartDelay` is kept.
 
-### 6.3 Per-node — Frame (XLFF, 11-bit ID)
+**PWM configuration** (derived like the XL BT tool, read-only): `PWMO`, `PWML`, `PWMS`
+(clock-period counts). Used by the PWM encoder and transceiver PWM decode (§9, §10).
+Output 1 / Output 2 show the derived bit timing properties and drawings as in `xl_bt/`.
+
+### 6.3 Per-node — Frame (XLFF, 11-bit ID) (Input 5)
+Input 5 is laid out as in the Frame Generator: frame type (fixed "CAN XL: XBFF (ID11)"), ID (hex), DLC (0–2047),
+RRS, SEC, SDT (hex), VCID (hex), AF (hex), data bytes (hex, textarea).
+
 Fields in transmission order per ISO 11898-1 XL data frame:
 SOF, ID[28:18], RRS, IDE, FDF, resXL/XLF marker, SBC bits, SDT, SEC, VCID, 
 DLC (payload length), AF (acceptance field), **PCRC (13-bit)**, payload data, **FCRC (32-bit)**,
@@ -176,7 +206,7 @@ The XLFF field list and sizes follow the XL frame definition in `frame/frame_def
 | `t_cable` | transceiver ↔ transceiver (bus propagation) | 20 ns |
 | `txStartDelay` (Node 2 only) | Node 2 is idle (Role = Idle) until this time, then starts transmitting. A recessive→dominant edge seen while idle is a hard sync on SOF; if Node 2 has not started transmitting by the SP of that SOF, it becomes receiver from that SP on | 0 ns |
 
-### 6.5 Transceiver (per node, SIC XL)
+### 6.5 Transceiver (per node, SIC XL) (Input 3)
 | Symbol | Meaning | Min (ISO 11898-2) | Max (ISO 11898-2) |
 |---|---|---|---|
 | `t_tc_tx` | transceiver TX pin → bus | 0 ns |  80 ns (default)|
@@ -185,6 +215,9 @@ The XLFF field list and sizes follow the XL frame definition in `frame/frame_def
 | `a_sic_rx` | SIC-mode asymmetry added to rising edge, RX | -20 ns | +15 ns (default)|
 | `a_fast_tx` | FAST-mode asymmetry added to rising edge, TX | -5 ns | +5 ns (default)|
 | `a_fast_rx` | FAST-mode asymmetry added to rising edge, RX | -5 ns | +5 ns (default)|
+| `tselect_threshold` | preselection time (§10.3) | 500 ns | 980 ns (default 700 ns) |
+| `t_pas_rec_start` | SIC active recessive duration (§10.5) | 0 ns | 530 ns (default) |
+| `SIC→FAST` / `FAST→SIC` | mode switch thresholds (§10.4) | — | default 205 ns / 245 ns |
 
 Each asymmetry is a **slider** ranging within the ISO-defined bounds (as specified in the table). Asymmetry is applied **only to the rising (recessive-going) edge**.
 
@@ -198,11 +231,16 @@ All channel delays (§6.4) and transceiver parameters except `SIC→FAST` / `FAS
 All essential parameters shall be user-configurable from a **central place** (`defaultView()` in
 `sim_config.js`), including:
 - Colors of the waveforms and graphics (incl. SP line `spLine`, the four bit-phase greys
-  `segSync` / `segProp` / `segPs1` / `segPs2`, transceiver state colors).
+  `segSync` / `segProp` / `segPs1` / `segPs2`, transceiver state colors, preselection colors
+  `preFastTx` / `preFastRx`, role colors `roleTx` / `roleRx` / `roleIdle`).
+- Field colors `fieldColors`, keyed by field ID (`sofField`, `arbField`, `ctrlField`, `dataField`, `crcField`,
+  `ackField`, `eofField`); display names come from `FIELD_NAMES` (`sim_bsp.js`).
+- Row names (`rowNames`, incl. `tcState`, `tcPreselect`).
 - Bit length of data bits (pixels).
 - Font sizes: node headline, and one common size for row names and bit/field/state names.
 - SP line style: width, dash pattern, opacity.
 - Waveform line width and waveform row height (one value each for all three waveforms).
+- High ohmic line style on `TX_bus` (`hiZLine`: width, dash pattern; color = `tx_bus`).
 - Marker style: cursor and pinned-marker color/width, readout font size and background, click distance for
   removing a pinned marker.
 - Zoom: step factor, min/max data bit width (px), mouse-wheel scroll speed.
@@ -210,6 +248,26 @@ All essential parameters shall be user-configurable from a **central place** (`d
 - Horizontal scaling / zoom preferences.
 - Transceiver-specific settings.
 - default values for all configurable parameters.
+
+### 6.7 Evaluation View
+One table per node ("Calculation for Node n"), columns Parameter | Value (with unit ns) | Formula | Description.
+`df` is ignored (nominal clock). For Node 1 (Node 2 with indices swapped):
+
+| Parameter | Formula | Description |
+|---|---|---|
+| `t1_propseg` | PropSeg_arb · BRP / f_clk1 | PropSeg duration (arbitration phase) |
+| `t1_cable_max` | t1_propseg / 2 − t1_cc_tc_tx − t1_tc_tx − t2_tc_rx − t2_cc_tc_rx | maximum supported cable length |
+| `t_n1_n2` | t1_cc_tc_tx + t1_tc_tx + t_cable + t2_tc_rx + t2_cc_tc_rx | Node 1 ⇒ Node 2 one way propagation delay |
+| `t_round_trip` | t_n1_n2 + t_n2_n1 | round trip delay (2 · one way with identical transceivers) |
+
+Transceiver asymmetries are not included.
+
+### 6.8 Share link
+"Copy link with settings" copies `…/sim/index.html#cfg=<JSON>` to the clipboard (button shows "Link copied!").
+The JSON contains all user parameters (per node: clock, `df`, TMS, TDC, transceiver type, `txStartDelay`,
+bit timing, channel, transceiver, frame; bus: `t_cable`) and the pinned markers. Zoom level, view visibility and
+`defaultView()` settings are **not** included. On page load the hash is applied before the UI is built; only
+known keys with matching types are taken over (untrusted input), everything else keeps its default.
 
 ---
 
@@ -254,10 +312,17 @@ this drift drives the arbitration/sample-point behaviour the tool visualizes.
 - When a synchronization makes a bit start at the edge, the edge tq (already elapsed) becomes the **SyncSeg** of
   that bit.
 - **Hard synchronization:**
-  - **SOF:** both nodes start transmitting SOF at the same time (t = 0); a transmitter's bit timing starts with
+  - **SOF:** Node 1 starts transmitting SOF at t = 0; Node 2 at t = 0 or, with `txStartDelay`, after an idle
+    phase (see below). A transmitter's bit timing starts with
     its **own SOF transmission**. Hard sync at SOF follows the general rules: a **receiver** always hard-syncs,
     a **transmitter only on early edges** (the received SOF edge is a late edge while the transmitter is already
     sending `0`, so it is not used).
+  - **Idle node (Node 2 before `txStartDelay`):** the node drives recessive and evaluates `RX_CC` at the end of
+    every (arbitration) tq. A recessive→dominant edge is a hard sync: the edge tq becomes the SyncSeg of a SOF.
+    If the node's transmission start falls into this SOF before or at its SP, it becomes transmitter of its own
+    frame; otherwise it becomes **receiver from the SP of the SOF on**. An edge seen in the same tick as the
+    transmission start has priority (hard sync first). Without an edge, the node starts its own SOF at
+    `txStartDelay` (quantized to its clock).
   - **XLF → resXL** edge (receivers only): if the edge is seen after the SP of XLF or during resXL, resXL
     starts at the edge.
   - **DL1** edge, i.e. the edge at the end of the DH\* bits (receivers only): DL1 starts at the edge (if the edge
@@ -327,7 +392,8 @@ The BSP tracks and exposes, for the trace: role (transmitter/receiver), phase, f
     (incl. the position of its ACK slot).
 
 ### 7.5 Arbitration & ACK scenario (default)
-1. Both nodes start SOF at t = 0 (own bit timing, no SOF hard sync) and transmit their configured frames.
+1. Node 1 starts SOF at t = 0, Node 2 at t = 0 or after `txStartDelay` (own bit timing, no SOF hard sync for a
+   transmitter) and both transmit their configured frames.
 2. During arbitration, the node that sends recessive but reads dominant at SP loses and becomes receiver.
 3. The winner continues transmitting through control/data/CRC.
 4. In the ACK slot, the transmitter sends recessive and the receiver drives dominant; the transmitter validates
@@ -379,7 +445,7 @@ Per the user's decision:
 
 ## 10. Transceiver Model (SIC XL)
 
-Both transceivers share identical parameters (per requirement). Each transceiver is modelled as a
+Each node has its own transceiver parameters (§6.5). Each transceiver is modelled as a
 **state machine** plus signal delay / asymmetry / PWM-decode logic.
 
 ### 10.1 Pins
@@ -420,6 +486,11 @@ falling edge per symbol, so the transmitter enters FAST_TX and the receiver ente
    `a_fast_tx` in FAST mode.
    - **SIC:** the transceiver outputs exactly what it sees on `TXD` (pass-through, incl. any PWM symbols that
      arrive before the switch to FAST).
+   - **Active recessive (SIC only):** after a rising edge in SIC mode and after entering SIC (FAST timeout) the
+     transceiver actively drives recessive for `t_pas_rec_start` (on bus time, from the TX_bus edge). The phase
+     ends early when the bus is driven dominant again or the transceiver leaves SIC. Display only (logic level `1`).
+     On **FAST_RX → SIC** the driven recessive level and the active recessive phase start `t_tc_tx` after the
+     switch, **without** TX asymmetry (same moment the high ohmic display ends).
    - **FAST_TX:** every PWM symbol (rising edge to next rising edge on `TXD`) is decoded in a simple way at the
      **end of the symbol**: `PWM_0` → `0`, `PWM_1` → `1` (high time > half the symbol length → `PWM_1`).
      The transceiver does **not** know about the two forced `PWM_0` symbols at the beginning of ADH (§9); they
@@ -430,7 +501,8 @@ falling edge per symbol, so the transmitter enters FAST_TX and the receiver ente
    - Attention: start of PWM symbol decoding introduces an additional delay of one PWM symbol (= time jump).
    - Attention: stop of PWM symbol decoding removes the additional delay of one PWM symbol (= time jump).
    - In **FAST_RX** the transceiver does not drive the bus (high-ohmic → recessive); PWM on `TXD` is **not**
-     decoded/forwarded.
+     decoded/forwarded. The high-ohmic state is simulated as `1` but recorded separately for display: it starts
+     `t_tc_tx` after entering FAST_RX and ends `t_tc_tx` after leaving FAST_RX (no asymmetry).
 2. **Bus:** wired-AND of both transceivers (dominant `0` wins).
 3. **RX direction:** each transceiver receives the wired-AND of its **own** bus output (no cable delay) and the
    **far** transceiver's bus output delayed by `t_cable`; then `t_tc_rx`, add rising-edge
@@ -450,7 +522,7 @@ other node's transceiver (both directions). A node sees its own bus output witho
 ## 12. Simulation Engine (clocked co-simulation)
 
 1. Build each node's bit sequence from its frame config (fields, stuff bits, fixed CRCs, ACK, EOF).
-2. Both nodes start SOF at t = 0.
+2. Node 1 starts SOF at t = 0; Node 2 at t = 0 or after its idle phase (`txStartDelay`, §7.1.1).
 3. **Clocked co-simulation:** the BTL, BSP and PWM encoder of each node tick on the node's **own clock**
    (period `1 / (clk · (1 + df))`). Clock ticks of both nodes are processed in **global time order**.
    Transceiver, channel and bus are not clocked; they run **online** on the edges produced so far:
@@ -475,7 +547,7 @@ all node blocks, so all nodes scroll together. The node headlines and row names 
 fixed label column to the left of the scrolling SVG, so they stay in place while scrolling.
 
 ### 13.1 Per-node hierarchical trace (6 levels)
-1. **Role:** transmitter / receiver.
+1. **Role:** transmitter / receiver / idle (Node 2 before its transmission start or SOF).
 2. **Phase:** arbitration phase / data phase.
 3. **Field:** only the frame fields as used in the Frame Generator (`frame/frame_definitions.js`):
    SOF, Arbitration field, Control field, Data field, CRC field, ACK field, EOF.
@@ -495,12 +567,21 @@ fixed label column to the left of the scrolling SVG, so they stay in place while
 - **Bit:** same background as its subfield (stuff bits and error bits keep their own colors).
 - All of these are drawn with a configurable fill opacity (`colors.frameOpacity`).
 
-Row labels are drawn left of the rows. Labels of spans wider than 300 px are left-aligned at the span start
-(applies to all rows incl. the transceiver state row); labels that do not fit their span are omitted.
+Row labels are drawn left of the rows. Span labels are aligned per row: **Role** and **Phase** left-aligned at
+the span start; **Field**, **SubField**, **Bit** and **Bit phase** centered; transceiver rows centered, but
+left-aligned for spans wider than 300 px. Labels that do not fit their span are omitted.
 
 ### 13.2 Waveforms (all digital, top→bottom)
 - `TX_CC` — controller output (PWM symbols from ADH to FCP0; NRZ otherwise).
-- `TX_bus` — transceiver output on the bus (digital value of what is normally differential).
+- `TX_bus` — transceiver output on the bus (digital value of what is normally differential). The
+  **high-ohmic state** (FAST_RX, §10.5) is drawn as a dashed line in the middle between `0` and `1`
+  (`hiZLine`, color of `TX_bus`), connected to the levels before and after by short vertical lines.
+- **Active recessive** phases (§10.5) are shown as a semi-transparent red background (`activeRecessiveColor`,
+  `activeRecessiveOpacity`, height of the waveform) when "show SIC time" is checked (default off):
+  - `TX_bus`: the node's own phases;
+  - `RX_CC`: the own phases and the far node's phases (after `t_cable`), both shifted by the own
+    `t_tc_rx + t_cc_tc_rx`; the start (a rising edge) additionally gets the RX asymmetry (`a_sic_rx` /
+    `a_fast_rx`), so it is aligned with the rising edge on `RX_CC`; overlapping phases of both nodes appear darker.
 - `RX_CC` — what the controller sees.
 
 Waveforms are drawn without background fill and without a bounding box.
@@ -516,7 +597,9 @@ Waveforms are drawn without background fill and without a bounding box.
   at that point; the node is **not updated further** (waveforms stop/stay recessive afterwards).
 
 ### 13.5 Transceiver state display
-- Each node's transceiver **state** (SIC / FAST_TX / FAST_RX) is visualized over time (per Slide 1).
+- Each node's transceiver **state** (SIC / FAST_TX / FAST_RX) is visualized over time (row "TC state").
+- Below it, row **"TC preselect"** shows the FAST mode preselected by the `tselect` timer (FAST_TX / FAST_RX,
+  colors `preFastTx` / `preFastRx`, same as the state colors); it starts with the default preselection FAST_RX.
 
 ### 13.6 Horizontal scaling / zoom
 - The **full frame** is shown by default (fitted to the visible width on page load); the user can **scroll left/right** (as in the Frame Generator view).
@@ -533,9 +616,11 @@ Waveforms are drawn without background fill and without a bounding box.
 - A **vertical cursor line** follows the mouse through the whole figure (all nodes). It is an HTML overlay,
   not part of the SVG. A readout shows the time at the cursor (ns) and the distance Δ to the last pinned marker.
 - **Click** pins a marker at the cursor position; clicking near an existing pinned marker removes it.
-  Each pinned marker shows its time and Δ to the previous pinned marker. Pinned markers persist across re-runs.
+  Each pinned marker shows its time and Δ to the previous pinned marker. Pinned markers persist across re-runs
+  and are part of the share link (§6.8).
+- The Δ value is shown **bold on a second line** below the time.
 - Marker style is configurable (§6.6).
 
 ---
 
-*End of draft. Awaiting review and the explicit start command before implementing.*
+*End of specification.*

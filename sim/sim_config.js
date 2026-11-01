@@ -8,8 +8,8 @@
 // Bit timing presets for the drop-down. Key = internal ID (unique), label = drop-down text.
 //            label,            clkMHz, brp, | arb: prop, ps1, ps2, sjw | data: prop, ps1, ps2, sjw | tms
 export const BT_PRESETS = {
-  cfg01: ['  1M /  2 Mbit/s @10MHz',     10,     1,           5,   2,   2,   2,           0,   2,   2,   2,  false],
-  cfg02: ['500k / 20 Mbit/s @160MHz',   160,     1,         191,  64,  64,  64,           0,   4,   3,   3,   true],
+  cfg01: ['500k / 20 Mbit/s @160MHz',   160,     1,         191,  64,  64,  64,           0,   4,   3,   3,   true],
+  cfg02: ['1000k / 2 Mbit/s @10MHz',     10,     1,           5,   2,   2,   2,           0,   2,   2,   2,  false],
   cfg03: ['500k /  1 Mbit/s @160MHz',   160,     1,         191,  64,  64,  64,           0,  80,  79,  79,   true],
   cfg04: ['500k /  2 Mbit/s @160MHz',   160,     1,         191,  64,  64,  64,           0,  40,  39,  39,   true],
   cfg05: ['500k /  5 Mbit/s @160MHz',   160,     1,         191,  64,  64,  64,           0,  16,  15,  15,   true],
@@ -29,26 +29,18 @@ export function applyPreset(node, key) {
   };
 }
 
-// Default bit timing
-function defaultBitTiming() {
-  return {
-    arb:  { brp: 1, prop: 5,   ps1:  2, ps2:  2, sjw:  2 },
-    data: { brp: 1, prop: 0,   ps1: 2, ps2: 2, sjw: 2 },
-  };
-}
+// Default clock / bit timing / TMS of both nodes.
+const DEFAULT_PRESET = 'cfg01';
 
 function defaultNode(index) {
   const isNode1 = index === 0;
-  return {
+  const node = {
     index,
     label: `Node ${index + 1}`,
-    clkMHz: 10,
     df: 0.2,                 // clock tolerance in %, independent per node
-    tms: false,              // Transceiver Mode Switching
     tdc: false,              // Transmitter Delay Compensation (not used by the simulation yet)
     transceiverType: 'TSICXL', // only SIC XL is simulated
     txStartDelay: 0,         // ns, Node 2 only: idle until then
-    bt: defaultBitTiming(),
     channel: defaultChannel(),
     transceiver: defaultTransceiver(),
     frame: {
@@ -64,6 +56,8 @@ function defaultNode(index) {
       fcrc: 0x55555555,      // 32-bit, fixed default
     },
   };
+  applyPreset(node, DEFAULT_PRESET); // sets clkMHz, tms, bt
+  return node;
 }
 
 // Slider ranges [min, max] in ns for channel / transceiver parameters (step 1).
@@ -80,6 +74,7 @@ export const SLIDER_RANGES = {
   a_fast_tx:         [-5, 5],    // according to ISO 11898-2 spec
   a_fast_rx:         [-5, 5],    // according to ISO 11898-2 spec
   tselect_threshold: [500, 980], // according to ISO 11898-2 spec
+  t_pas_rec_start:   [0, 530],
 };
 
 // Per-node path delays between CAN controller and transceiver.
@@ -101,6 +96,7 @@ function defaultTransceiver() {
     a_fast_tx: 5,
     a_fast_rx: 5,
     tselect_threshold: 700,  // ns
+    t_pas_rec_start: 530,    // ns, SIC active recessive phase after a rising edge / after entering SIC
     sic2fast: 205,           // ns (<= switches SIC -> FAST)
     fast2sic: 245,           // ns (>  switches FAST -> SIC)
   };
@@ -118,6 +114,10 @@ function defaultView() {
     },
     errorText: 'error detected',
     waveLineWidth: 1.5,      // px, stroke width of TX_CC / TX_bus / RX_CC
+    hiZLine: {               // TX_bus high ohmic state (FAST_RX), color = tx_bus
+      width: 1.5,            // px
+      dash: '6,4',           // SVG stroke-dasharray
+    },
     waveHeight: 42,          // px, row height of each waveform (incl. 6 px top/bottom margin)
     fontSize: {
       headline: 16,          // node headline, e.g. "Node 1 — transmitter"
@@ -183,6 +183,8 @@ function defaultView() {
       stateSIC:    '#90caf9',
       stateFastTx: '#a5d6a7',
       stateFastRx: '#fce3bb',
+      activeRecessiveColor: '#ff6666', // background of TX_bus / RX_CC during active recessive
+      activeRecessiveOpacity: 0.25,    // overlapping phases (both nodes) look darker
       preFastTx:   '#a5d6a7', // TC preselect band, same as stateFastTx
       preFastRx:   '#fce3bb', // TC preselect band, same as stateFastRx
       grid:   '#cccccc', // horizontal grid line between the two nodes in SVG

@@ -38,6 +38,10 @@ export class Transceiver {
     this.segStart = 0;
     this.preSegs = [];
     this.preStart = 0;
+    this.hiZ = [];           // FAST_RX: bus output high ohmic, on bus time (after t_tc_tx)
+    this.hiZStart = null;
+    this.actRec = [];        // SIC active recessive phases, on bus time
+    this.actRecStart = null;
     this.txbus = [];
   }
 
@@ -70,8 +74,10 @@ export class Transceiver {
 
   fireTimeout(t) {
     if (this.state !== STATE_SIC) {
+      // FAST_RX -> SIC: high ohmic -> driven recessive, visible after t_tc_tx without asymmetry.
+      const fromRx = this.state === STATE_FAST_RX;
       this.setState(t, STATE_SIC);
-      this.output(t, this.txd);
+      this.output(t, this.txd, fromRx);
       this.preDone = false;
       return;
     }
@@ -121,14 +127,31 @@ export class Transceiver {
   setState(t, s) {
     this.segs.push({ t0: this.segStart, t1: t, state: this.state });
     this.segStart = t;
+    if (this.state === STATE_FAST_RX) {
+      this.hiZ.push({ t0: this.hiZStart, t1: t + this.trx.t_tc_tx });
+      this.hiZStart = null;
+    }
+    if (s === STATE_FAST_RX) this.hiZStart = t + this.trx.t_tc_tx;
+    if (s !== STATE_SIC) this.closeActRec(t + this.trx.t_tc_tx);
     this.state = s;
   }
 
+  // Active recessive ends after t_pas_rec_start or earlier when the bus is no longer driven recessive.
+  closeActRec(tEnd) {
+    if (this.actRecStart === null) return;
+    const t0 = this.actRecStart;
+    this.actRec.push({ t0, t1: Math.min(t0 + this.trx.t_pas_rec_start, tEnd) });
+    this.actRecStart = null;
+  }
+
   // Logical level towards the bus at TXD time t -> TX_bus edge.
-  output(t, v) {
+  output(t, v, noAsym = false) {
     let tb = t + this.trx.t_tc_tx;
-    if (v === RECESSIVE) tb += this.state === STATE_SIC ? this.trx.a_sic_tx : this.trx.a_fast_tx;
+    if (v === RECESSIVE && !noAsym) tb += this.state === STATE_SIC ? this.trx.a_sic_tx : this.trx.a_fast_tx;
     pushEdge(this.txbus, tb, v);
+    if (this.state !== STATE_SIC) return;
+    this.closeActRec(tb);
+    if (v === RECESSIVE && this.trx.t_pas_rec_start > 0) this.actRecStart = tb;
   }
 
   stateAt(t) {
@@ -143,5 +166,17 @@ export class Transceiver {
   // Preselected FAST mode over time (result of the tselect timer).
   preSegments(endT) {
     return [...this.preSegs, { t0: this.preStart, t1: endT, state: this.pre }];
+  }
+
+  // High ohmic intervals of TX_bus (simulated as recessive).
+  hiZSegments(endT) {
+    return this.hiZStart === null ? [...this.hiZ] : [...this.hiZ, { t0: this.hiZStart, t1: endT }];
+  }
+
+  // Active recessive phases of TX_bus (SIC: recessive driven for t_pas_rec_start).
+  actRecSegments(endT) {
+    const t0 = this.actRecStart;
+    return t0 === null ? [...this.actRec]
+      : [...this.actRec, { t0, t1: Math.min(t0 + this.trx.t_pas_rec_start, endT) }];
   }
 }
