@@ -61,7 +61,7 @@ let compactConfigMode = false; // false = normal view (view1), true = config vie
 let compactCurrentModule = 'CAN';
 
 // Application version shown next to the page title
-const APP_VERSION = 'V1.0.5';
+const APP_VERSION = 'V1.0.6';
 
 // initialize report verbosity object
 const reportVerbosity = {

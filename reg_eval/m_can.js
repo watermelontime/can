@@ -1158,52 +1158,26 @@ function procRegsPrtOther(reg) {
 
   // IR Summary (only enabled IR shown)
   // (each line one IR flag)
-  if (reg.IE !== undefined && reg.IR !== undefined) {
-    // add IR Summary here: show only enabled IR flags
-    const defs = [
-      {bit:29, key:'ARA',  longName:'Accept Remote Access'},
-      {bit:28, key:'PED',  longName:'Protocol Error Detected'},
-      {bit:27, key:'PEA',  longName:'Protocol Error Active'},
-      {bit:26, key:'WDI',  longName:'Watchdog Interrupt'},
-      {bit:25, key:'BO',   longName:'Bus-Off'},
-      {bit:24, key:'EW',   longName:'Error Warning'},
-      {bit:23, key:'EP',   longName:'Error Passive'},
-      {bit:22, key:'ELO',  longName:'Error Logging Overflow'},
-      {bit:21, key:'BEU',  longName:'Bus Error Uncorrectable'},
-      {bit:20, key:'BEC',  longName:'Bus Error Correctable'},
-      {bit:19, key:'DRX',  longName:'Data Reception Error'},
-      {bit:18, key:'TOO',  longName:'Timeout Occurred'},
-      {bit:17, key:'MRAF', longName:'Message RAM Access Failure'},
-      {bit:16, key:'TSW',  longName:'Timestamp Wraparound'},
-      {bit:15, key:'TEFL', longName:'Transmit Error Flow Control'},
-      {bit:14, key:'TEFF', longName:'Transmit Error Frame Format'},
-      {bit:13, key:'TEFW', longName:'Transmit Error Frame Width'},
-      {bit:12, key:'TEFN', longName:'Transmit Error Frame Number'},
-      {bit:11, key:'TFE',  longName:'Transmit Frame Error'},
-      {bit:10, key:'TCF',  longName:'Transmit Collision Failure'},
-      {bit: 9, key:'TC',   longName:'Transmit Collision'},
-      {bit: 8, key:'HPM',  longName:'High Priority Message'},
-      {bit: 7, key:'RF1L', longName:'Receive FIFO 1 Level'},
-      {bit: 6, key:'RF1F', longName:'Receive FIFO 1 Full'},
-      {bit: 5, key:'RF1W', longName:'Receive FIFO 1 Watermark'},
-      {bit: 4, key:'RF1N', longName:'Receive FIFO 1 Not Empty'},
-      {bit: 3, key:'RF0L', longName:'Receive FIFO 0 Level'},
-      {bit: 2, key:'RF0F', longName:'Receive FIFO 0 Full'},
-      {bit: 1, key:'RF0W', longName:'Receive FIFO 0 Watermark'},
-      {bit: 0, key:'RF0N', longName:'Receive FIFO 0 Not Empty'},
-    ];
-    
-    // Keep only enabled (IE.*E == 1)
-    const enabled = defs.filter(d => reg.IE.fields && reg.IE.fields[d.key + 'E'] && reg.IE.fields[d.key + 'E'].value === 1);
-    const nameWidth = Math.max(4, ...enabled.map(e => e.key.length));
+  if (reg.IE?.fields) {
+    // Match IR and IE fields via bit position (IE field names carry an extra 'E')
+    const irByBit = {};
+    for (const irF of Object.values(reg.IR?.fields ?? {})) irByBit[irF.msb] = irF;
+
+    // Keep only enabled (IE bit == 1), ordered MSB -> LSB
+    const enabled = Object.values(reg.IE.fields)
+      .filter(ieF => ieF.value === 1)
+      .sort((a, b) => b.msb - a.msb);
+    const nameWidth = Math.max(4, ...enabled.map(ieF => (irByBit[ieF.msb]?.name_short ?? ieF.name_short).length));
     let lines;
     if (enabled.length === 0) {
       lines = 'No M_CAN interrupts enabled (all IE bits = 0)';
     } else {
-      lines = enabled.map(d => {
-        const irV = (reg.IR.fields && reg.IR.fields[d.key] !== undefined) ? reg.IR.fields[d.key].value : '-';
-        const ieV = reg.IE.fields[d.key + 'E'].value;
-        return `${d.bit.toString().padStart(2,' ')}   ${d.key.padEnd(nameWidth,' ')}  ${String(irV)}  ${String(ieV)}   (${d.longName})`;
+      lines = enabled.map(ieF => {
+        const irF = irByBit[ieF.msb];
+        const name = irF ? irF.name_short : ieF.name_short;
+        const longName = irF ? irF.name_long : ieF.name_long;
+        const irV = irF ? irF.value : '-';
+        return `${ieF.msb.toString().padStart(2,' ')}   ${name.padEnd(nameWidth,' ')}  ${String(irV)}  ${String(ieF.value)}   (${longName})`;
       }).join('\n');
     }
     reg.IE.report.push({
