@@ -29,6 +29,94 @@ export function applyPreset(node, key) {
   };
 }
 
+// Example configurations for the "Example Configurations" drop-down above the Evaluation View.
+// Loading an example first resets all parameters to their defaults (defaultConfig()) and then
+// applies the values given here. Every parameter is optional: a parameter that is omitted
+// (or set to null / undefined) keeps its default value.
+// - nodes[0] = Node 1, nodes[1] = Node 2
+// - BRP is shared by both phases: set it in bt.arb.brp only
+// - times in ns, clkMHz in MHz, df in %
+export const EXAMPLE_CONFIGS = [
+  {
+    label: 'Default',          // nothing given => all defaults
+  },
+  {
+    label: 'Arbitration Bitrate 1.5 Mbit/s',
+    bus: { t_cable: 20 },
+    nodes: [
+      { // ---- Node 1 ----
+        bt: {
+          arb:  { brp: 1, prop:  82, ps1: 12, ps2: 12, sjw: 12 },
+          data: {         prop:   0, ps1:  4, ps2:  3, sjw:  3 },
+        },
+        transceiver: {
+          tselect_threshold: 600,
+        },
+        frame: { id: 0x555, rrs: 0, sec: 0, sdt: 0x88, vcid: 0x33, af: 0x01234567, dlc: 0, data: [0x22] },
+      },
+      { // ---- Node 2 ----
+        bt: {
+          arb:  { brp: 1, prop:  82, ps1: 12, ps2: 12, sjw: 12 },
+          data: {         prop:   0, ps1:  4, ps2:  3, sjw:  3 },
+        },
+        transceiver: {
+          tselect_threshold: 600,
+        },
+        frame: { id: 0x577, rrs: 0, sec: 0, sdt: 0x88, vcid: 0x33, af: 0x01234567, dlc: 0, data: [0x22] },
+      },
+    ],
+  },
+  {
+    // Template listing all parameters (values = defaults). Copy, rename and edit;
+    // delete the lines that shall stay at their default.
+    label: 'Template (all parameters)',
+    bus: { t_cable: 20 },
+    nodes: [
+      { // ---- Node 1 ----
+        clkMHz: 160,
+        df: 0.2,
+        tms: true,
+        tdc: false,
+        bt: {
+          arb:  { brp: 1, prop: 191, ps1: 64, ps2: 64, sjw: 64 },
+          data: {         prop:   0, ps1:  4, ps2:  3, sjw:  3 },
+        },
+        channel: { t_cc_tc_tx: 15, t_cc_tc_rx: 20 },
+        transceiver: {
+          t_tc_tx: 80, t_tc_rx: 110,
+          a_sic_tx: 10, a_sic_rx: 15,
+          a_fast_tx: 5, a_fast_rx: 5,
+          tselect_threshold: 700,
+          t_pas_rec_start: 530,
+          sic2fast: 205, fast2sic: 245,
+        },
+        frame: { id: 0x547, rrs: 0, sec: 0, sdt: 0x88, vcid: 0x33, af: 0x01234567, dlc: 0, data: [0x11] },
+      },
+      { // ---- Node 2 ----
+        clkMHz: 160,
+        df: 0.2,
+        tms: true,
+        tdc: false,
+        txStartDelay: 0,       // Node 2 only
+        bt: {
+          arb:  { brp: 1, prop: 191, ps1: 64, ps2: 64, sjw: 64 },
+          data: {         prop:   0, ps1:  4, ps2:  3, sjw:  3 },
+        },
+        channel: { t_cc_tc_tx: 15, t_cc_tc_rx: 20 },
+        transceiver: {
+          t_tc_tx: 80, t_tc_rx: 110,
+          a_sic_tx: 10, a_sic_rx: 15,
+          a_fast_tx: 5, a_fast_rx: 5,
+          tselect_threshold: 700,
+          t_pas_rec_start: 530,
+          sic2fast: 205, fast2sic: 245,
+        },
+        frame: { id: 0x567, rrs: 0, sec: 0, sdt: 0x88, vcid: 0x33, af: 0x01234567, dlc: 0, data: [0x22] },
+      },
+    ],
+  },
+];
+
 // Default clock / bit timing / TMS of both nodes.
 const DEFAULT_PRESET = 'cfg01';
 
@@ -95,7 +183,7 @@ function defaultTransceiver() {
     a_sic_rx: 15,
     a_fast_tx: 5,
     a_fast_rx: 5,
-    tselect_threshold: 700,  // ns
+    tselect_threshold: 980,  // ns
     t_pas_rec_start: 530,    // ns, SIC active recessive phase after a rising edge / after entering SIC
     sic2fast: 205,           // ns (<= switches SIC -> FAST)
     fast2sic: 245,           // ns (>  switches FAST -> SIC)

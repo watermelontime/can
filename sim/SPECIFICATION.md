@@ -116,6 +116,9 @@ The page consists of four parts (layout per Slide 1):
    - Blue fields (`.input-field`) are editable copies of parameters: `df`, `t_cc_tc_tx`, `t_tc_tx`,
      `t_cc_tc_rx`, `t_tc_rx`, `t_cable` and, for Node 2, "delay transmission start by [ns]" (`txStartDelay`).
    - White fields (`.result-field`) are read-only copies: arbitration bit rate [kbit/s], data bit rate [Mbit/s].
+   - Below the Setup: **"Example Configurations:"** drop-down + **Load** button. The entries are defined in
+     `EXAMPLE_CONFIGS` (`sim_config.js`). Loading resets all parameters to their defaults and then applies
+     the values given in the example; omitted parameters keep their default.
 2. **Evaluation View** (hide/show button, hidden by default, green): calculations per node (§6.7).
 3. **Configuration View** (hide/show button, hidden by default, green):
    - **Bus Configuration:** `t_cable`.

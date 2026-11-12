@@ -6,7 +6,7 @@
 // =============================================================================
 
 import {
-  defaultConfig, validateConfig, BT_PRESETS, applyPreset, SLIDER_RANGES,
+  defaultConfig, validateConfig, BT_PRESETS, applyPreset, SLIDER_RANGES, EXAMPLE_CONFIGS,
 } from './sim_config.js';
 import { runSimulation } from './sim_engine.js';
 import { renderResult, timeAxis } from './sim_draw.js';
@@ -776,6 +776,30 @@ function applySettingsFromHash() {
   }
 }
 
+// ---- example configurations (EXAMPLE_CONFIGS in sim_config.js) ---------------
+
+// Reset all user parameters to their defaults, then apply the values given in the example.
+function loadExample(example) {
+  const d = defaultConfig();
+  cfg.nodes.forEach((n, i) => {
+    for (const k of NODE_KEYS) n[k] = d.nodes[i][k];
+    mergeKnown(n, example.nodes?.[i]);
+    n.bt.data.brp = n.bt.arb.brp; // BRP is shared by both phases
+  });
+  Object.assign(cfg.bus, d.bus);
+  mergeKnown(cfg.bus, example.bus);
+  changed();
+}
+
+function buildExamples() {
+  const select = document.getElementById('sim-example-select');
+  EXAMPLE_CONFIGS.forEach((ex, i) => select.append(el('option', { value: i, text: ex.label })));
+  document.getElementById('sim-example-load').addEventListener('click', () => {
+    const ex = EXAMPLE_CONFIGS[select.value];
+    if (ex) loadExample(ex);
+  });
+}
+
 async function copyShareLink(button) {
   const link = `${location.origin}${location.pathname}#cfg=${encodeURIComponent(JSON.stringify(userSettings()))}`;
   let ok = true;
@@ -802,6 +826,7 @@ const shareBtn = document.getElementById('copyShareLinkButton');
 shareBtn.addEventListener('click', () => copyShareLink(shareBtn));
 applySettingsFromHash();
 buildSetup();
+buildExamples();
 buildEval();
 buildConfig();
 refreshViews();

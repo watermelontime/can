@@ -71,8 +71,14 @@
   font-size: 1.25em;
 }
 
-.sim-config-head .styled-button {
+.sim-config-head .styled-button,
+.sim-config-head .styled-select {
+  margin-top: 0;
   margin-bottom: 0;
+}
+
+.sim-example-label {
+  font-weight: bold;
 }
 
 /* ---- part 1: setup ---- */
