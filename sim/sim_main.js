@@ -14,7 +14,7 @@ import { tqPerBit, derivePwm } from './sim_bittiming.js';
 import * as drawBt from '../draw_bits_svg.js';
 import { createSO8svg } from '../draw_transceiver_svg.js';
 
-const APP_VERSION = 'V0.2.0';
+const APP_VERSION = 'V0.3.0';
 const cfg = defaultConfig();
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -135,36 +135,64 @@ const short = (v, n) => String(Number(v.toFixed(n)));
 
 // ---- Part 1: setup (node / transceiver / bus overview) -----------------------
 
-function ccChipSvg() {
-  const W = 130, H = 110, bx = 12, by = 10, bw = W - 2 * bx, bh = H - 2 * by;
+// Geometry of the node schematic [px]. The side columns (style_sim.css, .sim-setup-side)
+// use the same rows: above TXD/RXD | TXD/RXD | transceiver.
+const SCH = {
+  W: 250, H: 232,
+  mcu: { x: 40, y: 10, w: 170, h: 120 },   // MCU package
+  cc:  { x: 60, y: 30, w: 130, h: 70 },    // CAN controller inside the MCU
+  trx: { x: 85, y: 172, w: 80, h: 60 },    // transceiver (SO8 picture, pins on top / bottom)
+  xTxd: 104, xRxd: 146,                    // TXD / RXD lines (end at the outer transceiver pins)
+  xArrowTx: 12, xArrowRx: 238,             // grey arrows next to the delay fields
+};
+
+// MCU with CAN controller, TXD/RXD (CAN controller <=> transceiver), grey delay arrows.
+// The transceiver picture is added by buildSetupNode().
+function nodeSchematicSvg() {
+  const { W, H, mcu, cc, trx, xTxd, xRxd, xArrowTx, xArrowRx } = SCH;
+  const c = cfg.view.colors;
+  const grey = '#c8c8c8';
+  const ccBottom = cc.y + cc.h;
+  // vertical arrow from y0 to y1 (head at y1)
+  const arrow = (x, y0, y1, color, width, head) => {
+    const yh = y1 - Math.sign(y1 - y0) * head;
+    const hw = head * 0.65;
+    return `<line x1="${x}" y1="${y0}" x2="${x}" y2="${yh}" stroke="${color}" stroke-width="${width}"/>`
+      + `<polygon points="${x - hw},${yh} ${x + hw},${yh} ${x},${y1}" fill="${color}"/>`;
+  };
+  const pin = (x, y, w, h) => `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w}" height="${h}" fill="#999"/>`;
   let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
-  for (let k = 0; k < 12; k++) {
-    const x = (bx + 6 + k * (bw - 12) / 11 - 1.5).toFixed(1);
-    s += `<rect x="${x}" y="${by - 8}" width="3" height="8" fill="#999"/>`
-       + `<rect x="${x}" y="${by + bh}" width="3" height="8" fill="#999"/>`;
+  // MCU package
+  for (let k = 0; k < 14; k++) {
+    const x = mcu.x + 10 + k * (mcu.w - 20) / 13 - 1.5;
+    s += pin(x, mcu.y - 8, 3, 8) + pin(x, mcu.y + mcu.h, 3, 8);
   }
   for (let k = 0; k < 9; k++) {
-    const y = (by + 6 + k * (bh - 12) / 8 - 1.5).toFixed(1);
-    s += `<rect x="${bx - 8}" y="${y}" width="8" height="3" fill="#999"/>`
-       + `<rect x="${bx + bw}" y="${y}" width="8" height="3" fill="#999"/>`;
+    const y = mcu.y + 10 + k * (mcu.h - 20) / 8 - 1.5;
+    s += pin(mcu.x - 8, y, 8, 3) + pin(mcu.x + mcu.w, y, 8, 3);
   }
-  s += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="4" fill="#111"/>`;
-  s += `<rect x="${bx + 12}" y="${by + 12}" width="${bw - 24}" height="${bh - 24}" fill="#ccc" stroke="#888"/>`;
+  s += `<rect x="${mcu.x}" y="${mcu.y}" width="${mcu.w}" height="${mcu.h}" rx="4" fill="#111"/>`
+    + `<text x="${mcu.x + 8}" y="${mcu.y + 15}" font-size="12" font-weight="bold" fill="#ddd">MCU</text>`;
+  // CAN controller
+  s += `<rect x="${cc.x}" y="${cc.y}" width="${cc.w}" height="${cc.h}" fill="#ccc" stroke="#888"/>`;
   ['CAN', 'Controller', '(CC)'].forEach((t, i) => {
-    s += `<text x="${W / 2}" y="${by + bh / 2 + (i - 1) * 17 + 5}" text-anchor="middle" font-size="14" fill="#222">${t}</text>`;
+    s += `<text x="${cc.x + cc.w / 2}" y="${cc.y + cc.h / 2 + (i - 1) * 16 + 5}" text-anchor="middle" font-size="14" fill="#222">${t}</text>`;
   });
+  // TXD: CAN controller => transceiver, RXD: transceiver => CAN controller (waveform colors);
+  // white outline inside the black MCU package
+  const yTrx = trx.y + 1; // top of the transceiver pins
+  const yMcu = mcu.y + mcu.h;
+  const yLabel = (yMcu + 8 + yTrx) / 2 + 5;
+  s += `<line x1="${xTxd}" y1="${ccBottom}" x2="${xTxd}" y2="${yMcu}" stroke="#fff" stroke-width="5.5"/>`
+    + `<line x1="${xRxd}" y1="${ccBottom + 5}" x2="${xRxd}" y2="${yMcu}" stroke="#fff" stroke-width="5.5"/>`
+    + `<polygon points="${xRxd - 9},${ccBottom + 11} ${xRxd + 9},${ccBottom + 11} ${xRxd},${ccBottom - 2}" fill="#fff"/>`;
+  s += arrow(xTxd, ccBottom, yTrx, c.tx_cc, 2.5, 9) + arrow(xRxd, yTrx, ccBottom, c.rx_cc, 2.5, 9)
+    + `<text x="${xTxd - 8}" y="${yLabel}" text-anchor="end" font-size="13" font-weight="bold" fill="${c.tx_cc}">TXD</text>`
+    + `<text x="${xRxd + 8}" y="${yLabel}" font-size="13" font-weight="bold" fill="${c.rx_cc}">RXD</text>`;
+  // grey arrows: t_cc_tc_* as long as TXD/RXD, t_tc_* along the transceiver
+  s += arrow(xArrowTx, ccBottom, yTrx, grey, 4, 10) + arrow(xArrowTx, yTrx + 4, trx.y + trx.h - 1, grey, 4, 10)
+    + arrow(xArrowRx, yTrx, ccBottom, grey, 4, 10) + arrow(xArrowRx, trx.y + trx.h - 1, yTrx + 4, grey, 4, 10);
   return s + '</svg>';
-}
-
-function txdRxdSvg() {
-  const H = 56;
-  return `<svg width="100" height="${H}">`
-    + `<line x1="44" y1="0" x2="44" y2="${H - 8}" stroke="#1565c0" stroke-width="2"/>`
-    + `<polygon points="39,${H - 9} 49,${H - 9} 44,${H}" fill="#1565c0"/>`
-    + `<line x1="56" y1="${H}" x2="56" y2="8" stroke="#1565c0" stroke-width="2"/>`
-    + `<polygon points="51,9 61,9 56,0" fill="#1565c0"/>`
-    + `<text x="38" y="${H / 2 + 5}" text-anchor="end" font-size="14">TXD</text>`
-    + `<text x="62" y="${H / 2 + 5}" font-size="14">RXD</text></svg>`;
 }
 
 function htmlBox(cls, html) {
@@ -173,60 +201,61 @@ function htmlBox(cls, html) {
   return d;
 }
 
-const kv = (label, input) => el('div', { class: 'sim-setup-kv' }, [el('label', { text: label }), input]);
-
-// Delay parameter next to a vertical arrow; dir 'down' (TX path) or 'up' (RX path).
-function pathCell(area, label, input, dir) {
-  const arrow = el('div', { class: `sim-arrow sim-arrow-${dir}` });
-  const p = el('div', { class: 'sim-setup-param' }, [el('label', { text: label }), el('span', {}, [input, ' ns'])]);
-  return el('div', { class: `sim-path sim-path-${dir} sim-ga-${area}` }, dir === 'down' ? [p, arrow] : [arrow, p]);
-}
+// Label above the field, both left aligned; optional unit after the field.
+const setupParam = (label, input, unit = '') => el('label', { class: 'sim-setup-param' }, [
+  el('span', { class: 'sim-setup-label', text: label }), el('span', {}, [input, unit]),
+]);
 
 function buildSetupNode(node) {
   const res = () => nodeResults(node);
   const ch = () => node.channel;
   const tc = () => node.transceiver;
   const head = el('div', { class: 'sim-setup-head' }, [el('span', { class: 'sim-setup-title', text: node.label })]);
-  if (node.index === 1) {
-    head.append(el('label', { class: 'sim-setup-delay' }, [
-      'delay transmission start by [ns] ',
-      numInput(() => node.txStartDelay, (v) => { node.txStartDelay = v; }, { min: 0, step: 1 }),
-    ]));
-  }
-  const trxSvg = createSO8svg('SIC XL');
-  trxSvg.setAttribute('width', 80);
-  trxSvg.setAttribute('height', 60);
-  const grid = el('div', { class: 'sim-setup-grid' }, [
-    el('div', { class: 'sim-ga-rates' }, [
-      kv('Arb. [kbit/s]', resultField(() => short(res().rateA * 1000, 1))),
-      kv('Data [Mbit/s]', resultField(() => short(res().rateD, 2))),
+  head.append(el('label', { class: 'sim-setup-delay' }, [
+    'delay TX start by ',
+    numInput(() => node.txStartDelay, (v) => { node.txStartDelay = v; }, { min: 0, step: 1 }),
+    ' ns',
+  ]));
+  // one child per row of the schematic (see SCH)
+  const left = el('div', { class: 'sim-setup-side' }, [
+    el('div', { class: 'sim-setup-rates' }, [
+      setupParam('Arb. [kbit/s]', resultField(() => short(res().rateA * 1000, 1))),
+      setupParam('Data [kbit/s]', resultField(() => short(res().rateD * 1000, 1))),
     ]),
-    htmlBox('sim-ga-cc', ccChipSvg()),
-    el('div', { class: 'sim-ga-df' }, [kv('df [%]', numInput(() => node.df, (v) => { node.df = v; }, { step: 0.1 }))]),
-    pathCell('tx1', 't_cc_tc_tx', numInput(() => ch().t_cc_tc_tx, (v) => { ch().t_cc_tc_tx = v; }), 'down'),
-    htmlBox('sim-ga-lines', txdRxdSvg()),
-    pathCell('rx1', 't_cc_tc_rx', numInput(() => ch().t_cc_tc_rx, (v) => { ch().t_cc_tc_rx = v; }), 'up'),
-    pathCell('tx2', 't_tc_tx', numInput(() => tc().t_tc_tx, (v) => { tc().t_tc_tx = v; }), 'down'),
-    el('div', { class: 'sim-ga-trx sim-setup-trx' }, [trxSvg]),
-    pathCell('rx2', 't_tc_rx', numInput(() => tc().t_tc_rx, (v) => { tc().t_tc_rx = v; }), 'up'),
+    setupParam('t_cc_tc_tx', numInput(() => ch().t_cc_tc_tx, (v) => { ch().t_cc_tc_tx = v; }), ' ns'),
+    setupParam('t_tc_tx', numInput(() => tc().t_tc_tx, (v) => { tc().t_tc_tx = v; }), ' ns'),
   ]);
-  return el('div', { class: 'sim-setup-node' }, [head, grid]);
+  const df = setupParam('df [%]', numInput(() => node.df, (v) => { node.df = v; }, { step: 0.1 }));
+  df.classList.add('sim-setup-df');
+  const right = el('div', { class: 'sim-setup-side' }, [
+    df,
+    setupParam('t_cc_tc_rx', numInput(() => ch().t_cc_tc_rx, (v) => { ch().t_cc_tc_rx = v; }), ' ns'),
+    setupParam('t_tc_rx', numInput(() => tc().t_tc_rx, (v) => { tc().t_tc_rx = v; }), ' ns'),
+  ]);
+  const schematic = htmlBox('sim-setup-schematic', nodeSchematicSvg());
+  const trxSvg = createSO8svg('SIC XL'); // same picture as in the configuration view
+  trxSvg.setAttribute('class', 'sim-setup-trx');
+  for (const [k, v] of [['x', SCH.trx.x], ['y', SCH.trx.y], ['width', SCH.trx.w], ['height', SCH.trx.h]]) trxSvg.setAttribute(k, v);
+  schematic.firstChild.append(trxSvg);
+  const body = el('div', { class: 'sim-setup-body' }, [left, schematic, right]);
+  return el('div', { class: 'sim-setup-node', style: `background:${cfg.view.colors.nodeBackgroundColor}` }, [head, body]);
 }
 
-// Twisted pair (two phase-shifted sine wires) along a straight line.
+// Twisted pair (two phase-shifted sine wires) along a straight line:
+// wire colors: canBusColorWire1 / canBusColorWire2 (sim_config.js).
 function twisted(x0, y0, x1, y1) {
   const len = Math.hypot(x1 - x0, y1 - y0);
   const ux = (x1 - x0) / len;
   const uy = (y1 - y0) / len;
-  const wire = (ph, color) => {
+  const wire = (ph, color, width) => {
     const pts = [];
     for (let s = 0; s <= len; s += 2) {
-      const o = 5 * Math.sin(2 * Math.PI * s / 22 + ph);
+      const o = 4 * Math.sin(2 * Math.PI * s / 22 + ph);
       pts.push(`${(x0 + ux * s - uy * o).toFixed(1)},${(y0 + uy * s + ux * o).toFixed(1)}`);
     }
-    return `<polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2"/>`;
+    return `<polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="${width}"/>`;
   };
-  return wire(0, '#f5a742') + wire(Math.PI, '#8cc8ff');
+  return wire(Math.PI, cfg.view.colors.canBusColorWire2, 2) + wire(0, cfg.view.colors.canBusColorWire1, 2);
 }
 
 // Bus, stubs and terminations are drawn on an overlay measured from the layout.
@@ -234,20 +263,23 @@ function drawBus(host, overlay) {
   const box = host.getBoundingClientRect();
   const trx = [...host.querySelectorAll('.sim-setup-trx')].map((e) => e.getBoundingClientRect());
   if (trx.length < 2 || !box.width) return;
-  const yBus = host.querySelector('.sim-setup-bus').getBoundingClientRect().top - box.top + 22;
+  const yBus = host.querySelector('.sim-setup-bus').getBoundingClientRect().top - box.top + 28; // node box border => bus wire
   const xs = trx.map((r) => r.left + r.width / 2 - box.left);
   const xL = xs[0] - 40;
   const xR = xs[1] + 40;
+  const xMid = (xs[0] + xs[1]) / 2;
+  const termW = 58;
   let s = twisted(xL, yBus, xR, yBus);
-  trx.forEach((r, i) => { s += twisted(xs[i], r.bottom - box.top - 4, xs[i], yBus); });
-  for (const x of [xL - 14, xR]) {
-    s += `<rect x="${x}" y="${yBus - 12}" width="14" height="24" fill="#ddd" stroke="#999"/>`
-       + `<text x="${x + 7}" y="${yBus + 5}" text-anchor="middle" font-size="14" font-weight="bold">T</text>`;
+  trx.forEach((r, i) => { s += twisted(xs[i], r.bottom - box.top - 2, xs[i], yBus); });
+  for (const x of [xL - termW, xR]) {
+    s += `<rect x="${x}" y="${yBus - 11}" width="${termW}" height="22" rx="3" fill="#eceff1" stroke="#90a4ae"/>`
+       + `<text x="${x + termW / 2}" y="${yBus + 5}" text-anchor="middle" font-size="13" font-weight="bold" fill="#37474f">Term Ω</text>`;
   }
-  s += `<text x="${(xs[0] + xs[1]) / 2}" y="${yBus - 12}" text-anchor="middle" font-size="15">CAN bus</text>`;
+  s += `<text x="${xMid}" y="${yBus - 10}" text-anchor="middle" font-size="15">CAN bus</text>`;
   overlay.setAttribute('width', box.width);
   overlay.setAttribute('height', box.height);
   overlay.innerHTML = s;
+  host.querySelector('.sim-setup-cable').style.left = `${xMid}px`; // centered below the bus
 }
 
 function buildSetup() {
@@ -255,9 +287,10 @@ function buildSetup() {
   const overlay = document.createElementNS(SVG_NS, 'svg');
   overlay.setAttribute('class', 'sim-setup-overlay');
   const bus = el('div', { class: 'sim-setup-bus' }, [
-    el('label', {}, ['t_cable: ', numInput(() => cfg.bus.t_cable, (v) => { cfg.bus.t_cable = v; }), ' ns']),
+    el('label', { class: 'sim-setup-cable' }, ['t_cable: ', numInput(() => cfg.bus.t_cable, (v) => { cfg.bus.t_cable = v; }), ' ns']),
   ]);
-  host.append(el('div', { class: 'sim-setup-nodes' }, cfg.nodes.map(buildSetupNode)), bus, overlay);
+  const [n1, n2] = cfg.nodes.map(buildSetupNode);
+  host.append(el('div', { class: 'sim-setup-nodes' }, [n1, el('div', { class: 'sim-setup-gap' }), n2]), bus, overlay);
   new ResizeObserver(() => drawBus(host, overlay)).observe(host);
 }
 
@@ -455,12 +488,20 @@ function buildInput5(node) {
   return column('settings-column', 'Input 5: Frame', [table]);
 }
 
-// Copy everything of Node 1 (incl. frame) except Node 2's own start delay.
-function copyNode1() {
+// Chunks of the Node 1 configuration that can be copied to Node 2: [button label, node keys].
+// Node 2's own start delay is never copied.
+const COPY_CHUNKS = [
+  ['clk', ['clkMHz', 'df']],
+  ['bit timing', ['bt', 'tms', 'tdc']],
+  ['transceiver', ['transceiverType', 'transceiver']],
+  ['MCU', ['channel']],
+  ['frame', ['frame']],
+];
+COPY_CHUNKS.unshift(['all', COPY_CHUNKS.flatMap(([, keys]) => keys)]);
+
+function copyNode1(keys) {
   const [n1, n2] = cfg.nodes;
-  for (const k of ['clkMHz', 'df', 'tms', 'tdc', 'transceiverType', 'bt', 'channel', 'transceiver', 'frame']) {
-    n2[k] = structuredClone(n1[k]);
-  }
+  for (const k of keys) n2[k] = structuredClone(n1[k]);
   changed();
 }
 
@@ -469,9 +510,13 @@ function buildNodeConfig(node) {
     el('h3', { class: 'sim-part-title', text: `${node.label} Configuration` }),
   ]);
   if (node.index === 1) {
-    const b = el('button', { type: 'button', class: 'styled-button', text: 'Copy Node 1 configuration' });
-    b.addEventListener('click', copyNode1);
-    head.append(b);
+    const copy = el('span', { class: 'sim-copy-bar' }, ['Copy from Node 1']);
+    for (const [label, keys] of COPY_CHUNKS) {
+      const b = el('button', { type: 'button', class: 'styled-button', text: label });
+      b.addEventListener('click', () => copyNode1(keys));
+      copy.append(b);
+    }
+    head.append(copy);
   }
   return el('section', { class: 'sim-part sim-part-dark' }, [head, el('div', { class: 'responsive-container' }, [
     buildInput1(node), buildInput2(node), buildOutput1(node), buildOutput2(node),
@@ -493,10 +538,10 @@ function buildConfig() {
   setupToggle(host, 'sim-config-toggle', (v) => { configVisible = v; });
 }
 
-// Hidden by default; onChange(visible) runs before the views are refreshed.
-function setupToggle(host, btnId, onChange = () => {}) {
+// Hidden by default (initial = false); onChange(visible) runs before the views are refreshed.
+function setupToggle(host, btnId, onChange = () => {}, initial = false) {
   const btn = document.getElementById(btnId);
-  let visible = false;
+  let visible = initial;
   const show = () => {
     host.style.display = visible ? '' : 'none';
     btn.textContent = visible ? 'Hide' : 'Show';
@@ -572,7 +617,31 @@ function placeMarker({ line, label }, x, text, delta = '') {
   if (delta) label.append(el('br'), el('b', { text: delta }));
 }
 
-function setupMarkers(scroller, axis, m) {
+// Phase error readout of a marker: one label per node just below its PE band.
+// The PE at time t is the PE of the node's next synchronizing edge.
+function peLabels(m, color, count) {
+  return Array.from({ length: count }, () => {
+    const label = markerEl(m, color, 0).label;
+    label.style.display = 'none';
+    return label;
+  });
+}
+
+function placePeLabels(labels, x, t, pe) {
+  labels.forEach((label, i) => {
+    const p = pe.nodes[i].pe.find((r) => t > r.from && t <= r.to);
+    label.style.display = p ? 'block' : 'none';
+    if (!p) return;
+    label.style.left = `${x + 4}px`;
+    label.style.top = `${pe.ys[i]}px`;
+    label.textContent = `PE = ${fmtNs(p.pe)}`;
+    if (p.hard) label.append(el('br'), 'hard sync');
+    else label.append(el('br'), `SJW = ${fmtNs(p.sjw)}`, el('br'), `PE/SJW = ${(p.pe / p.sjw).toFixed(2)}`);
+  });
+}
+
+// pe = { ys: bottom of each node's PE band (px), nodes: simulation result nodes }
+function setupMarkers(scroller, axis, m, pe) {
   if (!scroller) return;
   const tToX = (t) => axis.left + t * axis.pxPerNs;
   const xToT = (x) => (x - axis.left) / axis.pxPerNs;
@@ -587,14 +656,17 @@ function setupMarkers(scroller, axis, m) {
       const delta = i > 0 ? `Δ ${fmtNs(t - pins[i - 1])}` : '';
       placeMarker(mk, tToX(t), fmtNs(t), delta);
       mk.label.style.top = '2px';
-      pinLayer.append(mk.line, mk.label);
+      const peLab = peLabels(m, m.pinColor, pe.nodes.length);
+      placePeLabels(peLab, tToX(t), t, pe);
+      pinLayer.append(mk.line, mk.label, ...peLab);
     });
   };
 
   const cursor = markerEl(m, m.cursorColor, m.cursorWidth);
   cursor.label.style.bottom = '2px';
   cursor.line.style.display = cursor.label.style.display = 'none';
-  scroller.append(cursor.line, cursor.label);
+  const cursorPe = peLabels(m, m.cursorColor, pe.nodes.length);
+  scroller.append(cursor.line, cursor.label, ...cursorPe);
 
   scroller.addEventListener('mousemove', (e) => {
     const x = contentX(e);
@@ -603,9 +675,11 @@ function setupMarkers(scroller, axis, m) {
     const delta = last === null ? '' : `Δ ${fmtNs(t - last)}`;
     placeMarker(cursor, x, fmtNs(t), delta);
     cursor.line.style.display = cursor.label.style.display = 'block';
+    placePeLabels(cursorPe, x, t, pe);
   });
   scroller.addEventListener('mouseleave', () => {
     cursor.line.style.display = cursor.label.style.display = 'none';
+    cursorPe.forEach((l) => { l.style.display = 'none'; });
   });
   // Click pins a marker; clicking near an existing pin removes it.
   scroller.addEventListener('click', (e) => {
@@ -624,8 +698,9 @@ function setupMarkers(scroller, axis, m) {
 let zoomPx = null;
 let lastResult = null;
 let showSicTime = false;
+let showPhaseError = false;
 
-const viewCfg = () => ({ ...cfg, view: { ...cfg.view, dataBitPx: zoomPx, showSicTime } });
+const viewCfg = () => ({ ...cfg, view: { ...cfg.view, dataBitPx: zoomPx, showSicTime, showPhaseError } });
 
 // Zoom so that time t stays at offsetPx from the left edge of the visible area.
 function zoomTo(px, t, offsetPx) {
@@ -652,12 +727,16 @@ function buildZoomBar(bar, getScroller) {
   const sic = el('input', { type: 'checkbox' });
   sic.checked = showSicTime;
   sic.addEventListener('change', () => { showSicTime = sic.checked; render(); });
+  const pe = el('input', { type: 'checkbox' });
+  pe.checked = showPhaseError;
+  pe.addEventListener('change', () => { showPhaseError = pe.checked; render(); });
   bar.append(
     btn('−', 'Zoom out', () => centerZoom(1 / z.step)),
     btn('+', 'Zoom in', () => centerZoom(z.step)),
     btn('Fit', 'Show the whole frame', () => fitView(getScroller())),
     el('span', { class: 'sim-zoom-info', text: `Scroll (horizontal): wheel, Zoom: CTRL + wheel (data bit = ${zoomPx.toFixed(1)} px)` }),
-    el('label', { class: 'sim-zoom-info' }, [sic, ' show SIC time']),
+    el('label', { class: 'sim-zoom-info' }, [sic, ' SIC active recessive']),
+    el('label', { class: 'sim-zoom-info' }, [pe, ' Phase Error']),
   );
 }
 
@@ -694,7 +773,9 @@ function render(anchor) {
   const scroller = out.querySelector('.sim-node-scroller');
   const axis = timeAxis(lastResult, vc);
   scroller.scrollLeft = anchor ? axis.left + anchor.t * axis.pxPerNs - anchor.offsetPx : prevScroll;
-  setupMarkers(scroller, axis, cfg.view.marker);
+  // No PE readout at the markers while the Phase error band is hidden.
+  const peYs = out.querySelector('.sim-figure').dataset.peY.split(',').filter(Boolean).map(Number);
+  setupMarkers(scroller, axis, cfg.view.marker, { ys: peYs, nodes: lastResult.nodes.slice(0, peYs.length) });
   setupWheel(scroller, axis);
 }
 
@@ -788,16 +869,65 @@ function loadExample(example) {
   });
   Object.assign(cfg.bus, d.bus);
   mergeKnown(cfg.bus, example.bus);
+  showSicTime = example.showSicTime === true;
+  showPhaseError = example.showPhaseError === true;
+  pins.length = 0;
+  if (Array.isArray(example.markers)) pins.push(...example.markers.filter((t) => Number.isFinite(t)));
   changed();
 }
 
+// Render a description text (EXAMPLE_CONFIGS[].description) as DOM nodes.
+// Line break = new line; empty line = new paragraph;
+// lines starting with "- " / "* " = bullet list; lines starting with "1. " / "1) " = numbered list;
+// **text** = bold.
+function renderDescription(text) {
+  // split at **...**: odd parts are bold
+  const inline = (str) => str.split(/\*\*(.+?)\*\*/)
+    .map((part, i) => (i % 2 ? el('strong', { text: part }) : part))
+    .filter((part) => part !== '');
+  const out = [];
+  let block = null; // current <p>, <ul> or <ol>
+  for (const raw of String(text ?? '').split('\n')) {
+    const line = raw.trim();
+    if (!line) { block = null; continue; }
+    const m = /^([-*]|\d+[.)])\s+(.*)$/.exec(line);
+    const tag = !m ? 'P' : /\d/.test(m[1]) ? 'OL' : 'UL';
+    if (!block || block.tagName !== tag) {
+      block = el(tag.toLowerCase());
+      out.push(block);
+    }
+    if (m) block.append(el('li', {}, inline(m[2])));
+    else {
+      if (block.childNodes.length) block.append(el('br'));
+      block.append(...inline(line));
+    }
+  }
+  return out;
+}
+
 function buildExamples() {
-  const select = document.getElementById('sim-example-select');
+  const host = document.getElementById('sim-example');
+  const select = el('select', { id: 'sim-example-select', class: 'styled-select' });
   EXAMPLE_CONFIGS.forEach((ex, i) => select.append(el('option', { value: i, text: ex.label })));
-  document.getElementById('sim-example-load').addEventListener('click', () => {
+  const load = el('button', { type: 'button', id: 'sim-example-load', class: 'styled-button', text: 'Load' });
+  load.addEventListener('click', () => {
     const ex = EXAMPLE_CONFIGS[select.value];
     if (ex) loadExample(ex);
   });
+  const desc = el('div', { class: 'sim-example-desc' });
+  const showDesc = () => {
+    const nodes = renderDescription(EXAMPLE_CONFIGS[select.value]?.description);
+    desc.replaceChildren(...(nodes.length ? nodes : [el('p', { text: '(no description)' })]));
+  };
+  select.addEventListener('change', showDesc);
+  showDesc();
+  host.append(el('section', { class: 'sim-part sim-part-dark' }, [
+    el('div', { class: 'responsive-container' }, [
+      column('settings-column', 'Example', [select, load]),
+      column('settings-column', 'Description', [desc]),
+    ]),
+  ]));
+  setupToggle(host, 'sim-example-toggle', undefined, true);
 }
 
 async function copyShareLink(button) {

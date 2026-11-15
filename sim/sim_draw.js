@@ -172,6 +172,44 @@ function drawNode(node, result, view, y0) {
   const spTop = y;
   labels += rowLabel(names.bitPhase, y, ROW_H, fs);
   svg += band(segItems, x, y, ROW_H, colors.segSync, '#555', fs, 'center'); y += ROW_H;
+  // Phase error band: gray "no sync" bits; per synchronizing edge the interval between the
+  // edge and its reference (width = PE). Red = positive, green = negative; dark = |PE| > SJW
+  // (a hard sync is always light).
+  // The whole row is omitted unless "Phase Error" is checked (view.showPhaseError).
+  let peY = null;
+  if (view.showPhaseError) {
+    peY = y;
+    labels += rowLabel(names.phaseError, y, ROW_H, fs);
+    // No-sync bits: one gray box per run of bits (no separators, stays gray when zoomed out),
+    // the text is repeated in every bit it fits into.
+    let runStart = null;
+    node.bits.forEach((b, i) => {
+      if (!b.noSync) return;
+      if (runStart === null) runStart = b.t0;
+      const w = x(b.t1) - x(b.t0);
+      if (w > view.noSyncText.length * fs * 0.6 + 4) {
+        svg += `<text x="${(x(b.t0) + w / 2).toFixed(1)}" y="${textY(y, ROW_H, fs)}" text-anchor="middle" `
+             + `font-size="${fs}" fill="#555">${esc(view.noSyncText)}</text>`;
+      }
+      if (!node.bits[i + 1]?.noSync) {
+        const x0 = x(runStart);
+        svg = `<rect x="${x0.toFixed(1)}" y="${y}" width="${(x(b.t1) - x0).toFixed(1)}" height="${ROW_H}" `
+            + `fill="${colors.peNoSync}" />${svg}`;
+        runStart = null;
+      }
+    });
+    for (const p of node.pe) {
+      if (p.pe === 0) continue;
+      const dark = !p.hard && Math.abs(p.pe) > p.sjw;
+      const fill = p.pe > 0
+        ? (dark ? colors.pePosDark : colors.pePosLight)
+        : (dark ? colors.peNegDark : colors.peNegLight);
+      const x0 = x(Math.min(p.tEdge, p.ref));
+      const w = Math.max(1, x(Math.max(p.tEdge, p.ref)) - x0);
+      svg += `<rect x="${x0.toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${ROW_H}" fill="${fill}" />`;
+    }
+    y += ROW_H;
+  }
 
   const wavesTop = y + 6;
   const rows = [
@@ -254,7 +292,7 @@ function drawNode(node, result, view, y0) {
       + `<text x="${(px + 4).toFixed(1)}" y="${textY(phaseY, ROW_H, fs)}" font-size="${fs}" fill="#d50000" font-weight="bold">${esc(view.errorText)}</text>`;
   }
 
-  return { content: svg + waves + stateBand + preBand + spLines + errMark, labels, height: yy + 10 - y0 };
+  return { content: svg + waves + stateBand + preBand + spLines + errMark, labels, height: yy + 10 - y0, peY };
 }
 
 // Mapping between time (ns) and the x coordinate within the scrolling SVG.
@@ -274,6 +312,7 @@ export function renderResult(result, cfg) {
   let y = 0;
   let content = '';
   let labels = '';
+  const peYs = [];
   result.nodes.forEach((node, i) => {
     if (i > 0) {
       content += divider(width.toFixed(0), y + NODE_GAP / 2);
@@ -283,9 +322,12 @@ export function renderResult(result, cfg) {
     const n = drawNode(node, result, view, y);
     content += n.content;
     labels += n.labels;
+    if (n.peY !== null) peYs.push(n.peY + ROW_H);
     y += n.height;
   });
-  return `<div class="sim-figure">`
+  // data-pe-y: bottom of each node's phase error band (px); the marker readout is placed just below.
+  // Empty when the band is hidden.
+  return `<div class="sim-figure" data-pe-y="${peYs.join(',')}">`
     + `<svg class="sim-label-svg" width="${ML}" height="${y}" viewBox="0 0 ${ML} ${y}" `
     + `xmlns="http://www.w3.org/2000/svg">${labels}</svg>`
     + `<div class="sim-node-scroller"><svg class="sim-node-svg" width="${width.toFixed(0)}" height="${y}" `

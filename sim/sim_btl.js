@@ -54,9 +54,16 @@ export class Btl {
     const edge = this.prevRx === RECESSIVE && level === DOMINANT;
     this.prevRx = level;
     if (edge) {
+      // Phase error reference in tq from the bit start (before any correction):
+      // late edge -> right end of the SyncSeg; early edge -> nominal bit end
+      // (= left end of the next SyncSeg); edge in the SyncSeg -> e = 0.
+      const info = { refTq: this.edgeAfterSp ? this.len : 1, inSync: this.edgeTq === 0 };
       const mode = ctx.hardSyncMode(this);
-      if (mode) return { hardSync: mode };
-      this.resync(ctx);
+      if (mode) {
+        ctx.onSyncEdge?.({ ...info, hard: true });
+        return { hardSync: mode };
+      }
+      if (this.resync(ctx)) ctx.onSyncEdge?.({ ...info, hard: false });
     }
     if (this.pos === this.spPos) {
       this.lastSampled = level;
@@ -77,14 +84,15 @@ export class Btl {
     return this.edgeTq >= this.spPos;
   }
 
+  // Returns true if the edge is a synchronizing edge (incl. e = 0 in the SyncSeg).
   resync(ctx) {
-    if (this.synced || this.lastSampled !== RECESSIVE) return;
-    if (ctx.isTx && ctx.phase === 'data') return;
+    if (this.synced || this.lastSampled !== RECESSIVE) return false;
+    if (ctx.isTx && ctx.phase === 'data') return false;
     const q = this.edgeTq;
-    if (q === 0) return;
+    if (q === 0) return true;
     const sjw = this.cfg.sjw;
     if (!this.edgeAfterSp) {
-      if (ctx.drivingDominant) return;
+      if (ctx.drivingDominant) return false;
       const d = Math.min(q, sjw);
       this.ps1 += d;
       this.spPos += d;
@@ -93,5 +101,6 @@ export class Btl {
       this.len -= Math.min(this.len - q, sjw);
     }
     this.synced = true;
+    return true;
   }
 }

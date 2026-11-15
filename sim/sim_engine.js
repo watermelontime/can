@@ -22,7 +22,7 @@ class SimNode {
     this.idx = idx;
     this.ch = node.channel;
     // Node is idle until txStartT; an earlier bus edge is taken as SOF (hard sync).
-    this.txStartT = idx === 1 ? (node.txStartDelay || 0) : 0;
+    this.txStartT = node.txStartDelay || 0;
     this.idle = true;
     this.pending = false;  // synced to a foreign SOF, own transmission not started yet
     this.roles = [{ t: 0, role: 'idle' }];
@@ -35,6 +35,7 @@ class SimNode {
     this.txLevel = RECESSIVE;
     this.txcc = [];
     this.bits = [];
+    this.syncEdges = [];   // synchronizing edges (phase error band)
     this.rec = null;
     this.done = false;
     this.errorAt = null;
@@ -73,6 +74,7 @@ class SimNode {
       t0: t, t1: null, spTime: null, sampled: null, error: false,
       prop: this.btl.cfg.prop, ps1: this.btl.ps1, tqNs: this.btl.tqNs,
       nomPs1: this.btl.cfg.ps1, nomPs2: this.btl.cfg.ps2,
+      noSync: this.bsp.isTx && b.phase === 'data', // a transmitter does not synchronize in the data phase
     };
     this.bits.push(this.rec);
     if (b.name === 'ADH' && this.pwm) this.pwm.start(this.bsp.isTx);
@@ -161,6 +163,14 @@ class SimNode {
         phase: this.bsp.bit.phase,
         drivingDominant: !this.pending && this.bsp.drive() === DOMINANT,
         hardSyncMode: (btl) => this.bsp.hardSyncMode(btl.edgeAfterSp),
+        // Called before the synchronization changes the bit: t = end of the edge tq.
+        onSyncEdge: (e) => {
+          const tq = this.btl.tqNs;
+          this.syncEdges.push({
+            t, tq, ref: this.rec.t0 + e.refTq * tq, inSync: e.inSync, hard: e.hard,
+            sjw: this.btl.cfg.sjw * tq,
+          });
+        },
       };
       const ev = this.btl.clock(() => rxAt(t), ctx);
       if (ev?.hardSync) this.hardSync(t, ev.hardSync);
@@ -199,6 +209,34 @@ function segments(rec) {
     ps1Sync: differs(ps1, rec.nomPs1),
     ps2Sync: differs(ps2, rec.nomPs2),
   };
+}
+
+// Phase errors (ns) of a node's synchronizing edges, ISO 11898-1 sign:
+//   late edge  (after the SyncSeg, before the SP): PE = edge - SyncSeg right end > 0
+//   early edge (after the SP):                     PE = edge - nominal bit end   < 0
+//   edge in the SyncSeg:                           PE = 0
+// The exact edge time is taken from RX_CC (the BTL sees it at the end of the edge tq).
+// [from, to] = time span for which this edge is "the next synchronizing edge"; it
+// does not reach back over bits in which the node does not synchronize.
+function phaseErrors(m, rxcc) {
+  const eps = 1e-6;
+  const noSync = m.bits.filter((b) => b.noSync);
+  const out = [];
+  let j = 0;
+  let from = m.bits.length ? m.bits[0].t0 : 0;
+  for (const s of m.syncEdges) {
+    while (j < rxcc.length && rxcc[j].t <= s.t + eps) j++;
+    let tEdge = s.t;
+    for (let k = j - 1; k >= 0 && rxcc[k].t > s.t - s.tq - eps; k--) {
+      if (rxcc[k].v === DOMINANT) { tEdge = rxcc[k].t; break; }
+    }
+    const pe = s.inSync ? 0 : tEdge - s.ref;
+    const to = Math.max(tEdge, s.inSync ? tEdge : s.ref);
+    for (const b of noSync) if (b.t0 < tEdge && b.t1 > from) from = b.t1;
+    out.push({ tEdge, ref: s.inSync ? tEdge : s.ref, pe, sjw: s.sjw, hard: s.hard, from, to });
+    from = to;
+  }
+  return out;
 }
 
 export function runSimulation(cfg) {
@@ -266,18 +304,20 @@ export function runSimulation(cfg) {
     const roleSegs = m.roles
       .map((r, j) => ({ t0: r.t, t1: m.roles[j + 1]?.t ?? busTotalT, role: r.role }))
       .filter((s) => s.t1 > s.t0);
+    const rxcc = buildRxCc(i);
     return {
       label: m.node.label,
       role: m.bsp.role,
       roleSegs,
       bits: m.bits.map((r) => ({
         name: r.name, field: r.field, subfield: r.subfield, phase: r.phase, stuff: r.stuff, value: r.value,
-        t0: r.t0, t1: r.t1, spTime: r.spTime, sampled: r.sampled, error: r.error,
+        t0: r.t0, t1: r.t1, spTime: r.spTime, sampled: r.sampled, error: r.error, noSync: r.noSync,
         segs: segments(r),
       })),
+      pe: phaseErrors(m, rxcc),
       txcc: m.txcc,
       txbus: m.trx.txbus,
-      rxcc: buildRxCc(i),
+      rxcc,
       txState: m.trx.segments(busTotalT),
       txPre: m.trx.preSegments(busTotalT),
       txHiZ: m.trx.hiZSegments(busTotalT),
