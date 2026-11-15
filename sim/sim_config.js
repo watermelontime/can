@@ -63,7 +63,7 @@ export const EXAMPLE_CONFIGS = [
       - Node 1 syncs on Node 2 and so completely uses PropSeg.
       - Node 1 wins arbitration
     `,
-    bus: { t_cable: 31.3 },
+    bus: { t_cable: 19.4 },
     showSicTime: true,
     showPhaseError: true,
     nodes: [
