@@ -1,6 +1,6 @@
 # CAN Bus Simulator — Specification V0.3
 
-> Status: **Implemented (V0.3.0), under development.**
+> Status: **Implemented (V0.3.1), under development.**
 > Folder: `sim/`. Fourth tool of the CAN Tools website.
 
 ---
@@ -42,8 +42,8 @@ The CAN standard reference is [ISO11898-1_2024_FINAL.PDF](ISO11898-1_2024_FINAL.
 - Static full-frame computation; no animation, no play/step controls.
 
 ### Explicit non-goals (controller model does **NOT** support)
-- **No CRC calculation and no CRC check.** The CRC fields are **fixed defaults** transmitted verbatim and are
-  **not user-editable**; any received CRC is accepted as valid.
+- **No CRC calculation and no CRC check.** The CRC fields are **user-configured values** transmitted verbatim;
+  any received CRC is accepted as valid.
 - **No error-flag transmission.** On a detected error the node enters **error state and stays
   there forever** (no active/passive error flag is driven on the bus).
 - No CAN CC / CAN FD frames.
@@ -199,7 +199,7 @@ Output 1 / Output 2 show the derived bit timing properties and drawings as in `x
 
 ### 6.3 Per-node — Frame (XLFF, 11-bit ID) (Input 5)
 Input 5 is laid out as in the Frame Generator: frame type (fixed "CAN XL: XBFF (ID11)"), ID (hex), DLC (0–2047),
-RRS, SEC, SDT (hex), VCID (hex), AF (hex), data bytes (hex, textarea).
+RRS, SEC, SDT (hex), VCID (hex), AF (hex), PCRC (hex, 13 bit), data bytes (hex, textarea), FCRC (hex, 32 bit).
 
 Fields in transmission order per ISO 11898-1 XL data frame:
 SOF, ID[28:18], RRS, IDE, FDF, resXL/XLF marker, SBC bits, SDT, SEC, VCID, 
@@ -207,8 +207,9 @@ DLC (payload length), AF (acceptance field), **PCRC (13-bit)**, payload data, **
 CRC delimiter, ACK slot, ACK delimiter, EOF.
 The XLFF field list and sizes follow the XL frame definition in `frame/frame_definitions.js`.
 
-> CRC is **never computed**: both CRCs are **fixed defaults** transmitted verbatim (allowing worst-case
-> stuff/edge patterns) and are **not user-editable** — PCRC default `0x155`, FCRC default `0x55555555`.
+> CRC is **never computed**: both CRCs are **user-editable** values transmitted verbatim (allowing worst-case
+> stuff/edge patterns) — PCRC default `0x155`, FCRC default `0x55555555`. They are part of the frame chunk
+> ("Copy from Node 1" → frame), the example configurations and the share link.
 > ACK slot handling: see §7.5.
 
 **Default frame contents** (chosen so arbitration yields a clear winner/loser):
@@ -354,9 +355,11 @@ this drift drives the arbitration/sample-point behaviour the tool visualizes.
     `txStartDelay` (quantized to its clock).
   - **XLF → resXL** edge (receivers only): if the edge is seen after the SP of XLF or during resXL, resXL
     starts at the edge.
-  - **DL1** edge, i.e. the edge at the end of the DH\* bits (receivers only): DL1 starts at the edge (if the edge
-    is seen after the SP of the current DH bit, the next bit starts at the edge; otherwise the current bit
-    restarts at the edge).
+  - **DL1** edge, i.e. the edge at the end of the DH\* bits (receivers only), hard sync without SJW limit:
+    - edge after the SP of the current DH bit: PhaseSeg2 of the DH bit is shortened, the next bit starts at the edge;
+    - edge after the SyncSeg but before the SP: PhaseSeg1 of the current bit is lengthened by the full phase error.
+    Whether the bit is DL1 is decided only at its SP: `0` sampled → DL1, `1` sampled → DH\*.
+  - A hard sync (like a resync) is only performed if the value sampled at the **previous SP was recessive**.
 - **Resynchronization:**
   - only if the value sampled at the **previous SP was recessive**;
   - at most **one synchronization between two sample points**;
@@ -550,7 +553,7 @@ other node's transceiver (both directions). A node sees its own bus output witho
 
 ## 12. Simulation Engine (clocked co-simulation)
 
-1. Build each node's bit sequence from its frame config (fields, stuff bits, fixed CRCs, ACK, EOF).
+1. Build each node's bit sequence from its frame config (fields, stuff bits, configured CRCs, ACK, EOF).
 2. Each node starts SOF at t = 0 or after its idle phase (`txStartDelay`, §7.1.1).
 3. **Clocked co-simulation:** the BTL, BSP and PWM encoder of each node tick on the node's **own clock**
    (period `1 / (clk · (1 + df))`). Clock ticks of both nodes are processed in **global time order**.

@@ -270,13 +270,14 @@ export class Bsp {
   }
 
   // Hard synchronization on a recessive->dominant edge. Returns null (no hard
-  // sync), 'restart' (current bit restarts at the edge) or 'next' (the next bit
-  // starts at the edge).
+  // sync), 'restart' (current bit restarts at the edge), 'next' (the next bit
+  // starts at the edge, i.e. PhaseSeg2 shortened) or 'lengthen' (PhaseSeg1 of
+  // the current bit lengthened by the full phase error).
   //  - SOF: receivers always; a transmitter only on an early edge
-  //  - receivers: XLF->resXL edge and the DL1 edge (end of the DH* bits)
+  //  - receivers: XLF->resXL edge and the DL1 edge (end of the DH* bits); whether
+  //    the bit is DL1 is decided at its SP
   hardSyncMode(edgeAfterSp) {
     const b = this.bit;
-    const startsAtEdge = edgeAfterSp ? 'next' : 'restart';
     if (b.name === 'SOF') {
       if (!this.isTx) return 'restart';
       return edgeAfterSp ? 'next' : null;
@@ -284,7 +285,7 @@ export class Bsp {
     if (this.isTx) return null;
     if (b.name === 'resXL') return 'restart';
     if (b.name === 'XLF') return edgeAfterSp ? 'next' : null;
-    if (b.name === 'DH1' || b.candidate) return startsAtEdge;
+    if (b.name === 'DH1' || b.candidate) return edgeAfterSp ? 'next' : 'lengthen';
     return null;
   }
 }

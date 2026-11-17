@@ -14,7 +14,7 @@ import { tqPerBit, derivePwm } from './sim_bittiming.js';
 import * as drawBt from '../draw_bits_svg.js';
 import { createSO8svg } from '../draw_transceiver_svg.js';
 
-const APP_VERSION = 'V0.3.0';
+const APP_VERSION = 'V0.3.1';
 const cfg = defaultConfig();
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -483,7 +483,9 @@ function buildInput5(node) {
     row('SDT (hex)', hexInput(() => f().sdt, (v) => { f().sdt = v; }, 2, 8)),
     row('VCID (hex)', hexInput(() => f().vcid, (v) => { f().vcid = v; }, 2, 8)),
     row('AF (hex)', hexInput(() => f().af, (v) => { f().af = v; }, 8, 12), hint(' [31:0]')),
+    row('PCRC (hex)', hexInput(() => f().pcrc, (v) => { f().pcrc = v & 0x1FFF; }, 4, 8), hint(' [12:0]')),
     row('Data (hex)', data),
+    row('FCRC (hex)', hexInput(() => f().fcrc, (v) => { f().fcrc = v >>> 0; }, 8, 12), hint(' [31:0]')),
   ]);
   return column('settings-column', 'Input 5: Frame', [table]);
 }

@@ -13,7 +13,9 @@
 //  - a node sending dominant ignores late edges (also a receiver sending the
 //    ACK slot: its own edge is always late);
 //  - data phase: only receivers resynchronize (data SJW);
-//  - hard sync is requested by the BSP via ctx.hardSyncMode().
+//  - hard sync is requested by the BSP via ctx.hardSyncMode(); like a resync it
+//    is only performed if the last SP sampled recessive. Mode 'lengthen'
+//    lengthens PhaseSeg1 of the current bit by the full phase error (no SJW limit).
 // =============================================================================
 
 import { DOMINANT, RECESSIVE, clkPeriodNs } from './sim_bittiming.js';
@@ -58,12 +60,17 @@ export class Btl {
       // late edge -> right end of the SyncSeg; early edge -> nominal bit end
       // (= left end of the next SyncSeg); edge in the SyncSeg -> e = 0.
       const info = { refTq: this.edgeAfterSp ? this.len : 1, inSync: this.edgeTq === 0 };
-      const mode = ctx.hardSyncMode(this);
-      if (mode) {
+      const mode = this.lastSampled === RECESSIVE ? ctx.hardSyncMode(this) : null;
+      if (mode === 'lengthen') {
+        ctx.onSyncEdge?.({ ...info, hard: true });
+        this.lengthenPs1(this.edgeTq);
+        this.synced = true;
+      } else if (mode) {
         ctx.onSyncEdge?.({ ...info, hard: true });
         return { hardSync: mode };
+      } else if (this.resync(ctx)) {
+        ctx.onSyncEdge?.({ ...info, hard: false });
       }
-      if (this.resync(ctx)) ctx.onSyncEdge?.({ ...info, hard: false });
     }
     if (this.pos === this.spPos) {
       this.lastSampled = level;
@@ -93,14 +100,17 @@ export class Btl {
     const sjw = this.cfg.sjw;
     if (!this.edgeAfterSp) {
       if (ctx.drivingDominant) return false;
-      const d = Math.min(q, sjw);
-      this.ps1 += d;
-      this.spPos += d;
-      this.len += d;
+      this.lengthenPs1(Math.min(q, sjw));
     } else {
       this.len -= Math.min(this.len - q, sjw);
     }
     this.synced = true;
     return true;
+  }
+
+  lengthenPs1(d) {
+    this.ps1 += d;
+    this.spPos += d;
+    this.len += d;
   }
 }

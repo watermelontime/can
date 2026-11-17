@@ -289,7 +289,10 @@ export const EXAMPLE_CONFIGS = [
 //          t_pas_rec_start: 530,
 //          sic2fast: 205, fast2sic: 245,
 //        },
-//        frame: { id: 0x547, rrs: 0, sec: 0, sdt: 0x88, vcid: 0x33, af: 0x01234567, dlc: 0, data: [0x11] },
+//        frame: {
+//          id: 0x547, rrs: 0, sec: 0, sdt: 0x88, vcid: 0x33, af: 0x01234567, dlc: 0, data: [0x11],
+//          pcrc: 0x155, fcrc: 0x55555555,
+//        },
 //      },
 //      { // ---- Node 2 ----
 //        clkMHz: 160,
@@ -310,7 +313,10 @@ export const EXAMPLE_CONFIGS = [
 //          t_pas_rec_start: 530,
 //          sic2fast: 205, fast2sic: 245,
 //        },
-//        frame: { id: 0x567, rrs: 0, sec: 0, sdt: 0x88, vcid: 0x33, af: 0x01234567, dlc: 0, data: [0x22] },
+//        frame: {
+//          id: 0x567, rrs: 0, sec: 0, sdt: 0x88, vcid: 0x33, af: 0x01234567, dlc: 0, data: [0x22],
+//          pcrc: 0x155, fcrc: 0x55555555,
+//        },
 //      },
 //    ],
 //  },
@@ -339,8 +345,8 @@ function defaultNode(index) {
       af:   0x01234567,
       dlc:  0,
       data: [isNode1 ? 0x11 : 0x22],
-      pcrc: 0x155,           // 13-bit, fixed default
-      fcrc: 0x55555555,      // 32-bit, fixed default
+      pcrc: 0x155,           // 13-bit, transmitted verbatim (not computed)
+      fcrc: 0x55555555,      // 32-bit, transmitted verbatim (not computed)
     },
   };
   applyPreset(node, DEFAULT_PRESET); // sets clkMHz, tms, bt
