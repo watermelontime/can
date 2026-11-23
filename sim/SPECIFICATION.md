@@ -389,7 +389,9 @@ and produces the next bit to transmit. Responsibilities:
     directly after FCRC bit 0; the actual position depends on the DLC).
   - A receiver detects a form error if a fixed stuff bit has the same value as its preceding bit (covered by
     the receiver's sampled-vs-expected check, §7.4a).
-  - SBC is transmitted as fixed `0` (stuff-bit count not computed).
+  - **SBC** (3 bits) is computed from the number of dynamic stuff bits (0–3; SBC2, SBC1 = Gray code,
+    SBC0 = parity), same table as the frame tool (`frame/SPECIFICATION.md` §5.3):
+    0 → `001`, 1 → `010`, 2 → `111`, 3 → `100`.
 - **ACK transmission:** the **transmitter sends the ACK slot recessive (`1`)**; every **receiver drives the
   ACK slot dominant (`0`)**.
 - **ACK validation:** the transmitter checks that the ACK slot is read back dominant; otherwise it detects an

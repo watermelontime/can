@@ -165,6 +165,12 @@
   height: 24px;
 }
 
+/* checkboxes (e.g. RRS, SEC): left aligned with the other input fields */
+input[type="checkbox"].input-field {
+  width: auto;
+  margin-left: 0;
+}
+
 /* left parameters | schematic | right parameters */
 .sim-setup-body {
   display: flex;

@@ -2,6 +2,27 @@
    => check and correct which errors shall be detected
 
 - TDC + SSP => add feature
+  * Transmitter measures the so called Transmitter Delay (TD). This ist the time that the XLF=>resXL edge takes from TXD to RXD of the CAN Controller (CC).
+  * Transmitter checks in the Data Phase (Phase with Data Bits) each bit delayed by TD + SSP.
+  * TDC & SSP are only used in case when TMS=OFF.
+  * The receiver does never use TDC.
+  * I want to add some visualization of the TDC feature, but I do not yet know how.
+  * There shall be a check box (next to Phase Error check box) to switch on/off TDC visualization
+/ Error Signaling to be added. When TMS=1 => ES=1 automatically
+
+- Add description for the tool behavior
+  - Intention: This simulator is inteded to understand Arbitration, Synchronization, Interrelation between CAN Controller and Transceiver, timings.
+  - Transmission Errors
+     - Errors are detected as specified in ISO
+     - Not checked Errors
+       * Error frames are not transmitted
+       * Error State like Error Active and Error Passive is not maintained
+       * CRC errors are not checked
+     - Additionally, an RX node detects an Error, when the bit sampled differs from the bit transmitted. This is done to detect wrong behavior immediatelly.
+
+- Label the Markers with A, B, C, ...
+
+x Visual: The checkboxes for RRS and SEC are not left aligned to the other input fields.
 
 x "Example configuration" area has to be restructured visualy
   * Hide/Show button

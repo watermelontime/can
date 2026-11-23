@@ -77,7 +77,7 @@ function buildRawBits(node) {
   pushBits(bits, f.sdt & 0xFF, 8, F_CTRL, 'SDT', DATA);
   bits.push(bit('SEC', F_CTRL, DATA, f.sec & 1));
   pushBits(bits, f.dlc & 0x7FF, 11, F_CTRL, 'DLC', DATA);
-  pushBits(bits, 0, 3, F_CTRL, 'SBC', DATA);           // stuff-bit count — 0 in v1
+  pushBits(bits, 0, 3, F_CTRL, 'SBC', DATA);           // stuff-bit count — set in applyStuffing()
   pushBits(bits, f.pcrc & 0x1FFF, 13, F_CTRL, 'PCRC', DATA);
   pushBits(bits, f.vcid & 0xFF, 8, F_CTRL, 'VCID', DATA);
   pushBits(bits, f.af >>> 0, 32, F_CTRL, 'AF', DATA);
@@ -112,6 +112,11 @@ function buildRawBits(node) {
 const DYN_STUFF_RUN = 5;
 const FIXED_STUFF_DIST = 10;
 
+// XL SBC (SBC2, SBC1 = Gray code, SBC0 = parity), indexed by the number of
+// dynamic stuff bits (0–3, the maximum possible in an XLFF). Same table as
+// frame/frame_builder.js (SBC_XL_TABLE).
+const SBC_XL_TABLE = [0b001, 0b010, 0b111, 0b100];
+
 const stuffBit = (prev) => ({
   name: 'stuff', field: prev.field, subfield: prev.subfield, phase: prev.phase,
   value: prev.value === DOMINANT ? RECESSIVE : DOMINANT, stuff: true,
@@ -123,6 +128,8 @@ const stuffBit = (prev) => ({
 //  - fixed: after each 10th frame bit counted from and including DL1, a bit
 //    with the inverse value of the preceding bit is inserted; the last one may
 //    directly follow FCRC0.
+//  - SBC: the dynamic stuff count is final after IDE, so the SBC bits (which
+//    follow DLC) are filled in here, before the fixed stuffing reaches them.
 function applyStuffing(raw) {
   const iIde = raw.findIndex((b) => b.name === 'IDE');
   const iDl1 = raw.findIndex((b) => b.name === 'DL1');
@@ -130,8 +137,13 @@ function applyStuffing(raw) {
   const out = [];
   let runVal = null;
   let runLen = 0;
+  let dynCount = 0;
   for (let i = 0; i < raw.length; i++) {
-    const bit = raw[i];
+    let bit = raw[i];
+    if (bit.subfield === 'SBC') {
+      const pos = Number(bit.name.slice(3)); // 'SBC2' → 2
+      bit = { ...bit, value: (SBC_XL_TABLE[Math.min(dynCount, 3)] >> pos) & 1 };
+    }
     out.push(bit);
 
     if (i <= iIde) {
@@ -140,6 +152,7 @@ function applyStuffing(raw) {
       if (runLen === DYN_STUFF_RUN) {
         const s = stuffBit(bit);
         out.push(s);
+        dynCount++;
         runVal = s.value;
         runLen = 1;
       }
