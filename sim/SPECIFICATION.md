@@ -1,6 +1,6 @@
 # CAN Bus Simulator — Specification V0.3
 
-> Status: **Implemented (V0.3.1), under development.**
+> Status: **Implemented (V0.3.2), under development.**
 > Folder: `sim/`. Fourth tool of the CAN Tools website.
 
 ---

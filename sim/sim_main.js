@@ -14,7 +14,7 @@ import { tqPerBit, derivePwm } from './sim_bittiming.js';
 import * as drawBt from '../draw_bits_svg.js';
 import { createSO8svg } from '../draw_transceiver_svg.js';
 
-const APP_VERSION = 'V0.3.1';
+const APP_VERSION = 'V0.3.2';
 const cfg = defaultConfig();
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
