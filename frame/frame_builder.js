@@ -63,6 +63,7 @@ export function CanFrame(frameType) {
     fcrcValue:          0,
     stuffBitCountDyn:   0,
     stuffBitCountFixed: 0,
+    dynStuffRegionBits: 0,  // non-stuff bits in the range where dynamic bit stuffing applies
     totalBits:          0
   };
 
@@ -629,6 +630,9 @@ CanFrame.prototype._buildCC = function() {
   var dynCount = this._insertDynamicStuffBitsInRange(stuffIndices, "CRC del");
 
   this.computed.stuffBitCountDyn = dynCount;
+  // Dynamic stuffing range CC: SOF ... end of CRC sequence (non-stuff bits only)
+  this.computed.dynStuffRegionBits =
+    this._flattenBits(crcIndices, { excludeStuff: true }).length + crcElem.bits.filter(function(b) { return !b.isStuffBit; }).length;
 };
 
 // =============================================================================
@@ -656,6 +660,8 @@ CanFrame.prototype._buildFD = function() {
   // dynamic stuff bit if one was placed at the very end of the range.
   dynCount -= this._removeTrailingDynStuffBit(stuffIndices);
   this.computed.stuffBitCountDyn = dynCount;
+  // Dynamic stuffing range FD: SOF ... end of Data field (non-stuff bits only)
+  this.computed.dynStuffRegionBits = this._flattenBits(stuffIndices, { excludeStuff: true }).length;
 
   // Step 5: Compute SBC (4 bits)
   var sbcVal = SBC_FD_TABLE[dynCount % 8];
@@ -821,6 +827,13 @@ CanFrame.prototype._insertDynStuffBitsArbXL = function() {
       containers.push({ bits: arbField.elements[ai].bits });
     }
   }
+
+  // Dynamic stuffing range XL: SOF ... IDE (non-stuff bits only; counted before insertion)
+  var regionBits = 0;
+  for (var ri = 0; ri < containers.length; ri++) {
+    regionBits += containers[ri].bits.filter(function(b) { return !b.isStuffBit; }).length;
+  }
+  this.computed.dynStuffRegionBits = regionBits;
 
   // Walk all bits, insert stuff bits
   var consecutiveCount = 1;

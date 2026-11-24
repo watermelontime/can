@@ -8,7 +8,7 @@ import { exportSVG, exportPNG, exportCSV, exportVHDL } from './frame_export.js';
 import { EXAMPLE_CONFIGS } from './frame_definitions.js';
 
 // Application version shown next to the page title
-const APP_VERSION = 'V1.1.3';
+const APP_VERSION = 'V1.2.0';
 
 var myFrame = null;
 
@@ -46,6 +46,13 @@ function frameInit() {
     document.getElementById(displayChkIds[i]).addEventListener("change", _redraw);
   }
 
+  // Drag-to-scroll (pan) the SVG waveform with the mouse
+  _enableDragScroll(document.getElementById("svgContainer"));
+
+  // Share link button
+  var shareBtn = document.getElementById("copyShareLinkButton");
+  if (shareBtn) shareBtn.addEventListener("click", function() { _copyShareLink(shareBtn); });
+
   // Set initial field enable/disable state
   onFrameTypeChange();
 
@@ -54,6 +61,140 @@ function frameInit() {
   if (versionEl) {
     versionEl.textContent = APP_VERSION;
   }
+
+  // Apply settings from a shared link (#cfg=...) and show the frame
+  if (_applySettingsFromHash()) onShowFrame();
+}
+
+// =============================================================================
+// Share link: all user settings (inputs + display options) in the URL hash
+// =============================================================================
+// Element IDs whose value (text/number/select) or checked state (checkbox) is shared
+var SHARE_SETTING_IDS = [
+  "frameTypeSelect", "inputID", "inputDLC", "inputBRS", "inputESI", "inputRRS", "inputSEC",
+  "inputSDT", "inputVCID", "inputAF", "inputData", "inputACK",
+  "chkBitNames", "chkColor", "chkColorStuff", "chkBitSeparators", "chkFields", "chkPhases",
+  "chkArbPhaseBitsLonger", "chkRealArbDataBitRatio",
+  "inputArbBitrate", "inputArbSP", "inputDataBitrate", "inputDataSP"
+];
+
+function _collectSettings() {
+  var s = {};
+  for (var i = 0; i < SHARE_SETTING_IDS.length; i++) {
+    var el = document.getElementById(SHARE_SETTING_IDS[i]);
+    if (!el) continue;
+    s[SHARE_SETTING_IDS[i]] = (el.type === "checkbox") ? el.checked : el.value;
+  }
+  return s;
+}
+
+// Set one element from untrusted link data: only matching types, select values must exist
+function _applySetting(el, v) {
+  if (el.type === "checkbox") {
+    if (typeof v === "boolean") el.checked = v;
+  } else if (typeof v === "string" && v.length <= 2000) {
+    if (el.tagName === "SELECT") {
+      var exists = Array.prototype.some.call(el.options, function(o) { return o.value === v; });
+      if (!exists) return;
+    }
+    el.value = v;
+  }
+}
+
+// Returns true if settings were found and applied
+function _applySettingsFromHash() {
+  var raw = new URLSearchParams(location.hash.slice(1)).get("cfg");
+  if (!raw) return false;
+  var s;
+  try {
+    s = JSON.parse(raw);
+  } catch (e) {
+    console.warn("[Warning] Invalid settings in link:", e);
+    return false;
+  }
+  if (!s || typeof s !== "object") return false;
+
+  // Frame type first: it enables/disables and shows/hides the other inputs
+  var ftSel = document.getElementById("frameTypeSelect");
+  if ("frameTypeSelect" in s) _applySetting(ftSel, s.frameTypeSelect);
+  onFrameTypeChange();
+
+  for (var i = 0; i < SHARE_SETTING_IDS.length; i++) {
+    var id = SHARE_SETTING_IDS[i];
+    if (id === "frameTypeSelect" || !(id in s)) continue;
+    var el = document.getElementById(id);
+    if (el) _applySetting(el, s[id]);
+  }
+
+  // Update dependent UI (bit-rate inputs, "Arb-bits longer" lock)
+  onRealBitRatioToggle();
+  return true;
+}
+
+async function _copyShareLink(button) {
+  var link = location.origin + location.pathname + "#cfg=" + encodeURIComponent(JSON.stringify(_collectSettings()));
+  var ok = true;
+  try {
+    await navigator.clipboard.writeText(link);
+  } catch (e) {
+    // Fallback for contexts without clipboard permission
+    var tmp = document.createElement("textarea");
+    tmp.value = link;
+    document.body.appendChild(tmp);
+    tmp.select();
+    try { ok = document.execCommand("copy"); } catch (e2) { ok = false; }
+    tmp.remove();
+  }
+  var original = button.dataset.originalLabel || button.textContent;
+  button.dataset.originalLabel = original;
+  button.textContent = ok ? "Link copied!" : "Copy failed";
+  setTimeout(function() { button.textContent = original; }, 1500);
+}
+
+// =============================================================================
+// Drag-to-scroll: pan the scrollable SVG container by click & drag (mouse/pen)
+// =============================================================================
+function _enableDragScroll(container) {
+  if (!container) return;
+  var dragging = false;
+  var startX = 0, startY = 0, startLeft = 0, startTop = 0;
+
+  container.addEventListener("pointerdown", function(e) {
+    // Left mouse button / pen only; touch keeps native scrolling
+    if (e.pointerType === "touch" || e.button !== 0) return;
+    // Only start panning on the waveform itself (not on padding/scrollbar)
+    if (!(e.target instanceof Element) || !e.target.closest("svg")) return;
+    // Exclude the scrollbar area (also for overlay scrollbars drawn over the content)
+    var rect = container.getBoundingClientRect();
+    if (e.clientY - rect.top - container.clientTop >= container.clientHeight) return;
+    if (e.clientX - rect.left - container.clientLeft >= container.clientWidth) return;
+    // Only pan if there is something to scroll
+    if (container.scrollWidth <= container.clientWidth &&
+        container.scrollHeight <= container.clientHeight) return;
+    dragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    startLeft = container.scrollLeft;
+    startTop = container.scrollTop;
+    container.setPointerCapture(e.pointerId);
+    container.classList.add("dragging");
+    e.preventDefault(); // avoid text selection / native SVG drag
+  });
+
+  container.addEventListener("pointermove", function(e) {
+    if (!dragging) return;
+    container.scrollLeft = startLeft - (e.clientX - startX);
+    container.scrollTop = startTop - (e.clientY - startY);
+  });
+
+  function endDrag(e) {
+    if (!dragging) return;
+    dragging = false;
+    container.classList.remove("dragging");
+    if (container.hasPointerCapture(e.pointerId)) container.releasePointerCapture(e.pointerId);
+  }
+  container.addEventListener("pointerup", endDrag);
+  container.addEventListener("pointercancel", endDrag);
 }
 
 // =============================================================================
@@ -389,30 +530,85 @@ function _updateInfoDisplay(frame) {
   var info = document.getElementById("infoDisplay");
   if (!info) return;
 
-  var lines = [];
-  lines.push("Frame type: " + frame.frameType);
-  lines.push("Total bits: " + frame.computed.totalBits);
-  lines.push("Dynamic stuff bits: " + frame.computed.stuffBitCountDyn);
-  lines.push("Fixed stuff bits: " + frame.computed.stuffBitCountFixed);
-  lines.push("Data bytes: " + frame.computed.dataFieldBytes);
+  var rows = [];   // [label, value] pairs, printed as aligned columns
+  var lines = [];  // free-form lines appended below the table (debug output)
+  rows.push(["Frame type", frame.frameType]);
+  rows.push(["Total bits", frame.computed.totalBits]);
+
+  // Arbitration / data phase bit counts
+  var phases = _countPhaseBits(frame);
+  rows.push(["Arb. phase bits", phases.arb]);
+  rows.push(["Data phase bits", phases.data]);
+  rows.push(["Mixed phase bits", phases.mixed + (phases.mixed > 0 ? " (mixed Arb./Data phase bits: BRS and CRC del)" : "")]);
+  rows.push(["Data field bytes", frame.computed.dataFieldBytes + " (DLC = " + frame.input.dlc + ")"]);
+
+  rows.push(["Dynamic stuff bits", frame.computed.stuffBitCountDyn]);
+  rows.push(["Fixed stuff bits", frame.computed.stuffBitCountFixed]);
+
+  // Dynamic stuff bits relative to the non-stuff bits of the dynamic stuffing range
+  var dynStuff = frame.computed.stuffBitCountDyn;
+  var dynRegion = frame.computed.dynStuffRegionBits;
+  var dynRatio = dynRegion > 0 ? (100 * dynStuff / dynRegion).toFixed(2) + " %" : "n/a";
+  rows.push(["Ratio", dynStuff + " / " + dynRegion + " = " + dynRatio + " (dynamic stuff bits / non-stuff bits)"]);
 
   if (frame._isCC()) {
-    lines.push("CRC-15: 0x" + frame.computed.crcValue.toString(16).toUpperCase());
+    rows.push(["CRC-15", "0x" + frame.computed.crcValue.toString(16).toUpperCase()]);
     //lines.push("CRC input bit stream: " + frame.debug.crcInputBitStream.join(""));
     //z_pushCrcTrace(lines, frame.debug.crcShiftRegTrace, 15, "CRC-15");
   } else if (frame._isFD()) {
-    lines.push("CRC-" + frame.computed.crcLength + ": 0x" + frame.computed.crcValue.toString(16).toUpperCase());
+    rows.push(["CRC-" + frame.computed.crcLength, "0x" + frame.computed.crcValue.toString(16).toUpperCase()]);
     //lines.push("CRC input bit stream: " + frame.debug.crcInputBitStream.join(""));
     //_pushCrcTrace(lines, frame.debug.crcShiftRegTrace, frame.computed.crcLength, "CRC-" + frame.computed.crcLength);
   } else if (frame._isXL()) {
-    lines.push("PCRC-13: 0x" + frame.computed.pcrcValue.toString(16).toUpperCase());
+    rows.push(["PCRC-13", "0x" + frame.computed.pcrcValue.toString(16).toUpperCase()]);
     //lines.push("PCRC input bit stream: " + frame.debug.pcrcInputBitStream.join(""));
     //_pushCrcTrace(lines, frame.debug.pcrcShiftRegTrace, 13, "PCRC-13");
-    lines.push("FCRC-32: 0x" + frame.computed.fcrcValue.toString(16).toUpperCase().padStart(8, "0"));
+    rows.push(["FCRC-32", "0x" + frame.computed.fcrcValue.toString(16).toUpperCase().padStart(8, "0")]);
     //lines.push("FCRC input bit stream: " + frame.debug.fcrcInputBitStream.join(""));
   }
 
-  info.textContent = lines.join("\n");
+  // Align values: pad all labels (incl. colon) to the longest label
+  var labelWidth = 0;
+  for (var r = 0; r < rows.length; r++) {
+    labelWidth = Math.max(labelWidth, rows[r][0].length + 1);
+  }
+  var table = rows.map(function(row) {
+    return (row[0] + ":").padEnd(labelWidth + 2) + row[1];
+  });
+
+  info.textContent = table.concat(lines).join("\n");
+}
+
+// =============================================================================
+// Count bits per phase (same phase boundaries as the phase bar in the drawing).
+// CAN FD (BRS=1): the first (BRS) and last (CRC del) data phase bit contain the
+// bit-rate switch at the sample point -> counted as "mixed".
+// CAN XL: switch happens at bit boundaries -> no mixed bits.
+// =============================================================================
+function _countPhaseBits(frame) {
+  var allIdx = [];
+  for (var i = 0; i < frame.fields.length; i++) allIdx.push(i);
+  var bits = frame._flattenBits(allIdx);
+  var total = bits.length;
+  var bti = frame.bitTimeInfo;
+
+  var start = -1, end = -1;
+  if (bti && bti.dataPhasePresent) {
+    for (var s = 0; s < total; s++) {
+      if (bits[s].name === bti.firstDataPhaseBit) { start = s; break; }
+    }
+    for (var e = total - 1; e >= 0; e--) {
+      if (bits[e].name === bti.lastDataPhaseBit) { end = e; break; }
+    }
+  }
+  if (start < 0 || end < 0 || start > end) {
+    return { arb: total, data: 0, mixed: 0 };
+  }
+
+  var dataRangeLen = end - start + 1;
+  var mixed = frame._isFD() ? Math.min(2, dataRangeLen) : 0;
+  var data = dataRangeLen - mixed;
+  return { arb: total - dataRangeLen, data: data, mixed: mixed };
 }
 
 // =============================================================================

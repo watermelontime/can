@@ -29,6 +29,18 @@
   background: #fff;
   min-height: 120px;
   margin-bottom: 1em;
+  padding-bottom: 14px; /* room for horizontal scrollbar (overlay scrollbars would cover the SVG) */
+}
+
+/* Drag-to-scroll only on the waveform itself, not on padding/scrollbar */
+.svg-wrapper svg {
+  cursor: grab;
+}
+
+.svg-wrapper.dragging,
+.svg-wrapper.dragging svg {
+  cursor: grabbing;
+  user-select: none;
 }
 
 /* ── Frame Generator: export row ── */
@@ -60,6 +72,17 @@
 input:disabled,
 select:disabled {
   opacity: 0.5;
+}
+
+/* ── Display option checkboxes (same style as reg_eval .report-filters) ── */
+.display-options {
+  font-weight: normal;
+  font-size: 0.9em;
+  margin-bottom: 0.5em;
+}
+.display-options .scroll-hint {
+  margin-left: 1.5em;
+  white-space: nowrap;
 }
 
 /* ── iPhone-style toggle switch ── */

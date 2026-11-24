@@ -22,6 +22,10 @@
 
     <div class="page-header">
       <h1>CAN Frame Generator <a href="versionhistory.html" id="appVersion" class="version-label" target="_blank" rel="noopener noreferrer" aria-label="Version"></a></h1>
+      <div class="header-actions">
+        <button type="button" id="copyShareLinkButton" class="styled-select">Copy link with settings</button>
+        <h1><a href="#" id="openHelp" class="help-link" aria-haspopup="dialog" aria-controls="helpModal">Help</a></h1>
+      </div>
     </div>
 
     <div class="responsive-container">
@@ -125,8 +129,8 @@
       <div class="column report-column">
 
         <!-- Checkbox row -->
-        <h3 class="report-headline">Generated CAN Frame
-          <div class="inline-control">
+        <h3 class="report-headline">Generated CAN MAC Frame</h3>
+          <div class="inline-control display-options" role="group" aria-label="Display options">
             <label><input type="checkbox" id="chkBitNames" checked /> bit names</label>
             <label><input type="checkbox" id="chkColor" checked /> color bits</label>
             <label><input type="checkbox" id="chkColorStuff" checked /> color stuff bits</label>
@@ -135,8 +139,8 @@
             <label><input type="checkbox" id="chkPhases" checked /> phases</label>
             <label><input type="checkbox" id="chkArbPhaseBitsLonger" unchecked /> Arb-bits longer</label>
             <label class="switch-label"><input type="checkbox" id="chkRealArbDataBitRatio" /><span class="switch-slider"></span> Real Arb/Data bit ratio</label>
+            <span class="scroll-hint">Scroll (horizontal): Shift + mouse wheel</span>
           </div>
-        </h3>
 
         <!-- Real Arb/Data bit ratio inputs (hidden by default) -->
         <div id="realBitRatioInputs" style="display:none;" class="real-bit-ratio-row">
@@ -179,6 +183,70 @@
         </div>
       </div>
     </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true"
+      aria-labelledby="helpTitle">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="helpTitle">Help: How to use the CAN MAC Frame Generator?</h2>
+          <button type="button" id="closeHelp" class="modal-close" aria-label="Close">Close</button>
+        </div>
+        <div class="modal-body">
+          <p>This tool generates the bit-level waveform of a valid MAC (Medium Access Control, OSI Layer 2) frame for CAN CC, CAN FD, or CAN XL.
+            Therefore it calculates the CRC, inserts stuff bits (dynamic and fixed) and shows all fields and phases of the frame graphically.</p>
+          <h3>Step by Step</h3>
+          <ol>
+            <li>Select the "<b>Frame Type</b>" (CAN XL, CAN FD, ...).</li>
+            <li>Enter the <b>frame content</b>: ID, DLC, control bits (e.g. BRS, ESI), for CAN XL additionally
+              SDT, VCID and AF, and the data bytes in hex (e.g. "DE AD BE EF").</li>
+            <li>Select the value of the ACK slot: 1 (no ACK) or 0 (ACK received).</li>
+            <li>Press the button "<b>Show Frame</b>" to generate the waveform. Done</li>
+          </ol>
+          <h3>Display Options</h3>
+          <ul>
+            <li>Use the checkboxes in the header of the "Generated CAN Frame" pane to change the visualization.</li>
+            <li>"Arb-bits longer" draws the bits of the arbitration phase wider than the bits of the data phase.</li>
+            <li>The switch "Real Arb/Data bit ratio" scales the bit widths according to real bit rates. Enter the
+            bit rate and sample point (SP) of the arbitration phase and (for CAN FD/XL) the data phase, then press
+            "Show Frame" again.</li>
+          </ul>
+          <h3>Export & information</h3>
+          <ul>
+            <li><b>SVG / PNG:</b> the waveform as vector graphic or image, e.g. for documentation.</li>
+            <li><b>CSV:</b> list of all bits with bit value, bit name, element name and field name.</li>
+            <li><b>VHDL:</b> a frame generator entity and testbench that drives the frame on a signal. Only
+              available when "Real Arb/Data bit ratio" is enabled, because real bit times are required.</li>
+            <li>Below the waveform, "Frame Information" shows details of the generated frame (e.g. calculated CRC
+            values and frame length).</li>
+          </ul>
+          <h3>Quick Try</h3>
+          <p>Select a frame type, choose an entry in "Example" and press "Load" to fill the input fields and the frame is shown.</p>
+          <p>Enjoy!</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const openBtn = document.getElementById('openHelp');
+        const modal = document.getElementById('helpModal');
+        const closeBtn = document.getElementById('closeHelp');
+        function openModal(e) {
+          if (e) e.preventDefault();
+          modal.classList.add('open');
+          modal.setAttribute('aria-hidden', 'false');
+        }
+        function closeModal() {
+          modal.classList.remove('open');
+          modal.setAttribute('aria-hidden', 'true');
+        }
+        openBtn.addEventListener('click', openModal);
+        closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+      })();
+    </script>
 
   </main>
 
